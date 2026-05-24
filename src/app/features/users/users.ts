@@ -123,13 +123,14 @@ export class UsersComponent implements OnInit {
         error: handleError,
       });
     } else {
-      // → admin — POST /admin/users with role:'admin', needs firstname+lastname
-      this.userService.create({
-        firstname: f.firstname.trim(),
-        lastname:  f.lastname.trim(),
-        email:     f.email.trim(),
-        password:  f.password,
-        role:      f.role,
+      // → admin/superadmin: POST /admin/auth/register → adminUsers collection
+      // (so they can sign in to this dashboard). NOT /admin/users which writes
+      // to the regular app users collection.
+      this.authService.registerAdminUser({
+        name:     `${f.firstname.trim()} ${f.lastname.trim()}`,
+        email:    f.email.trim(),
+        password: f.password,
+        role:     f.role as 'admin' | 'superadmin',
       }).subscribe({
         next: () => {
           this.creating.set(false);

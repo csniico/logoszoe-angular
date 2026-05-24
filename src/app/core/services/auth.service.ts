@@ -45,6 +45,20 @@ export class AuthService {
       }));
   }
 
+  /**
+   * Creates a user in the adminUsers collection (dashboard access).
+   * Calls POST /admin/auth/register — distinct from POST /admin/users
+   * which writes to the regular app users collection.
+   */
+  registerAdminUser(data: {
+    name: string;
+    email: string;
+    password: string;
+    role: 'admin' | 'superadmin';
+  }): Observable<AdminUser> {
+    return this.http.post<AdminUser>(`${this.base}/admin/auth/register`, data);
+  }
+
   changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
     return this.http.patch<{ message: string }>(
       `${this.base}/admin/auth/me/password`,
