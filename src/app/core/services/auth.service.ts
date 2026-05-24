@@ -32,6 +32,26 @@ export class AuthService {
       .pipe(tap((res) => this.handleAuthResponse(res)));
   }
 
+  updateProfile(name: string): Observable<AdminUser> {
+    return this.http
+      .patch<AdminUser>(`${this.base}/admin/auth/me`, { name })
+      .pipe(tap((updated) => {
+        const prev = this._currentAdmin();
+        if (prev) {
+          const next = { ...prev, name: updated.name };
+          this._currentAdmin.set(next);
+          this.tokenService.setAdminUser(next);
+        }
+      }));
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(
+      `${this.base}/admin/auth/me/password`,
+      { currentPassword, newPassword },
+    );
+  }
+
   signOut(): void {
     this._currentAdmin.set(null);
     this.tokenService.clearTokens();

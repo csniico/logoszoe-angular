@@ -301,7 +301,7 @@
             <span class="field-empty">No passages added yet.</span>
           }
         } @else {
-          <app-bible-passage-picker [passages]="draftPassages" (passagesChange)="setDraftPassages($event)" />
+          <app-bible-passage-picker [passages]="draftPassages" [readonly]="true" />
           <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'biblePassages' }"></ng-container>
         }
       </div>

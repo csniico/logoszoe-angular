@@ -2,49 +2,169 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Profile</h1>
-      <p class="page-subtitle">Your account details</p>
+      <p class="page-subtitle">Manage your account details and password</p>
     </div>
   </div>
 
   <div class="profile-grid">
-    <!-- Avatar card -->
+
+    <!-- ── Avatar card ── -->
     <div class="card profile-avatar-card">
       @if (authService.currentAdmin(); as admin) {
-        <div class="big-avatar">
-          {{ admin.name[0].toUpperCase() }}
-        </div>
+        <div class="big-avatar">{{ initials }}</div>
         <p class="profile-fullname">{{ admin.name }}</p>
         <p class="profile-email">{{ admin.email }}</p>
-        <span class="badge badge--role" style="margin-top: 0.5rem">{{ admin.role }}</span>
+        <span class="role-badge role-badge--{{ admin.role }}">{{ roleLabel }}</span>
       }
-      <button class="btn btn--ghost" style="margin-top: 1rem; width: 100%">
-        Change photo
-      </button>
     </div>
 
-    <!-- Edit form -->
-    <div class="card">
-      <h2 class="card-section-title">Personal information</h2>
+    <!-- ── Right column ── -->
+    <div class="profile-right">
 
-      @if (saved()) {
-        <div class="alert alert--success">Changes saved successfully.</div>
-      }
+      <!-- Personal information -->
+      <div class="card">
+        <h2 class="card-section-title">Personal information</h2>
 
-      <form [formGroup]="form" (ngSubmit)="onSave()" novalidate>
+        @if (saveSuccess()) {
+          <div class="inline-alert inline-alert--success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Changes saved successfully.
+          </div>
+        }
+        @if (saveError()) {
+          <div class="inline-alert inline-alert--error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ saveError() }}
+          </div>
+        }
+
         <div class="form-group">
-          <label class="form-label" for="name">Name</label>
-          <input id="name" type="text" class="form-input" formControlName="name" />
+          <label class="form-label" for="profile-name">Display name</label>
+          <input
+            id="profile-name"
+            type="text"
+            class="form-input"
+            placeholder="Your name"
+            [(ngModel)]="name"
+            maxlength="80"
+            autocomplete="name"
+          />
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="email">Email <span class="optional">(read-only)</span></label>
-          <input id="email" type="email" class="form-input form-input--disabled" formControlName="email" />
+          <label class="form-label" for="profile-email">
+            Email <span class="label-muted">(read-only)</span>
+          </label>
+          <input
+            id="profile-email"
+            type="email"
+            class="form-input form-input--readonly"
+            [value]="authService.currentAdmin()?.email ?? ''"
+            readonly
+          />
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn--primary">Save changes</button>
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="saving() || !name.trim()"
+            (click)="onSave()"
+          >
+            @if (saving()) {
+              <span class="spinner spinner--sm"></span> Saving…
+            } @else {
+              Save changes
+            }
+          </button>
         </div>
-      </form>
-    </div>
-  </div>
+      </div>
+
+      <!-- Change password -->
+      <div class="card">
+        <div class="card-section-header">
+          <h2 class="card-section-title">Password</h2>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="togglePasswordForm()">
+            {{ showPasswordForm ? 'Cancel' : 'Change password' }}
+          </button>
+        </div>
+
+        @if (!showPasswordForm) {
+          <p class="password-hint">Use a strong password of at least 8 characters.</p>
+        }
+
+        @if (showPasswordForm) {
+          @if (passwordSuccess()) {
+            <div class="inline-alert inline-alert--success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Password changed successfully.
+            </div>
+          }
+          @if (passwordError()) {
+            <div class="inline-alert inline-alert--error">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ passwordError() }}
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="form-label" for="current-pw">Current password</label>
+            <input
+              id="current-pw"
+              type="password"
+              class="form-input"
+              placeholder="Enter current password"
+              [(ngModel)]="currentPassword"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="new-pw">New password</label>
+              <input
+                id="new-pw"
+                type="password"
+                class="form-input"
+                placeholder="Min. 8 characters"
+                [(ngModel)]="newPassword"
+                autocomplete="new-password"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confirm-pw">Confirm password</label>
+              <input
+                id="confirm-pw"
+                type="password"
+                class="form-input"
+                [class.form-input--error]="confirmPassword && newPassword !== confirmPassword"
+                placeholder="Repeat new password"
+                [(ngModel)]="confirmPassword"
+                autocomplete="new-password"
+              />
+              @if (confirmPassword && newPassword !== confirmPassword) {
+                <p class="field-error">Passwords do not match.</p>
+              }
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn--primary"
+              [disabled]="changingPassword() || !currentPassword || !newPassword || !confirmPassword"
+              (click)="onChangePassword()"
+            >
+              @if (changingPassword()) {
+                <span class="spinner spinner--sm"></span> Updating…
+              } @else {
+                Update password
+              }
+            </button>
+          </div>
+        }
+      </div>
+
+    </div><!-- /profile-right -->
+  </div><!-- /profile-grid -->
 </div>

@@ -1,5 +1,5 @@
 import {
-  Component, inject, signal, computed, OnDestroy,
+  Component, inject, signal, OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -60,16 +60,18 @@ export class PodcastCreateComponent implements OnDestroy {
   readonly saving    = signal(false);
   readonly saveError = signal<string | null>(null);
 
-  // ── Computed ───────────────────────────────────────────────
-  readonly step1Valid = computed(() =>
-    this.title.trim().length > 0 && this.description.trim().length > 0,
-  );
+  // ── Validation / labels ────────────────────────────────────────
+  // Plain methods (not signal computeds) so Angular's change detection
+  // re-evaluates them on every cycle when [(ngModel)] triggers a check.
+  step1Valid(): boolean {
+    return this.title.trim().length > 0 && this.description.trim().length > 0;
+  }
 
-  readonly step2Valid = computed(() => this.audioDone());
+  step2Valid(): boolean { return this.audioDone(); }
 
-  readonly selectedCategoryLabel = computed(() =>
-    PODCAST_CATEGORIES.find((c) => c.value === this.category)?.label ?? this.category,
-  );
+  selectedCategoryLabel(): string {
+    return PODCAST_CATEGORIES.find((c) => c.value === this.category)?.label ?? this.category;
+  }
 
   // ── Navigation ─────────────────────────────────────────────
   canGoNext(): boolean {

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -43,10 +43,12 @@ export class CourseCreateComponent {
   readonly saving    = signal(false);
   readonly saveError = signal<string | null>(null);
 
-  // ── Computed ───────────────────────────────────────────────────
-  readonly step1Valid = computed(() =>
-    this.title.trim().length > 0 && this.description.trim().length > 0,
-  );
+  // ── Validation ─────────────────────────────────────────────────
+  // Plain method (not a signal computed) so Angular's change detection
+  // re-evaluates it on every cycle when [(ngModel)] triggers a check.
+  step1Valid(): boolean {
+    return this.title.trim().length > 0 && this.description.trim().length > 0;
+  }
 
   // ── Navigation ─────────────────────────────────────────────────
   canGoNext(): boolean {

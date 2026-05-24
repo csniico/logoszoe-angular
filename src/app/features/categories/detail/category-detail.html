@@ -310,12 +310,11 @@
             }
 
           } @else {
-            <!-- ── Edit mode: Bible passage picker ── -->
+            <!-- ── Bible passages — display-only (not editable on detail page) ── -->
             <app-bible-passage-picker
               [passages]="draftPassages"
-              (passagesChange)="setDraftPassages($event)"
+              [readonly]="true"
             />
-            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'biblePassages' }"></ng-container>
           }
         </div>
 

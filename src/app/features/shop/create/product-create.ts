@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -58,24 +58,28 @@ export class ProductCreateComponent {
   readonly saving    = signal(false);
   readonly saveError = signal<string | null>(null);
 
-  // ── Computed validation ────────────────────────────────────────
-  readonly step1Valid = computed(() =>
-    this.title.trim().length > 0 &&
-    this.description.trim().length > 0 &&
-    this.category !== '' &&
-    this.price > 0,
-  );
+  // ── Validation ─────────────────────────────────────────────────
+  // Plain methods (not signal computeds) so Angular's change detection
+  // re-evaluates them on every cycle when [(ngModel)] triggers a check.
+  step1Valid(): boolean {
+    return (
+      this.title.trim().length > 0 &&
+      this.description.trim().length > 0 &&
+      this.category !== '' &&
+      this.price > 0
+    );
+  }
 
-  readonly step2Valid = computed(() => this.imageUrl !== '');
+  step2Valid(): boolean { return this.imageUrl !== ''; }
 
-  // ── Computed summary labels ────────────────────────────────────
-  readonly selectedStatusLabel = computed(() =>
-    PRODUCT_STATUSES.find((s) => s.value === this.status)?.label ?? this.status,
-  );
+  // ── Summary labels ─────────────────────────────────────────────
+  selectedStatusLabel(): string {
+    return PRODUCT_STATUSES.find((s) => s.value === this.status)?.label ?? this.status;
+  }
 
-  readonly selectedCategoryLabel = computed(() =>
-    (PRODUCT_CATEGORIES.find((c) => c.value === this.category)?.label ?? this.category) || 'None',
-  );
+  selectedCategoryLabel(): string {
+    return (PRODUCT_CATEGORIES.find((c) => c.value === this.category)?.label ?? this.category) || 'None';
+  }
 
   // ── Navigation ─────────────────────────────────────────────────
   canGoNext(): boolean {

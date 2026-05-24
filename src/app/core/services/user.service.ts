@@ -18,25 +18,15 @@ export class UserService {
     return this.http.get<User[]>(`${this.adminBase}/all`);
   }
 
-  /** Create an app user (goes to the users collection). */
+  /** Create a user via the admin endpoint. Backend supports roles 'user' and 'admin'. */
   create(data: {
     firstname: string;
     lastname: string;
     email: string;
     password: string;
-    role: UserRole;
+    role: string;
   }): Observable<User> {
     return this.http.post<User>(this.adminBase, data);
-  }
-
-  /** Create an admin-panel user (goes to the adminUsers collection). */
-  createAdmin(data: {
-    name: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'superadmin';
-  }): Observable<unknown> {
-    return this.http.post(`${environment.apiUrl}/admin/users`, data);
   }
 
   getProfile(): Observable<User> {

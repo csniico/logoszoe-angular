@@ -266,7 +266,7 @@
       <div class="cf-field">
         <span class="cf-label">Role <span aria-hidden="true">*</span></span>
         <div class="cf-radio-list" role="radiogroup" aria-label="Select role">
-          @for (opt of roleOptions(); track opt.value) {
+          @for (opt of roleOptions; track opt.value) {
             <label
               class="cf-radio-item"
               [class.cf-radio-item--selected]="createForm.role === opt.value"

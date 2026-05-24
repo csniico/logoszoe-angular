@@ -50,24 +50,14 @@ export class UsersComponent implements OnInit {
   readonly isSuperAdmin = this.authService.isSuperAdmin;
 
   /**
-   * Role options when creating a user:
-   * - admin      → can assign 'user' or 'admin' (not superadmin)
-   * - superadmin → can assign 'user', 'admin', or 'superadmin'
-   *
-   * user      → POST /users       (app users collection)
-   * admin     → POST /admin/users (adminUsers collection, role: admin)
-   * superadmin→ POST /admin/users (adminUsers collection, role: superadmin)
+   * Role options when creating a user.
+   * Backend POST /admin/users only supports 'user' and 'admin'.
+   * Superadmin accounts cannot be created through this form.
    */
-  readonly roleOptions = computed<RoleOption[]>(() => {
-    const opts: RoleOption[] = [
-      { value: 'user',        label: 'User',        description: 'Regular app account'           },
-      { value: 'admin',       label: 'Admin',       description: 'Admin panel access'            },
-    ];
-    if (this.isSuperAdmin()) {
-      opts.push({ value: 'superadmin', label: 'Super-admin', description: 'Full system access'  });
-    }
-    return opts;
-  });
+  readonly roleOptions: RoleOption[] = [
+    { value: 'user',  label: 'User',  description: 'Regular app account' },
+    { value: 'admin', label: 'Admin', description: 'Admin panel access'  },
+  ];
 
   // ── Create user modal ─────────────────────────────────────────
   readonly showCreate  = signal(false);
@@ -133,12 +123,13 @@ export class UsersComponent implements OnInit {
         error: handleError,
       });
     } else {
-      // → adminUsers collection (admin or superadmin)
-      this.userService.createAdmin({
-        name:     `${f.firstname.trim()} ${f.lastname.trim()}`,
-        email:    f.email.trim(),
-        password: f.password,
-        role:     f.role as 'admin' | 'superadmin',
+      // → admin — POST /admin/users with role:'admin', needs firstname+lastname
+      this.userService.create({
+        firstname: f.firstname.trim(),
+        lastname:  f.lastname.trim(),
+        email:     f.email.trim(),
+        password:  f.password,
+        role:      f.role,
       }).subscribe({
         next: () => {
           this.creating.set(false);
