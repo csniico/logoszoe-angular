@@ -1,0 +1,130 @@
+$sidebar-w: 240px;
+$sidebar-w-collapsed: 64px;
+$topbar-h: 52px;
+$transition: 0.2s ease;
+
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+
+  /* ── Sidebar column ── */
+  &__sidebar {
+    flex-shrink: 0;
+    width: $sidebar-w;
+    height: 100%;
+    transition: width $transition;
+    position: relative;
+    z-index: 200;
+  }
+
+  &--collapsed .shell__sidebar {
+    width: $sidebar-w-collapsed;
+  }
+
+  /* ── Main column ── */
+  &__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #f1f5f9;
+    overflow: hidden;
+  }
+
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+  }
+}
+
+/* ── Topbar ── */
+.topbar {
+  height: $topbar-h;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  gap: 0.5rem;
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    &--mobile {
+      display: none;
+    }
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+}
+
+/* ── Mobile overlay ── */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 190;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .shell {
+    &__sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: $sidebar-w !important;
+      transform: translateX(-100%);
+      transition: transform $transition;
+      z-index: 200;
+
+      &--open {
+        transform: translateX(0);
+      }
+    }
+
+    &__main {
+      width: 100%;
+    }
+
+    &__content {
+      padding: 1.25rem 1rem;
+    }
+  }
+
+  .topbar {
+    &__toggle--desktop {
+      display: none;
+    }
+
+    &__toggle--mobile {
+      display: flex;
+    }
+  }
+}

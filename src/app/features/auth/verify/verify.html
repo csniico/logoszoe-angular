@@ -1,0 +1,64 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Verify your email</h1>
+      @if (email()) {
+        <p class="auth-subtitle">We sent a 6-digit code to <strong>{{ email() }}</strong></p>
+      } @else {
+        <p class="auth-subtitle">Enter your email and the code we sent you.</p>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="alert alert--error" role="alert">{{ error() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          class="form-input"
+          [class.form-input--error]="emailCtrl.invalid && emailCtrl.touched"
+          formControlName="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+        />
+        @if (emailCtrl.invalid && emailCtrl.touched) {
+          <span class="form-error">Please enter a valid email.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="code">Verification code</label>
+        <input
+          id="code"
+          type="text"
+          class="form-input form-input--code"
+          [class.form-input--error]="code.invalid && code.touched"
+          formControlName="code"
+          placeholder="123456"
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+        />
+        @if (code.invalid && code.touched) {
+          <span class="form-error">Enter the 6-digit code from your email.</span>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn--primary btn--full"
+        [disabled]="loading()"
+      >
+        @if (loading()) { Verifying… } @else { Verify email }
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      <a routerLink="/auth/login">Back to sign in</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Profile</h1>
+      <p class="page-subtitle">Your account details</p>
+    </div>
+  </div>
+
+  <div class="profile-grid">
+    <!-- Avatar card -->
+    <div class="card profile-avatar-card">
+      @if (authService.currentAdmin(); as admin) {
+        <div class="big-avatar">
+          {{ admin.name[0].toUpperCase() }}
+        </div>
+        <p class="profile-fullname">{{ admin.name }}</p>
+        <p class="profile-email">{{ admin.email }}</p>
+        <span class="badge badge--role" style="margin-top: 0.5rem">{{ admin.role }}</span>
+      }
+      <button class="btn btn--ghost" style="margin-top: 1rem; width: 100%">
+        Change photo
+      </button>
+    </div>
+
+    <!-- Edit form -->
+    <div class="card">
+      <h2 class="card-section-title">Personal information</h2>
+
+      @if (saved()) {
+        <div class="alert alert--success">Changes saved successfully.</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSave()" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="name">Name</label>
+          <input id="name" type="text" class="form-input" formControlName="name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email <span class="optional">(read-only)</span></label>
+          <input id="email" type="email" class="form-input form-input--disabled" formControlName="email" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+import { Injectable, inject, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { tap, Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { TokenService } from './token.service';
+import { AdminLoginRequest, AdminLoginResponse, AdminUser } from '../models/auth.model';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly http         = inject(HttpClient);
+  private readonly router       = inject(Router);
+  private readonly tokenService = inject(TokenService);
+  private readonly base         = environment.apiUrl;
+
+  private readonly _currentAdmin = signal<AdminUser | null>(null);
+  readonly currentAdmin = this._currentAdmin.asReadonly();
+  readonly isLoggedIn   = computed(() => this._currentAdmin() !== null);
+  readonly isSuperAdmin = computed(() => this._currentAdmin()?.role === 'superadmin');
+
+  /** Restore session from localStorage on app start — no network call needed. */
+  restoreSession(): void {
+    const admin = this.tokenService.getAdminUser();
+    if (admin && this.tokenService.hasToken()) {
+      this._currentAdmin.set(admin);
+    }
+  }
+
+  signIn(payload: AdminLoginRequest): Observable<AdminLoginResponse> {
+    return this.http
+      .post<AdminLoginResponse>(`${this.base}/admin/auth/login`, payload)
+      .pipe(tap((res) => this.handleAuthResponse(res)));
+  }
+
+  signOut(): void {
+    this._currentAdmin.set(null);
+    this.tokenService.clearTokens();
+    void this.router.navigate(['/auth/login']);
+  }
+
+  private handleAuthResponse(res: AdminLoginResponse): void {
+    this.tokenService.setAccessToken(res.access_token);
+    this.tokenService.setAdminUser(res.admin);
+    this._currentAdmin.set(res.admin);
+  }
+}

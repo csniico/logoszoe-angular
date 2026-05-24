@@ -1,0 +1,192 @@
+<div class="page create-page">
+
+  <!-- Back -->
+  <a routerLink="/courses" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Courses
+  </a>
+
+  <div class="create-header">
+    <h1 class="page-title">New course</h1>
+    <p class="page-subtitle">Create a course and add lessons on the detail page.</p>
+  </div>
+
+  <!-- ── Stepper ── -->
+  <div class="stepper" role="list">
+    @for (step of steps; track step.id) {
+      <button
+        class="stepper__step"
+        role="listitem"
+        [class.stepper__step--active]="currentStep() === step.id"
+        [class.stepper__step--done]="currentStep() > step.id"
+        [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+        (click)="goToStep(step.id)"
+        [disabled]="step.id > currentStep()"
+        type="button"
+      >
+        <span class="stepper__circle">
+          @if (currentStep() > step.id) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else {
+            {{ step.id }}
+          }
+        </span>
+        <span class="stepper__label">{{ step.label }}</span>
+      </button>
+      @if (step.id < steps.length) {
+        <span class="stepper__line" [class.stepper__line--done]="currentStep() > step.id" aria-hidden="true"></span>
+      }
+    }
+  </div>
+
+  <!-- ── Step card ── -->
+  <div class="step-card">
+
+    <!-- STEP 1 ─ Details -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">1</span>
+          <div>
+            <h2 class="step-title">Course details</h2>
+            <p class="step-desc">Give your course a title, description, and optional cover image.</p>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="course-title">
+            Title <span class="required-star">*</span>
+          </label>
+          <input
+            id="course-title"
+            type="text"
+            class="form-input"
+            placeholder="e.g. Introduction to the Faith Journey"
+            [(ngModel)]="title"
+            maxlength="200"
+            autofocus
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="course-desc">
+            Description <span class="required-star">*</span>
+          </label>
+          <textarea
+            id="course-desc"
+            class="form-textarea"
+            rows="4"
+            placeholder="Describe what students will learn…"
+            [(ngModel)]="description"
+            maxlength="2000"
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Cover image <span class="optional-tag">optional</span></label>
+
+          @if (imageUrl) {
+            <div class="banner-done">
+              <img class="banner-preview-img" [src]="imageUrl" alt="Course cover" />
+              <div class="banner-done-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="icon-success" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Cover image uploaded</span>
+                <button class="link-btn" type="button" (click)="removeImage()">Change</button>
+              </div>
+            </div>
+          } @else {
+            <div class="upload-area">
+              @if (imagePreviewUrl()) {
+                <img class="banner-preview-img" [src]="imagePreviewUrl()!" alt="Preview" />
+              } @else {
+                <label class="upload-drop" for="cover-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>Click to choose a cover image</span>
+                  <span class="upload-hint">JPG, PNG or WebP</span>
+                </label>
+              }
+              <input id="cover-input" type="file" accept="image/*" class="file-input-hidden" (change)="onImageFileChange($event)" />
+            </div>
+
+            @if (imagePreviewUrl() && !imageUrl) {
+              <div class="upload-actions">
+                <button class="btn btn--primary btn--sm" type="button" [disabled]="uploadingImage()" (click)="uploadImage()">
+                  @if (uploadingImage()) { <span class="spinner spinner--sm"></span> Uploading… }
+                  @else { Upload image }
+                </button>
+                <button class="btn btn--ghost btn--sm" type="button" (click)="removeImage()">Remove</button>
+              </div>
+            }
+            @if (imageUploadError()) {
+              <p class="field-error">{{ imageUploadError() }}</p>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2 ─ Review -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">2</span>
+          <div>
+            <h2 class="step-title">Review &amp; create</h2>
+            <p class="step-desc">Review the course details, then create it. You can add lessons on the next page.</p>
+          </div>
+        </div>
+
+        <div class="create-summary">
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Title</span>
+            <span class="create-summary__row-val">{{ title || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Description</span>
+            <span class="create-summary__row-val">{{ description || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Cover image</span>
+            <span class="create-summary__row-val">{{ imageUrl ? 'Uploaded' : 'None' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Lessons</span>
+            <span class="create-summary__row-val" style="color:var(--color-text-muted)">Add after creating</span>
+          </div>
+        </div>
+
+        @if (imageUrl) {
+          <img class="banner-preview-img" [src]="imageUrl" alt="Cover preview" style="max-height:180px" />
+        }
+      </div>
+    }
+
+    <!-- ── Nav buttons ── -->
+    <div class="step-nav">
+      @if (saveError()) {
+        <p class="field-error">{{ saveError() }}</p>
+      }
+      <div class="step-nav-btns">
+        @if (currentStep() > 1) {
+          <button class="btn btn--ghost" type="button" (click)="back()">Back</button>
+        }
+        @if (currentStep() < 2) {
+          <button class="btn btn--primary" type="button" [disabled]="!canGoNext()" (click)="next()">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon btn-icon--right" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        } @else {
+          <button class="btn btn--primary" type="button" [disabled]="saving() || !step1Valid()" (click)="save()">
+            @if (saving()) { <span class="spinner spinner--sm"></span> Creating… }
+            @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Create course
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+  </div><!-- /step-card -->
+
+</div>

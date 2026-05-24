@@ -1,0 +1,345 @@
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Storage</h1>
+      <p class="page-subtitle">S3 assets tracked across the database</p>
+    </div>
+    <div class="header-actions">
+      @if (isSuperAdmin()) {
+        <a
+          routerLink="/storage/migrations"
+          class="btn btn--ghost history-btn"
+          title="View migration history"
+        >
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          History
+        </a>
+        <button
+          class="btn btn--outline migrate-btn"
+          (click)="migrate()"
+          [disabled]="migrating() || syncing()"
+          [attr.aria-busy]="migrating()"
+          title="Copy assets from other S3 buckets into the primary bucket and update database references"
+        >
+          @if (migrating()) {
+            <svg class="btn-icon spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Migrating…
+          } @else {
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            Migrate Buckets
+          }
+        </button>
+        <button
+          class="btn btn--secondary sync-btn"
+          (click)="sync()"
+          [disabled]="syncing() || migrating()"
+          [attr.aria-busy]="syncing()"
+        >
+          @if (syncing()) {
+            <svg class="btn-icon spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Syncing…
+          } @else {
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10"/>
+              <polyline points="23 20 23 14 17 14"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
+            Sync Now
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Sync Result Banner -->
+  @if (syncResult()) {
+    <div class="sync-banner sync-banner--success" role="status">
+      <div class="sync-banner__text">
+        <svg class="sync-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Synced <strong>{{ syncResult()!.synced }}</strong> assets from
+        <strong>{{ syncResult()!.collections.length }}</strong> collections:
+        {{ syncResult()!.collections.join(', ') }}
+      </div>
+      <button class="sync-banner__dismiss" (click)="dismissSyncResult()" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Sync Error Banner -->
+  @if (syncError()) {
+    <div class="sync-banner sync-banner--error" role="alert">
+      <div class="sync-banner__text">
+        <svg class="sync-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        {{ syncError() }}
+      </div>
+      <button class="sync-banner__dismiss" (click)="dismissSyncResult()" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Migrate Error Banner -->
+  @if (migrateError()) {
+    <div class="sync-banner sync-banner--error" role="alert">
+      <div class="sync-banner__text">
+        <svg class="sync-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        {{ migrateError() }}
+      </div>
+    </div>
+  }
+
+  <!-- Stats Bar -->
+  @if (stats()) {
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--total">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <span class="stat-card__count">{{ stats()!.total }}</span>
+        <span class="stat-card__label">Total Assets</span>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/>
+          </svg>
+        </div>
+        <span class="stat-card__count">{{ stats()!.image }}</span>
+        <span class="stat-card__label">Images</span>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--audio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 18V5l12-2v13M9 18c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-2c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+          </svg>
+        </div>
+        <span class="stat-card__count">{{ stats()!.audio }}</span>
+        <span class="stat-card__label">Audio</span>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--video">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M15 10l4.553-2.277A1 1 0 0 1 21 8.68v6.64a1 1 0 0 1-1.447.898L15 14v-4zM3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/>
+          </svg>
+        </div>
+        <span class="stat-card__count">{{ stats()!.video }}</span>
+        <span class="stat-card__label">Videos</span>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--document">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8L14 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+        </div>
+        <span class="stat-card__count">{{ stats()!.document }}</span>
+        <span class="stat-card__label">Documents</span>
+      </div>
+    </div>
+  }
+
+  <!-- Toolbar -->
+  <div class="card">
+    <div class="table-toolbar">
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search by key, URL, or collection…"
+        aria-label="Search assets"
+        [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+      />
+      <div class="filter-pills">
+        <button class="pill" [class.pill--active]="filterType() === 'all'" (click)="setFilter('all')">All</button>
+        <button class="pill" [class.pill--active]="filterType() === 'image'" (click)="setFilter('image')">Images</button>
+        <button class="pill" [class.pill--active]="filterType() === 'audio'" (click)="setFilter('audio')">Audio</button>
+        <button class="pill" [class.pill--active]="filterType() === 'video'" (click)="setFilter('video')">Video</button>
+        <button class="pill" [class.pill--active]="filterType() === 'document'" (click)="setFilter('document')">Documents</button>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    @if (error()) {
+      <div class="state-message state-message--error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Loading Skeleton -->
+    @if (loading()) {
+      <div class="skeleton-wrap" aria-busy="true" aria-label="Loading assets…">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton skeleton--icon"></div>
+            <div class="skeleton skeleton--key"></div>
+            <div class="skeleton skeleton--chip"></div>
+            <div class="skeleton skeleton--chip"></div>
+            <div class="skeleton skeleton--date"></div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Table -->
+    @if (!loading() && !error()) {
+      <div class="table-wrap">
+        <table class="storage-table">
+          <thead>
+            <tr>
+              <th class="col-type">Type</th>
+              <th>Key</th>
+              <th class="col-url">URL</th>
+              <th class="col-refs">References</th>
+              <th class="col-synced">Last Synced</th>
+              <th class="col-expand"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (asset of displayed(); track asset._id) {
+              <!-- Main row -->
+              <tr class="asset-row" [class.asset-row--expanded]="isExpanded(asset._id)">
+                <td>
+                  <div class="type-icon" [class]="'type-icon--' + asset.resourceType" [attr.title]="asset.resourceType">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+                      <path [attr.d]="typeIconPath(asset.resourceType)"/>
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <span class="asset-key" [title]="asset.key">{{ truncateKey(asset.key) }}</span>
+                </td>
+                <td>
+                  <button class="asset-url-btn icon-btn" (click)="openUrl(asset.url)" title="Open in new tab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                  </button>
+                </td>
+                <td>
+                  @if (asset.references.length > 0) {
+                    <span class="ref-count">{{ asset.references.length }}</span>
+                  } @else {
+                    <span class="ref-none">none</span>
+                  }
+                </td>
+                <td class="col-synced">
+                  <span class="synced-date">{{ formatDate(asset.syncedAt) }}</span>
+                </td>
+                <td class="col-expand">
+                  @if (asset.references.length > 0) {
+                    <button
+                      class="expand-btn"
+                      [class.expand-btn--open]="isExpanded(asset._id)"
+                      (click)="toggleExpand(asset._id)"
+                      [attr.aria-expanded]="isExpanded(asset._id)"
+                      [attr.aria-label]="isExpanded(asset._id) ? 'Collapse references' : 'Expand references'"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  }
+                </td>
+              </tr>
+
+              <!-- Expanded references row -->
+              @if (isExpanded(asset._id)) {
+                <tr class="refs-row">
+                  <td colspan="6">
+                    <div class="refs-inner">
+                      <p class="refs-heading">Referenced by</p>
+                      <table class="refs-table">
+                        <thead>
+                          <tr>
+                            <th>Collection</th>
+                            <th>Document ID</th>
+                            <th>Field</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (ref of asset.references; track ref.documentId + ref.field) {
+                            <tr>
+                              <td>
+                                <span class="ref-collection">{{ ref.collection }}</span>
+                              </td>
+                              <td>
+                                <span class="ref-doc-id" [title]="ref.documentId">{{ ref.documentId }}</span>
+                                <button
+                                  class="copy-btn"
+                                  (click)="copyToClipboard(ref.documentId)"
+                                  title="Copy ID"
+                                  aria-label="Copy document ID"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                  </svg>
+                                </button>
+                              </td>
+                              <td>
+                                <code class="ref-field">{{ ref.field }}</code>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr>
+                <td colspan="6" class="empty-cell">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <path d="M5 8h14M5 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-9 4h4"/>
+                    </svg>
+                    <p>No assets synced yet.</p>
+                    <p class="empty-state__hint">Click <strong>Sync Now</strong> to scan your database and index all S3 assets.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (displayed().length > 0) {
+        <p class="table-footer">
+          Showing {{ displayed().length }} of {{ assets().length }} assets
+        </p>
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,318 @@
+<div class="page create-page">
+
+  <!-- Back -->
+  <a routerLink="/categories" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Categories
+  </a>
+
+  <div class="create-header">
+    <h1 class="page-title">New category</h1>
+    <p class="page-subtitle">Fill in the steps below — only the name is required.</p>
+  </div>
+
+  <!-- ── Step indicator ─────────────────────────────────────── -->
+  <div class="stepper" role="list">
+    @for (step of steps; track step.id) {
+      <button
+        class="stepper__step"
+        role="listitem"
+        [class.stepper__step--active]="currentStep() === step.id"
+        [class.stepper__step--done]="currentStep() > step.id"
+        [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+        (click)="goToStep(step.id)"
+        [disabled]="step.id > currentStep()"
+        type="button"
+      >
+        <span class="stepper__circle">
+          @if (currentStep() > step.id) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else {
+            {{ step.id }}
+          }
+        </span>
+        <span class="stepper__label">{{ step.label }}</span>
+      </button>
+      @if (step.id < steps.length) {
+        <span class="stepper__line" [class.stepper__line--done]="currentStep() > step.id" aria-hidden="true"></span>
+      }
+    }
+  </div>
+
+  <!-- ── Step card ──────────────────────────────────────────── -->
+  <div class="step-card">
+
+    <!-- STEP 1 ─ Basic info -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">1</span>
+          <div>
+            <h2 class="step-title">Basic information</h2>
+            <p class="step-desc">Give your category a name and an optional description.</p>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="cat-name">
+            Name <span class="required-star">*</span>
+          </label>
+          <input
+            id="cat-name"
+            type="text"
+            class="form-input"
+            placeholder="e.g. Decisions"
+            [(ngModel)]="name"
+            maxlength="120"
+            autofocus
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="cat-desc">Description <span class="optional-tag">optional</span></label>
+          <textarea
+            id="cat-desc"
+            class="form-textarea"
+            rows="3"
+            placeholder="A brief summary shown on the category card…"
+            [(ngModel)]="description"
+          ></textarea>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2 ─ Banner image -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">2</span>
+          <div>
+            <h2 class="step-title">Banner image <span class="optional-tag">optional</span></h2>
+            <p class="step-desc">Upload a banner — press "Upload" then continue.</p>
+          </div>
+        </div>
+
+        @if (bannerUrl) {
+          <!-- Uploaded -->
+          <div class="banner-done">
+            <img class="banner-preview-img" [src]="bannerUrl" alt="Banner" />
+            <div class="banner-done-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="icon-success" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Banner uploaded</span>
+              <button class="link-btn" type="button" (click)="removeBanner()">Change</button>
+            </div>
+          </div>
+        } @else {
+          <!-- Upload zone -->
+          <div class="upload-area">
+            @if (bannerPreviewUrl()) {
+              <img class="banner-preview-img" [src]="bannerPreviewUrl()!" alt="Preview" />
+            } @else {
+              <label class="upload-drop" for="banner-input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Click to choose image</span>
+                <span class="upload-hint">JPG, PNG or WebP — shown as category banner</span>
+              </label>
+            }
+            <input id="banner-input" type="file" accept="image/*" class="file-input-hidden" (change)="onBannerFileChange($event)" />
+          </div>
+
+          @if (bannerPreviewUrl() && !bannerUrl) {
+            <div class="upload-actions">
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="uploadingBanner()" (click)="uploadBanner()">
+                @if (uploadingBanner()) { <span class="spinner spinner--sm"></span> Uploading… }
+                @else { Upload image }
+              </button>
+              <button class="btn btn--ghost btn--sm" type="button" (click)="removeBanner()">Remove</button>
+            </div>
+          }
+          @if (bannerUploadError()) {
+            <p class="field-error">{{ bannerUploadError() }}</p>
+          }
+        }
+      </div>
+    }
+
+    <!-- STEP 3 ─ Article -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">3</span>
+          <div>
+            <h2 class="step-title">Article content <span class="optional-tag">optional</span></h2>
+            <p class="step-desc">Upload a Word (.docx) or PDF — it will be converted to formatted HTML automatically.</p>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="art-title">Article title <span class="optional-tag">optional</span></label>
+          <input id="art-title" type="text" class="form-input" placeholder="e.g. Do you desire to receive the gift?" [(ngModel)]="articleTitle" />
+        </div>
+
+        <!-- Document upload & pipeline -->
+        <div class="form-field">
+          <label class="form-label">Article body <span class="optional-tag">optional</span></label>
+
+          @if (!docFileName()) {
+            <label class="upload-drop upload-drop--doc" for="doc-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Drop a Word or PDF document here</span>
+              <span class="upload-hint">.docx · .doc · .pdf</span>
+            </label>
+            <input id="doc-input" type="file" accept=".docx,.doc,.pdf" class="file-input-hidden" (change)="onDocumentFileChange($event)" />
+          } @else {
+
+            <!-- Pipeline status card -->
+            <div class="pipeline-card" [class.pipeline-card--done]="pipelineComplete()" [class.pipeline-card--error]="pipelineState()?.stage === 'error'">
+              <div class="pipeline-file-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="pipeline-filename">{{ docFileName() }}</span>
+                @if (!pipelineRunning()) {
+                  <button class="link-btn" type="button" (click)="clearDocument()">Change file</button>
+                }
+              </div>
+
+              @if (pipelineRunning()) {
+                <!-- Animated progress -->
+                <div class="pipeline-progress">
+                  <div class="pipeline-bar-track">
+                    <div class="pipeline-bar-fill" [style.width.%]="pipelineState()?.progress ?? 0"></div>
+                  </div>
+                  <div class="pipeline-stage-row">
+                    <div class="pipeline-dots">
+                      <span class="dot dot--bounce" style="animation-delay:0ms"></span>
+                      <span class="dot dot--bounce" style="animation-delay:150ms"></span>
+                      <span class="dot dot--bounce" style="animation-delay:300ms"></span>
+                    </div>
+                    <span class="pipeline-stage-msg">{{ pipelineState()?.message }}</span>
+                    @if (pipelineState()?.imageTask) {
+                      <span class="pipeline-task-counter">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="pipeline-counter-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        {{ pipelineState()!.imageTask!.current }} / {{ pipelineState()!.imageTask!.total }} images
+                      </span>
+                    }
+                    @if (pipelineState()?.bibleTask) {
+                      <span class="pipeline-task-counter pipeline-task-counter--bible">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="pipeline-counter-icon" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        {{ pipelineState()!.bibleTask!.current }} / {{ pipelineState()!.bibleTask!.total }} passages
+                      </span>
+                    }
+                  </div>
+                </div>
+              } @else if (pipelineState()?.stage === 'complete') {
+                <div class="pipeline-success">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>
+                    Document processed — HTML ready
+                    @if (biblePassages.length) {
+                      <span class="pipeline-passage-badge">{{ biblePassages.length }} passage{{ biblePassages.length === 1 ? '' : 's' }} extracted</span>
+                    }
+                  </span>
+                </div>
+              } @else if (pipelineState()?.stage === 'error') {
+                <div class="pipeline-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {{ pipelineState()?.message ?? 'Processing failed' }}
+                </div>
+              }
+            </div>
+
+            <!-- HTML editor shown after pipeline completes -->
+            @if (pipelineComplete()) {
+              <div class="html-editor-wrap">
+                <p class="editor-hint">Review and edit the generated HTML before saving.</p>
+                <app-html-editor [value]="articleBody" (valueChange)="articleBody = $event" />
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 4 ─ Details / meta -->
+    @if (currentStep() === 4) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">4</span>
+          <div>
+            <h2 class="step-title">Extra details <span class="optional-tag">optional</span></h2>
+            <p class="step-desc">Color, icon, bible passages, and publish status.</p>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="form-label" for="cat-color">Color</label>
+            <div class="color-pick-row">
+              <div class="color-swatch-btn" [style.background]="color || '#16A34A'" (click)="colorInput.click()">
+                <input #colorInput type="color" class="color-input-native" [value]="color || '#16A34A'" (input)="color = $any($event.target).value" />
+              </div>
+              <input id="cat-color" type="text" class="form-input mono" placeholder="#16A34A" [value]="color" (input)="color = $any($event.target).value" maxlength="7" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="cat-icon">Icon <span class="form-hint">Font Awesome class, emoji…</span></label>
+            <input id="cat-icon" type="text" class="form-input" placeholder="fa-circle-check" [(ngModel)]="icon" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">
+            Bible passages
+            @if (biblePassages.length) {
+              <span class="auto-extract-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="width:11px;height:11px;flex-shrink:0"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                {{ biblePassages.length }} auto-extracted from document
+              </span>
+            }
+          </label>
+          <app-bible-passage-picker [passages]="biblePassages" (passagesChange)="biblePassages = $event" />
+        </div>
+
+        <div class="form-field">
+          <label class="toggle-field">
+            <span class="form-label" style="margin:0">Publish immediately</span>
+            <button
+              class="toggle" [class.toggle--on]="published"
+              role="switch" [attr.aria-checked]="published"
+              type="button"
+              (click)="published = !published"
+            >
+              <span class="toggle__thumb"></span>
+            </button>
+          </label>
+          <p class="form-hint-text">You can always publish or unpublish from the category detail page.</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Nav buttons ── -->
+    <div class="step-nav">
+      @if (saveError()) {
+        <p class="field-error">{{ saveError() }}</p>
+      }
+      <div class="step-nav-btns">
+        @if (currentStep() > 1) {
+          <button class="btn btn--ghost" type="button" (click)="back()">Back</button>
+        }
+        @if (currentStep() < 4) {
+          <button class="btn btn--primary" type="button" [disabled]="!canGoNext()" (click)="next()">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon btn-icon--right" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        } @else {
+          <button class="btn btn--primary" type="button" [disabled]="saving() || !name.trim()" (click)="save()">
+            @if (saving()) { <span class="spinner spinner--sm"></span> Creating… }
+            @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Create category
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+  </div><!-- /step-card -->
+
+</div>

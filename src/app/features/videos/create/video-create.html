@@ -1,0 +1,122 @@
+<div class="page create-page">
+
+  <!-- Back -->
+  <a routerLink="/videos" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Videos
+  </a>
+
+  <div class="create-header">
+    <h1 class="page-title">Add video</h1>
+    <p class="page-subtitle">Link a YouTube video to your library.</p>
+  </div>
+
+  <div class="step-card">
+    <div class="step-content">
+
+      <!-- YouTube ID -->
+      <div class="form-field">
+        <label class="form-label" for="yt-id">
+          YouTube video ID <span class="required-star">*</span>
+        </label>
+        <input
+          id="yt-id"
+          type="text"
+          class="form-input mono"
+          placeholder="e.g. dQw4w9WgXcQ"
+          [(ngModel)]="youtubeId"
+          maxlength="20"
+          autofocus
+        />
+        <span class="form-hint">The part after ?v= in the YouTube URL.</span>
+      </div>
+
+      <!-- YouTube preview -->
+      @if (youtubeThumbnail) {
+        <div class="yt-preview">
+          <img [src]="youtubeThumbnail" alt="YouTube thumbnail preview" />
+          <div class="yt-preview__badge">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+            YouTube preview
+          </div>
+        </div>
+      }
+
+      <!-- Title -->
+      <div class="form-field">
+        <label class="form-label" for="vid-title">Title <span class="required-star">*</span></label>
+        <input
+          id="vid-title"
+          type="text"
+          class="form-input"
+          placeholder="e.g. The Power of Grace"
+          [(ngModel)]="title"
+          maxlength="200"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="form-field">
+        <label class="form-label" for="vid-desc">Description <span class="required-star">*</span></label>
+        <textarea
+          id="vid-desc"
+          class="form-textarea"
+          rows="3"
+          placeholder="Brief description of the video…"
+          [(ngModel)]="description"
+          maxlength="1000"
+        ></textarea>
+      </div>
+
+      <!-- Category -->
+      <div class="form-field">
+        <label class="form-label" for="vid-cat">Category <span class="required-star">*</span></label>
+        <select
+          id="vid-cat"
+          class="form-select"
+          [(ngModel)]="category"
+        >
+          <option value="" disabled>Select a category…</option>
+          @for (cat of CATEGORIES; track cat.value) {
+            <option [value]="cat.value">{{ cat.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Thumbnail note -->
+      @if (youtubeThumbnail) {
+        <div class="form-field">
+          <span class="form-label">Thumbnail</span>
+          <p class="form-hint-text">The YouTube thumbnail is used automatically.</p>
+          <img class="yt-thumb-preview" [src]="youtubeThumbnail" alt="YouTube thumbnail" />
+        </div>
+      }
+
+    </div>
+
+    <!-- Nav -->
+    <div class="step-nav">
+      @if (error()) {
+        <p class="field-error">{{ error() }}</p>
+      }
+      <div class="step-nav-btns">
+        <a routerLink="/videos" class="btn btn--ghost">Cancel</a>
+        <button
+          class="btn btn--primary"
+          type="button"
+          [disabled]="saving() || !formValid"
+          (click)="save()"
+        >
+          @if (saving()) {
+            <span class="spinner spinner--sm"></span> Saving…
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Add video
+          }
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

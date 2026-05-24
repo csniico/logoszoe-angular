@@ -1,0 +1,52 @@
+@if (modal.config(); as cfg) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" [attr.aria-labelledby]="'confirm-intent'" (click)="onBackdropClick($event)">
+    <div class="modal-panel" role="document">
+
+      <!-- Icon -->
+      <div class="modal-icon" [class.modal-icon--danger]="cfg.variant === 'danger'" [class.modal-icon--default]="cfg.variant !== 'danger'">
+        @if (cfg.variant === 'danger') {
+          <!-- Trash / warning icon for destructive actions -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        } @else {
+          <!-- Info / question icon for non-destructive actions -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        }
+      </div>
+
+      <!-- Text -->
+      <h2 class="modal-intent" id="confirm-intent">{{ cfg.intent }}</h2>
+      <p class="modal-description">{{ cfg.description }}</p>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button
+          class="btn btn--ghost"
+          type="button"
+          (click)="modal.cancel()"
+          autofocus
+        >
+          {{ cfg.cancelLabel ?? 'Cancel' }}
+        </button>
+        <button
+          class="btn"
+          [class.btn--danger]="cfg.variant === 'danger'"
+          [class.btn--primary]="cfg.variant !== 'danger'"
+          type="button"
+          (click)="modal.confirm()"
+        >
+          {{ cfg.confirmLabel ?? 'Continue' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

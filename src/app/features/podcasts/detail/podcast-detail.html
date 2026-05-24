@@ -1,0 +1,243 @@
+<div class="page detail-page">
+
+  <!-- Back -->
+  <a routerLink="/podcasts" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Podcasts
+  </a>
+
+  @if (loading()) {
+    <div class="state-cell"><div class="spinner"></div> Loading…</div>
+
+  } @else if (error()) {
+    <div class="state-cell state-cell--error">{{ error() }}</div>
+
+  } @else if (podcast(); as pod) {
+
+    <!-- ── Page header ── -->
+    <div class="page-header">
+      <div class="detail-title-row">
+        <span class="cat-chip">{{ catLabel() }}</span>
+        <h1 class="page-title">{{ pod.title }}</h1>
+      </div>
+
+      <div class="header-actions">
+        <button
+          class="btn btn--sm btn--danger-outline"
+          [disabled]="deleting() || saving()"
+          (click)="deletePodcast()"
+        >
+          @if (deleting()) {
+            <span class="spinner spinner--sm"></span> Deleting…
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+            Delete
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (saveError()) {
+      <div class="alert alert--error">{{ saveError() }}</div>
+    }
+
+    <!-- ══ Hero row: cover left · core fields right ══ -->
+    <div class="hero-row">
+
+      <!-- Left: cover image -->
+      <div class="hero-row__image field-card">
+        <div class="field-card__header">
+          <span class="field-card__label">Cover image</span>
+          @if (editingField() !== 'imageUrl') {
+            <button class="edit-btn" (click)="startEdit('imageUrl')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          }
+        </div>
+
+        @if (editingField() !== 'imageUrl') {
+          @if (pod.imageUrl) {
+            <img class="hero-img" [src]="pod.imageUrl" [alt]="pod.title" />
+          } @else {
+            <div class="no-image-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              <span>No cover image</span>
+            </div>
+          }
+        } @else {
+          <div class="upload-zone">
+            @if (imagePreviewUrl()) {
+              <img class="hero-img" [src]="imagePreviewUrl()!" alt="Preview" />
+            } @else if (pod.imageUrl) {
+              <img class="hero-img" [src]="pod.imageUrl" [alt]="pod.title" />
+            } @else {
+              <div class="upload-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Select an image</span>
+              </div>
+            }
+            <label class="upload-label">
+              <input type="file" accept="image/*" class="upload-input" (change)="onImageFileChange($event)" />
+              <span class="btn btn--ghost btn--sm">Choose file</span>
+            </label>
+            @if (imageUploadError()) {
+              <p class="field-error">{{ imageUploadError() }}</p>
+            }
+          </div>
+          <div class="field-card__actions">
+            <button class="btn btn--primary btn--sm" [disabled]="!pendingImageFile || uploadingImage()" (click)="uploadImage()">
+              @if (uploadingImage()) { <span class="spinner spinner--sm"></span> Uploading… } @else { Upload &amp; save }
+            </button>
+            <button class="btn btn--ghost btn--sm" (click)="cancelImageEdit()">Cancel</button>
+          </div>
+        }
+      </div>
+
+      <!-- Right: title, category, description stacked -->
+      <div class="hero-row__meta">
+
+        <!-- Title -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Title</span>
+            @if (editingField() !== 'title') {
+              <button class="edit-btn" (click)="startEdit('title')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'title') {
+            <span class="field-value">{{ pod.title }}</span>
+          } @else {
+            <input type="text" class="field-input" [value]="draftString" (input)="setDraftString($any($event.target).value)" />
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'title' }"></ng-container>
+          }
+        </div>
+
+        <!-- Slug (read-only) -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Slug</span>
+            <span class="readonly-badge">read-only</span>
+          </div>
+          <code class="slug">{{ pod.slug }}</code>
+        </div>
+
+        <!-- Category -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Category</span>
+            @if (editingField() !== 'category') {
+              <button class="edit-btn" (click)="startEdit('category')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'category') {
+            <span class="cat-chip cat-chip--sm">{{ catLabel() }}</span>
+          } @else {
+            <select class="field-select" [value]="draftString" (change)="setDraftString($any($event.target).value)">
+              @for (cat of categories; track cat.value) {
+                <option [value]="cat.value">{{ cat.label }}</option>
+              }
+            </select>
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'category' }"></ng-container>
+          }
+        </div>
+
+        <!-- Description -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Description</span>
+            @if (editingField() !== 'description') {
+              <button class="edit-btn" (click)="startEdit('description')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'description') {
+            <span class="field-value field-value--multi">{{ pod.description || '—' }}</span>
+          } @else {
+            <textarea class="field-textarea" rows="4" [value]="draftString" (input)="setDraftString($any($event.target).value)"></textarea>
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'description' }"></ng-container>
+          }
+        </div>
+
+      </div>
+    </div><!-- /hero-row -->
+
+    <!-- ── Stat strip ── -->
+    <div class="stat-strip">
+      <div class="stat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span><strong>{{ pod.hits }}</strong> hits</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Created <strong>{{ pod.createdAt | date:'MMM d, y' }}</strong></span>
+      </div>
+      @if (pod.updatedAt) {
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Updated <strong>{{ pod.updatedAt | date:'MMM d, y' }}</strong></span>
+        </div>
+      }
+    </div>
+
+    <!-- ── Audio player card ── -->
+    <div class="field-card field-card--full">
+      <div class="field-card__header">
+        <span class="field-card__label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          Audio
+        </span>
+      </div>
+      <div class="audio-player-wrap">
+        <audio controls [src]="pod.audioUrl" style="width:100%">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+      <div class="audio-meta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <code class="audio-key">{{ pod.audioKey }}</code>
+        <a class="audio-link" [href]="pod.audioUrl" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open audio
+        </a>
+      </div>
+    </div>
+
+  } @else {
+    <div class="state-cell state-cell--error">Podcast not found.</div>
+  }
+
+</div>
+
+<!-- ── Shared templates ── -->
+<ng-template #saveCancel let-field="field">
+  <div class="field-card__actions">
+    @if (saveError()) { <span class="field-error">{{ saveError() }}</span> }
+    <button class="btn btn--primary btn--sm" [disabled]="saving()" (click)="saveField(field)">
+      @if (saving()) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
+    </button>
+    <button class="btn btn--ghost btn--sm" [disabled]="saving()" (click)="cancelEdit()">Cancel</button>
+  </div>
+</ng-template>

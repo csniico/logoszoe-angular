@@ -1,0 +1,325 @@
+<div class="page">
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Categories</h1>
+      <p class="page-subtitle">
+        @if (!loading()) {
+          {{ displayed().length }} of {{ categories().length }} categor{{ categories().length !== 1 ? 'ies' : 'y' }}
+        } @else {
+          Content taxonomy for articles
+        }
+      </p>
+    </div>
+    <a routerLink="/categories/create" class="btn btn--primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New category
+    </a>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="grid-toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search categories…"
+        [value]="searchQuery()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- Status filter -->
+      <div class="select-wrap">
+        <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <select class="filter-select" [value]="filterStatus()" (change)="filterStatus.set($any($event.target).value)">
+          <option value="all">All statuses</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- Sort -->
+      <div class="select-wrap">
+        <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/>
+        </svg>
+        <select class="filter-select" [value]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+          <option value="date">Recently updated</option>
+          <option value="articles">Most articles</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      @if (hasActiveFilters()) {
+        <button class="clear-btn" type="button" (click)="clearFilters()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Clear
+        </button>
+      }
+
+      <!-- View toggle -->
+      <div class="view-toggle" role="group" aria-label="View mode">
+        <button
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="viewMode() === 'grid'"
+          (click)="viewMode.set('grid')"
+          title="Grid view"
+          aria-label="Grid view"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+        <button
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="viewMode() === 'table'"
+          (click)="viewMode.set('table')"
+          title="Table view"
+          aria-label="Table view"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6"  x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── States ── -->
+  @if (loading()) {
+    <div class="cat-grid cat-grid--loading">
+      @for (n of [1,2,3,4,5,6]; track n) {
+        <div class="cat-card cat-card--skeleton">
+          <div class="cat-card__hero skeleton-block"></div>
+          <div class="cat-card__body">
+            <div class="skeleton-line skeleton-line--title"></div>
+            <div class="skeleton-line skeleton-line--sub"></div>
+            <div class="skeleton-line skeleton-line--meta"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  } @else if (displayed().length === 0) {
+    <div class="state-cell">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      @if (hasActiveFilters()) {
+        No categories match your filters.
+        <button class="link-action" (click)="clearFilters()">Clear filters</button>
+      } @else {
+        No categories yet.
+        <a routerLink="/categories/create" class="link-action">Create one</a>
+      }
+    </div>
+  } @else if (viewMode() === 'grid') {
+
+    <!-- ── Card grid ── -->
+    <div class="cat-grid">
+      @for (cat of displayed(); track cat._id) {
+        <article
+          class="cat-card"
+          (click)="goToDetail(cat._id)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="goToDetail(cat._id)"
+        >
+
+          <!-- Hero: banner image or colour block -->
+          <div class="cat-card__hero" [style.background]="cat.bannerUrl ? 'none' : (cat.color || '#16A34A')">
+            @if (cat.bannerUrl) {
+              <img class="cat-card__hero-img" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
+            } @else {
+              <span class="cat-card__hero-icon">{{ cat.icon || cat.name[0] }}</span>
+            }
+            <div class="cat-card__overlay"></div>
+
+            <!-- Status pill -->
+            <span class="cat-card__status-pill" [class.cat-card__status-pill--pub]="cat.published" [class.cat-card__status-pill--draft]="!cat.published">
+              @if (cat.published) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Published
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                Draft
+              }
+            </span>
+          </div>
+
+          <!-- Body -->
+          <div class="cat-card__body">
+            <h3 class="cat-card__name">{{ cat.name }}</h3>
+
+            @if (cat.description) {
+              <p class="cat-card__desc">{{ cat.description }}</p>
+            }
+
+            <div class="cat-card__meta">
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                {{ articleCount(cat) }} article{{ articleCount(cat) !== 1 ? 's' : '' }}
+              </span>
+              <span class="meta-sep">·</span>
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {{ cat.updatedAt | date:'MMM d, y' }}
+              </span>
+            </div>
+          </div>
+
+        </article>
+      }
+    </div>
+
+  } @else {
+
+    <!-- ── Table view ── -->
+    <div class="cat-table-wrap">
+      <table class="cat-table">
+        <thead>
+          <tr>
+            <th class="cat-table__th cat-table__th--img"></th>
+            <th class="cat-table__th">Name</th>
+            <th class="cat-table__th">Status</th>
+            <th class="cat-table__th cat-table__th--num">Articles</th>
+            <th class="cat-table__th cat-table__th--num">Updated</th>
+            <th class="cat-table__th cat-table__th--action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cat of displayed(); track cat._id) {
+            <tr class="cat-table__row" (click)="goToDetail(cat._id)" tabindex="0" (keydown.enter)="goToDetail(cat._id)" role="button">
+
+              <!-- Thumbnail -->
+              <td class="cat-table__td cat-table__td--img">
+                @if (cat.bannerUrl) {
+                  <img class="cat-table__thumb" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
+                } @else {
+                  <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#16A34A'">
+                    <span>{{ cat.icon || cat.name[0] }}</span>
+                  </div>
+                }
+              </td>
+
+              <!-- Name + slug -->
+              <td class="cat-table__td cat-table__td--name">
+                <span class="cat-table__name">{{ cat.name }}</span>
+                <code class="cat-table__slug">{{ cat.slug }}</code>
+              </td>
+
+              <!-- Status -->
+              <td class="cat-table__td">
+                <span class="cat-table__pill" [class.cat-table__pill--pub]="cat.published" [class.cat-table__pill--draft]="!cat.published">
+                  @if (cat.published) {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Published
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    Draft
+                  }
+                </span>
+              </td>
+
+              <!-- Article count -->
+              <td class="cat-table__td cat-table__td--num">
+                <span class="cat-table__count">{{ articleCount(cat) }}</span>
+              </td>
+
+              <!-- Updated date -->
+              <td class="cat-table__td cat-table__td--num cat-table__td--muted">
+                {{ cat.updatedAt | date:'MMM d, y' }}
+              </td>
+
+              <!-- Chevron -->
+              <td class="cat-table__td cat-table__td--action">
+                <svg class="cat-table__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </td>
+
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  }
+
+  <!-- ── Backend search results ── -->
+  @if (showBackendResults()) {
+    <div class="backend-search">
+      @if (searchingBackend()) {
+        <div class="backend-search__banner backend-search__banner--loading">
+          <span class="spinner spinner--sm"></span>
+          Searching all categories…
+        </div>
+      } @else if (backendSearched()) {
+        @if (backendResults().length > 0) {
+          <div class="backend-search__banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="backend-search__icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            {{ backendTotal() }} result{{ backendTotal() !== 1 ? 's' : '' }} found across all categories
+          </div>
+          <div class="cat-table-wrap">
+            <table class="cat-table">
+              <thead><tr>
+                <th class="cat-table__th cat-table__th--img"></th>
+                <th class="cat-table__th">Name</th>
+                <th class="cat-table__th">Status</th>
+                <th class="cat-table__th cat-table__th--num">Articles</th>
+                <th class="cat-table__th cat-table__th--action"></th>
+              </tr></thead>
+              <tbody>
+                @for (cat of backendResults(); track cat._id) {
+                  <tr class="cat-table__row" (click)="goToDetail(cat._id)" role="button" tabindex="0" (keydown.enter)="goToDetail(cat._id)">
+                    <td class="cat-table__td cat-table__td--img">
+                      @if (cat.bannerUrl) {
+                        <img class="cat-table__thumb" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
+                      } @else {
+                        <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#16A34A'">
+                          <span>{{ cat.icon || cat.name[0] }}</span>
+                        </div>
+                      }
+                    </td>
+                    <td class="cat-table__td cat-table__td--name">
+                      <span class="cat-table__name">{{ cat.name }}</span>
+                      <code class="cat-table__slug">{{ cat.slug }}</code>
+                    </td>
+                    <td class="cat-table__td">
+                      <span class="cat-table__pill" [class.cat-table__pill--pub]="cat.published" [class.cat-table__pill--draft]="!cat.published">
+                        @if (cat.published) { Published } @else { Draft }
+                      </span>
+                    </td>
+                    <td class="cat-table__td cat-table__td--num"><span class="cat-table__count">{{ articleCount(cat) }}</span></td>
+                    <td class="cat-table__td cat-table__td--action">
+                      <svg class="cat-table__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="state-cell">No results found for "{{ searchQuery() }}".</div>
+        }
+      }
+    </div>
+  }
+
+</div>

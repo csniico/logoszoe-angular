@@ -1,0 +1,70 @@
+<div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
+
+  <!-- Mobile overlay -->
+  @if (mobileMenuOpen()) {
+    <div
+      class="mobile-overlay"
+      aria-hidden="true"
+      (click)="closeMobileMenu()"
+    ></div>
+  }
+
+  <!-- Sidebar -->
+  <div class="shell__sidebar" [class.shell__sidebar--open]="mobileMenuOpen()">
+    <app-sidebar
+      [collapsed]="sidebarCollapsed()"
+      (closeMobile)="closeMobileMenu()"
+    />
+  </div>
+
+  <!-- Main -->
+  <div class="shell__main">
+    <!-- Top bar -->
+    <header class="topbar">
+      <!-- Desktop collapse toggle -->
+      <button
+        class="topbar__toggle topbar__toggle--desktop"
+        (click)="toggleSidebar()"
+        aria-label="Toggle sidebar"
+        [attr.aria-expanded]="!sidebarCollapsed()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Mobile menu toggle -->
+      <button
+        class="topbar__toggle topbar__toggle--mobile"
+        (click)="toggleMobileMenu()"
+        [attr.aria-label]="mobileMenuOpen() ? 'Close menu' : 'Open menu'"
+        [attr.aria-expanded]="mobileMenuOpen()"
+      >
+        @if (mobileMenuOpen()) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        }
+      </button>
+
+      <div class="topbar__spacer"></div>
+    </header>
+
+    <!-- Page content -->
+    <main class="shell__content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<!-- Global confirmation modal — rendered outside the scroll tree so it always sits on top -->
+<app-confirm-modal />

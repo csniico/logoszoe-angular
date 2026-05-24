@@ -1,0 +1,211 @@
+.bpp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Saved passage list ── */
+.bpp__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bpp__item {
+  position: relative;
+  background: var(--color-scaffold);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 2.5rem 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bpp__item-ref {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
+}
+
+.bpp__verses {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.bpp__verse {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.bpp__verse-num {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-right: 0.25rem;
+  vertical-align: super;
+}
+
+.bpp__remove {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-faint);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  padding: 0;
+  svg { width: 14px; height: 14px; }
+  &:hover { background: var(--color-error-light, #FEF2F2); color: var(--color-error, #DC2626); }
+}
+
+.bpp__empty {
+  font-size: 0.85rem;
+  color: var(--color-text-faint);
+  font-style: italic;
+}
+
+/* ── Add button ── */
+.bpp__add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  width: 100%;
+  justify-content: center;
+  svg { width: 14px; height: 14px; }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+}
+
+/* ── Picker form ── */
+.bpp__picker {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.bpp__picker-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 0.625rem;
+  @media (max-width: 600px) { grid-template-columns: 1fr 1fr; }
+}
+
+.bpp__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bpp__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.bpp__optional {
+  font-size: 0.65rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-faint);
+}
+
+.bpp__select {
+  padding: 0.45rem 0.65rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: #F1F8F1;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  &:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(22,163,74,.12); background: #fff; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; background: var(--color-scaffold); }
+}
+
+.bpp__loading {
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+  font-style: italic;
+  padding: 0.45rem 0;
+}
+
+/* ── Preview ── */
+.bpp__preview {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+}
+
+.bpp__preview-ref {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.bpp__preview-verse {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.bpp__sup {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-right: 0.2rem;
+  vertical-align: super;
+}
+
+/* ── Actions ── */
+.bpp__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}

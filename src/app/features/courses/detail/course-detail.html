@@ -1,0 +1,507 @@
+<div class="page">
+
+  <!-- Back -->
+  <a routerLink="/courses" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Courses
+  </a>
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- ── Loading ── -->
+  @if (loading() && !error()) {
+    <div class="state-cell">
+      <span class="spinner"></span> Loading course…
+    </div>
+  }
+
+  @if (!loading() && !error() && course()) {
+    <!-- ── Course header ── -->
+    <div class="detail-header">
+      <div class="detail-header__left">
+        <!-- Inline title edit -->
+        @if (editingField() === 'title') {
+          <div class="inline-edit-row">
+            <input class="form-input detail-title-input" type="text" [(ngModel)]="editTitle" maxlength="200" autofocus />
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="saving()" (click)="saveField('title')">
+              @if (saving()) { <span class="spinner spinner--sm"></span> } @else { Save }
+            </button>
+            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditField()">Cancel</button>
+          </div>
+          @if (saveError()) { <p class="field-error">{{ saveError() }}</p> }
+        } @else {
+          <div class="detail-title-row">
+            <h1 class="detail-title">{{ course()!.title }}</h1>
+            <button class="icon-btn" type="button" title="Edit title" (click)="startEditField('title')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        }
+      </div>
+      <button class="btn btn--danger btn--sm" type="button" (click)="deleteCourse()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Delete course
+      </button>
+    </div>
+
+    <!-- ── Course info section ── -->
+    <div class="info-grid">
+
+      <!-- Cover image card -->
+      <div class="info-card">
+        <div class="info-card__label">Cover image</div>
+        @if (course()!.imageUrl && !coverImgError()) {
+          <img class="course-cover-img" [src]="course()!.imageUrl" alt="Course cover"
+               (error)="coverImgError.set(true)" />
+        } @else {
+          <div class="course-cover-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" width="40" height="40"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>No cover image</span>
+          </div>
+        }
+        <div class="cover-upload-row">
+          <label class="btn btn--ghost btn--sm" for="cover-input" style="cursor:pointer">
+            @if (uploadingImage()) { <span class="spinner spinner--sm"></span> Uploading… }
+            @else { {{ course()!.imageUrl ? 'Replace image' : 'Upload image' }} }
+          </label>
+          <input id="cover-input" type="file" accept="image/*" class="file-input-hidden" (change)="onImageFileChange($event)" [disabled]="uploadingImage()" />
+        </div>
+        @if (imageUploadError()) {
+          <p class="field-error">{{ imageUploadError() }}</p>
+        }
+      </div>
+
+      <!-- Description card -->
+      <div class="info-card info-card--grow">
+        <div class="info-card__label">Description</div>
+        @if (editingField() === 'description') {
+          <textarea class="form-textarea" rows="5" [(ngModel)]="editDescription" maxlength="2000"></textarea>
+          <div class="inline-edit-actions">
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="saving()" (click)="saveField('description')">
+              @if (saving()) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
+            </button>
+            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditField()">Cancel</button>
+          </div>
+          @if (saveError()) { <p class="field-error">{{ saveError() }}</p> }
+        } @else {
+          <p class="info-card__text">{{ course()!.description || '—' }}</p>
+          <button class="link-btn" type="button" (click)="startEditField('description')">Edit description</button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Lessons section ── -->
+    <div class="lessons-section">
+      <div class="lessons-header">
+        <h2 class="lessons-title">
+          Lessons
+          <span class="lessons-count">{{ lessons().length }}</span>
+        </h2>
+        <button
+          class="btn btn--primary btn--sm"
+          type="button"
+          (click)="showAddLesson.set(!showAddLesson())"
+        >
+          @if (showAddLesson()) { Cancel }
+          @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add lesson
+          }
+        </button>
+      </div>
+
+      <!-- Loading lessons -->
+      @if (loadingLessons()) {
+        <div class="state-cell" style="padding:2rem">
+          <span class="spinner"></span> Loading lessons…
+        </div>
+      }
+
+      <!-- ── Lesson accordions ── -->
+      @if (!loadingLessons()) {
+        <div class="lesson-list">
+          @if (lessons().length === 0 && !showAddLesson()) {
+            <div class="lesson-empty">No lessons yet. Add one below.</div>
+          }
+
+          @for (lesson of lessons(); track lesson._id; let idx = $index) {
+            <div class="lesson-accordion"
+                 [class.lesson-accordion--open]="expandedLessonId() === lesson._id"
+                 [class.lesson-accordion--editing]="editingLessonId() === lesson._id">
+
+              <!-- ── Accordion header ── -->
+              <div class="lesson-accordion__header" (click)="toggleLesson(lesson._id)">
+
+                <!-- Order bubble -->
+                <div class="lesson-item__order">{{ idx + 1 }}</div>
+
+                <!-- Move arrows -->
+                <div class="lesson-item__move" (click)="$event.stopPropagation()">
+                  <button class="arrow-btn" type="button" [disabled]="idx === 0" title="Move up"
+                          (click)="moveLesson(lesson._id, -1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+                  </button>
+                  <button class="arrow-btn" type="button" [disabled]="idx === lessons().length - 1" title="Move down"
+                          (click)="moveLesson(lesson._id, 1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                </div>
+
+                <!-- Type badge -->
+                <span class="lesson-item__type" [class.lesson-item__type--video]="lesson.type === 'video'">
+                  {{ lesson.type }}
+                </span>
+
+                <!-- Title -->
+                <div class="lesson-accordion__title">{{ lesson.title }}</div>
+
+                <!-- Duration badge -->
+                @if (lesson.durationSec) {
+                  <span class="lesson-duration-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ formatLessonDuration(lesson.durationSec) }}
+                  </span>
+                }
+
+                <!-- Completions badge -->
+                @if (lesson.completionsCount !== undefined && lesson.completionsCount > 0) {
+                  <span class="lesson-completions-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {{ lesson.completionsCount }}
+                  </span>
+                }
+
+                <!-- Edit / Delete actions -->
+                <div class="lesson-item__actions" (click)="$event.stopPropagation()">
+                  <button class="icon-btn" type="button" title="Edit lesson" (click)="startEditLesson(lesson)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="icon-btn icon-btn--danger" type="button" title="Delete lesson"
+                          [disabled]="deletingLessonId() === lesson._id"
+                          (click)="deleteLesson(lesson._id)">
+                    @if (deletingLessonId() === lesson._id) {
+                      <span class="spinner spinner--sm"></span>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    }
+                  </button>
+                </div>
+
+                <!-- Chevron -->
+                <svg class="lesson-accordion__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div><!-- /header -->
+
+              <!-- ── Accordion body ── -->
+              @if (expandedLessonId() === lesson._id) {
+                <div class="lesson-accordion__body">
+
+                  @if (editingLessonId() === lesson._id) {
+                    <!-- Edit form -->
+                    <div class="lesson-edit-form">
+                      <div class="form-field">
+                        <label class="form-label">Title</label>
+                        <input class="form-input form-input--sm" type="text" [(ngModel)]="editLessonTitle" placeholder="Lesson title" />
+                      </div>
+                      <div class="form-field">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-textarea form-textarea--sm" rows="3" [(ngModel)]="editLessonContent" placeholder="Content…"></textarea>
+                      </div>
+                      <div class="inline-edit-actions">
+                        <button class="btn btn--primary btn--sm" type="button" [disabled]="savingLessonId() === lesson._id" (click)="saveLessonEdit(lesson)">
+                          @if (savingLessonId() === lesson._id) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
+                        </button>
+                        <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditLesson()">Cancel</button>
+                      </div>
+                    </div>
+
+                  } @else {
+                    <!-- ── Compact meta strip ── -->
+                    <div class="lesson-meta-strip">
+                      <span class="lesson-meta-chip lesson-meta-chip--type"
+                            [class.lesson-meta-chip--video]="lesson.type === 'video'">
+                        {{ lesson.type }}
+                      </span>
+                      <span class="lesson-meta-chip">Order {{ lesson.order }}</span>
+                      @if (lesson.durationSec) {
+                        <span class="lesson-meta-chip">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          {{ formatLessonDuration(lesson.durationSec) }}
+                        </span>
+                      }
+                      <span class="lesson-meta-chip lesson-meta-chip--completions">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        {{ lesson.completionsCount ?? 0 }} completion{{ (lesson.completionsCount ?? 0) !== 1 ? 's' : '' }}
+                      </span>
+                    </div>
+
+                    <!-- ── Questions subsection ── -->
+                    <div class="questions-section">
+                      <div class="questions-header">
+                        <h4 class="questions-title">
+                          Quiz questions
+                          @if (questionsFor(lesson._id).length > 0) {
+                            <span class="questions-count">{{ questionsFor(lesson._id).length }}</span>
+                          }
+                        </h4>
+                        @if (addingQuestionFor() !== lesson._id) {
+                          <button class="btn btn--ghost btn--sm" type="button" (click)="openAddQuestion(lesson._id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add question
+                          </button>
+                        }
+                      </div>
+
+                      <!-- Loading questions -->
+                      @if (loadingQuestionsFor() === lesson._id) {
+                        <div class="questions-loading">
+                          <span class="spinner spinner--sm"></span> Loading…
+                        </div>
+                      }
+
+                      <!-- Question list -->
+                      @for (q of questionsFor(lesson._id); track q._id; let qi = $index) {
+                        <div class="question-card" [class.question-card--editing]="editingQuestionId() === q._id">
+
+                          @if (editingQuestionId() === q._id) {
+                            <!-- Edit form -->
+                            <div class="question-edit-form">
+                              <div class="form-field">
+                                <label class="form-label">Question text</label>
+                                <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="editQuestionText"></textarea>
+                              </div>
+                              <div class="form-field">
+                                <label class="form-label">Type</label>
+                                <div class="type-toggle type-toggle--sm">
+                                  <button class="type-toggle__btn" [class.type-toggle__btn--active]="editQuestionType === 'multiple_choice'"
+                                          type="button" (click)="editQuestionType = 'multiple_choice'">Multiple choice</button>
+                                  <button class="type-toggle__btn" [class.type-toggle__btn--active]="editQuestionType === 'text_input'"
+                                          type="button" (click)="editQuestionType = 'text_input'">Text input</button>
+                                </div>
+                              </div>
+                              @if (editQuestionType === 'multiple_choice') {
+                                <div class="form-field">
+                                  <label class="form-label">Options</label>
+                                  @for (opt of editQuestionOptions; track opt.label; let oi = $index) {
+                                    <div class="option-row">
+                                      <span class="option-label-chip">{{ opt.label }}</span>
+                                      <input class="form-input form-input--sm" type="text" [(ngModel)]="editQuestionOptions[oi].value" placeholder="Option text" />
+                                    </div>
+                                  }
+                                </div>
+                                <div class="form-field">
+                                  <label class="form-label">Correct option (value)</label>
+                                  <select class="form-input form-input--sm" [(ngModel)]="editQuestionCorrect">
+                                    <option value="">— Select correct —</option>
+                                    @for (opt of editQuestionOptions; track opt.label) {
+                                      @if (opt.value.trim()) {
+                                        <option [value]="opt.value">{{ opt.label }}: {{ opt.value }}</option>
+                                      }
+                                    }
+                                  </select>
+                                </div>
+                              }
+                              <div class="inline-edit-actions">
+                                <button class="btn btn--primary btn--sm" type="button"
+                                        [disabled]="savingQuestionId() === q._id"
+                                        (click)="saveQuestionEdit(lesson._id, q)">
+                                  @if (savingQuestionId() === q._id) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
+                                </button>
+                                <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditQuestion()">Cancel</button>
+                              </div>
+                            </div>
+
+                          } @else {
+                            <!-- Question display -->
+                            <div class="question-row">
+                              <span class="question-index">Q{{ qi + 1 }}</span>
+                              <div class="question-body">
+                                <p class="question-text">{{ q.text }}</p>
+                                <span class="question-type-badge" [class.question-type-badge--mc]="q.type === 'multiple_choice'">
+                                  {{ q.type === 'multiple_choice' ? 'MC' : 'Text' }}
+                                </span>
+                                @if (q.type === 'multiple_choice' && q.options.length) {
+                                  <div class="question-options">
+                                    @for (opt of q.options; track opt.label) {
+                                      <span class="question-option" [class.question-option--correct]="opt.value === q.correctOption">
+                                        <strong>{{ opt.label }}.</strong> {{ opt.value }}
+                                        @if (opt.value === q.correctOption) {
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        }
+                                      </span>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                              <div class="question-actions">
+                                <button class="icon-btn" type="button" title="Edit question" (click)="startEditQuestion(q)">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="icon-btn icon-btn--danger" type="button" title="Delete question"
+                                        [disabled]="deletingQuestionId() === q._id"
+                                        (click)="deleteQuestion(lesson._id, q)">
+                                  @if (deletingQuestionId() === q._id) {
+                                    <span class="spinner spinner--sm"></span>
+                                  } @else {
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                  }
+                                </button>
+                              </div>
+                            </div>
+                          }
+
+                        </div><!-- /question-card -->
+                      }
+
+                      @if (questionsFor(lesson._id).length === 0 && loadingQuestionsFor() !== lesson._id && addingQuestionFor() !== lesson._id) {
+                        <p class="questions-empty">No questions yet.</p>
+                      }
+
+                      <!-- ── Add question form ── -->
+                      @if (addingQuestionFor() === lesson._id) {
+                        <div class="add-question-panel">
+                          <h5 class="add-question-panel__title">New question</h5>
+
+                          <div class="form-field">
+                            <label class="form-label">Question text <span class="required-star">*</span></label>
+                            <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="newQuestionText" placeholder="e.g. What is the capital of France?"></textarea>
+                          </div>
+
+                          <div class="form-field">
+                            <label class="form-label">Type</label>
+                            <div class="type-toggle type-toggle--sm">
+                              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newQuestionType === 'multiple_choice'"
+                                      type="button" (click)="newQuestionType = 'multiple_choice'">Multiple choice</button>
+                              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newQuestionType === 'text_input'"
+                                      type="button" (click)="newQuestionType = 'text_input'">Text input</button>
+                            </div>
+                          </div>
+
+                          @if (newQuestionType === 'multiple_choice') {
+                            <div class="form-field">
+                              <label class="form-label">Options (A–D)</label>
+                              @for (opt of newQuestionOptions; track opt.label; let oi = $index) {
+                                <div class="option-row">
+                                  <span class="option-label-chip">{{ opt.label }}</span>
+                                  <input class="form-input form-input--sm" type="text" [(ngModel)]="newQuestionOptions[oi].value" placeholder="Option text" />
+                                </div>
+                              }
+                            </div>
+                            <div class="form-field">
+                              <label class="form-label">Correct option (value)</label>
+                              <select class="form-input form-input--sm" [(ngModel)]="newQuestionCorrect">
+                                <option value="">— Select correct —</option>
+                                @for (opt of newQuestionOptions; track opt.label) {
+                                  @if (opt.value.trim()) {
+                                    <option [value]="opt.value">{{ opt.label }}: {{ opt.value }}</option>
+                                  }
+                                }
+                              </select>
+                            </div>
+                          }
+
+                          @if (addQuestionError()) {
+                            <p class="field-error">{{ addQuestionError() }}</p>
+                          }
+
+                          <div class="inline-edit-actions">
+                            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddQuestion()">Cancel</button>
+                            <button class="btn btn--primary btn--sm" type="button"
+                                    [disabled]="addingQuestion() || !newQuestionText.trim()"
+                                    (click)="submitNewQuestion(lesson._id)">
+                              @if (addingQuestion()) { <span class="spinner spinner--sm"></span> Adding… } @else { Add question }
+                            </button>
+                          </div>
+                        </div>
+                      }
+                    </div><!-- /questions-section -->
+
+                  }
+                </div>
+              }
+
+            </div><!-- /lesson-accordion -->
+          }
+        </div>
+      }
+
+      <!-- ── Add lesson panel ── -->
+      @if (showAddLesson()) {
+        <div class="lesson-add-panel">
+          <h3 class="lesson-add-panel__title">New lesson</h3>
+
+          <div class="form-field">
+            <label class="form-label" for="new-lesson-title">Title <span class="required-star">*</span></label>
+            <input id="new-lesson-title" class="form-input" type="text" [(ngModel)]="newLessonTitle" placeholder="Lesson title" maxlength="200" />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Type</label>
+            <div class="type-toggle">
+              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newLessonType() === 'text'"
+                      type="button" (click)="newLessonType.set('text')">Text</button>
+              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newLessonType() === 'video'"
+                      type="button" (click)="newLessonType.set('video')">Video</button>
+            </div>
+          </div>
+
+          @if (newLessonType() === 'text') {
+            <div class="form-field">
+              <label class="form-label" for="new-lesson-content">Content</label>
+              <textarea id="new-lesson-content" class="form-textarea" rows="5" [(ngModel)]="newLessonContent" placeholder="Lesson content (HTML or plain text)…"></textarea>
+            </div>
+          }
+
+          @if (newLessonType() === 'video') {
+            <div class="form-field">
+              <label class="form-label" for="video-select">Select video from catalog</label>
+              @if (videos().length > 0) {
+                <select id="video-select" class="form-input" [ngModel]="selectedVideoId()" (ngModelChange)="selectedVideoId.set($event)">
+                  <option [value]="null">— No video selected —</option>
+                  @for (v of videos(); track v._id) {
+                    <option [value]="v._id">{{ v.title }}</option>
+                  }
+                </select>
+              } @else {
+                <p class="form-hint-text">No course videos yet. Upload videos on the Course Videos page first.</p>
+              }
+              @if (selectedVideo()) {
+                <div class="video-pick-preview">
+                  @if (selectedVideo()!.thumbnailUrl) {
+                    <img [src]="selectedVideo()!.thumbnailUrl" [alt]="selectedVideo()!.title" />
+                  } @else {
+                    <div class="video-pick-thumb-placeholder">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    </div>
+                  }
+                  <span>{{ selectedVideo()!.title }}</span>
+                </div>
+              }
+            </div>
+          }
+
+          @if (addLessonError()) {
+            <p class="field-error">{{ addLessonError() }}</p>
+          }
+
+          <div class="lesson-add-panel__actions">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="showAddLesson.set(false)">Cancel</button>
+            <button class="btn btn--primary btn--sm" type="button"
+                    [disabled]="addingLesson() || !newLessonTitle.trim()"
+                    (click)="addLesson()">
+              @if (addingLesson()) { <span class="spinner spinner--sm"></span> Adding… } @else { Add lesson }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

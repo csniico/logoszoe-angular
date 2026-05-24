@@ -1,0 +1,184 @@
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════════════════ VIEW 1: Books -->
+  @if (!selectedBook()) {
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Bible</h1>
+        <p class="page-subtitle">
+          @if (!loadingBooks()) {
+            {{ books().length }} books &bull; Read-only
+          } @else {
+            Loading books…
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="bible-search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search books…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+    </div>
+
+    <!-- Loading -->
+    @if (loadingBooks()) {
+      <div class="book-grid">
+        @for (n of [1,2,3,4,5,6,7,8,9,10,11,12]; track n) {
+          <div class="book-card book-card--skeleton">
+            <div class="skeleton-line skeleton-line--title"></div>
+            <div class="skeleton-line skeleton-line--sub"></div>
+          </div>
+        }
+      </div>
+
+    } @else if (errorBooks()) {
+      <div class="state-cell state-cell--error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ errorBooks() }}
+      </div>
+
+    } @else {
+
+      <!-- OT Section -->
+      @if (otBooks().length > 0) {
+        <p class="ot-nt-header">Old Testament</p>
+        <div class="book-grid">
+          @for (book of otBooks(); track book.abbrev) {
+            <button
+              class="book-card"
+              (click)="selectBook(book)"
+              [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'"
+            >
+              <span class="book-card__name">{{ book.name }}</span>
+              <span class="book-card__abbrev">{{ book.abbrev }}</span>
+              <span class="book-card__chapters">{{ book.chaptersCount }} ch</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- NT Section -->
+      @if (ntBooks().length > 0) {
+        <p class="ot-nt-header ot-nt-header--nt">New Testament</p>
+        <div class="book-grid">
+          @for (book of ntBooks(); track book.abbrev) {
+            <button
+              class="book-card"
+              (click)="selectBook(book)"
+              [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'"
+            >
+              <span class="book-card__name">{{ book.name }}</span>
+              <span class="book-card__abbrev">{{ book.abbrev }}</span>
+              <span class="book-card__chapters">{{ book.chaptersCount }} ch</span>
+            </button>
+          }
+        </div>
+      }
+
+      @if (filteredBooks().length === 0) {
+        <div class="state-cell">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          No books match "{{ searchQuery() }}"
+        </div>
+      }
+
+    }
+
+  <!-- ══════════════════════════════════════════════ VIEW 2: Chapters -->
+  } @else if (selectedChapter() === null) {
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <button class="breadcrumb__link" (click)="clearBook()">Bible</button>
+      <span class="breadcrumb__sep" aria-hidden="true">/</span>
+      <span class="breadcrumb__current">{{ selectedBook()!.name }}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ selectedBook()!.name }}</h1>
+        <p class="page-subtitle">{{ selectedBook()!.chaptersCount }} chapters</p>
+      </div>
+      <button class="btn btn--ghost" (click)="clearBook()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to books
+      </button>
+    </div>
+
+    <!-- Chapter grid -->
+    <div class="chapter-grid">
+      @for (ch of chapterNumbers(); track ch) {
+        <button class="ch-btn" (click)="selectChapter(ch)" [attr.aria-label]="'Chapter ' + ch">
+          {{ ch }}
+        </button>
+      }
+    </div>
+
+  <!-- ══════════════════════════════════════════════ VIEW 3: Verses -->
+  } @else {
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <button class="breadcrumb__link" (click)="clearBook()">Bible</button>
+      <span class="breadcrumb__sep" aria-hidden="true">/</span>
+      <button class="breadcrumb__link" (click)="clearChapter()">{{ selectedBook()!.name }}</button>
+      <span class="breadcrumb__sep" aria-hidden="true">/</span>
+      <span class="breadcrumb__current">Chapter {{ selectedChapter() }}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ selectedBook()!.name }} {{ selectedChapter() }}</h1>
+        <p class="page-subtitle">
+          @if (!loadingVerses() && !errorVerses()) {
+            {{ verses().length }} verse{{ verses().length !== 1 ? 's' : '' }}
+          } @else if (loadingVerses()) {
+            Loading verses…
+          }
+        </p>
+      </div>
+      <button class="btn btn--ghost" (click)="clearChapter()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to chapters
+      </button>
+    </div>
+
+    <!-- Loading verses -->
+    @if (loadingVerses()) {
+      <div class="verse-loading">
+        <span class="spinner spinner--md"></span>
+        <span>Loading verses…</span>
+      </div>
+
+    } @else if (errorVerses()) {
+      <div class="state-cell state-cell--error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ errorVerses() }}
+      </div>
+
+    } @else {
+      <ol class="verse-list" start="1">
+        @for (verse of verses(); track $index) {
+          <li class="verse-item">
+            <sup>{{ $index + 1 }}</sup>{{ verse }}
+          </li>
+        }
+      </ol>
+    }
+
+  }
+
+</div>

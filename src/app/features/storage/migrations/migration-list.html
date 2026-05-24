@@ -1,0 +1,151 @@
+<div class="mig-list-page">
+
+  <!-- Back link -->
+  <a class="back-link" routerLink="/storage">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Storage
+  </a>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">Migration History</h1>
+      <p class="page-subtitle">All S3 bucket migration jobs</p>
+    </div>
+    <div class="page-header__right">
+      <button
+        class="btn btn--ghost refresh-btn"
+        (click)="refresh()"
+        [disabled]="loading()"
+        [attr.aria-busy]="loading()"
+      >
+        <svg class="btn-icon" [class.spin]="loading()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <polyline points="1 4 1 10 7 10"/>
+          <polyline points="23 20 23 14 17 14"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  @if (error()) {
+    <div class="banner banner--error" role="alert">
+      <svg class="banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="card skeleton-card" aria-busy="true" aria-label="Loading…">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton-row">
+          <div class="skel skel--badge"></div>
+          <div class="skel skel--date"></div>
+          <div class="skel skel--short"></div>
+          <div class="skel skel--short"></div>
+          <div class="skel skel--short"></div>
+          <div class="skel skel--short"></div>
+          <div class="skel skel--btn"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!loading() && !error() && jobs().length === 0) {
+    <div class="card empty-state">
+      <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <p class="empty-state__text">No migration jobs yet. Start a migration from the Storage page.</p>
+      <a class="btn btn--ghost" routerLink="/storage">Go to Storage</a>
+    </div>
+  }
+
+  <!-- Jobs table -->
+  @if (!loading() && jobs().length > 0) {
+    <div class="card jobs-card">
+      <div class="table-wrap">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Duration</th>
+              <th class="col-num">Total</th>
+              <th class="col-num">Migrated</th>
+              <th class="col-num">Failed</th>
+              <th class="col-view"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (job of jobs(); track job._id) {
+              <tr class="job-row" (click)="openJob(job._id)" role="button" tabindex="0" (keydown.enter)="openJob(job._id)" (keydown.space)="openJob(job._id)">
+
+                <!-- Status badge -->
+                <td>
+                  <span [class]="statusClass(job.status)">
+                    @if (job.status === 'running') {
+                      <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" width="11" height="11">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                      </svg>
+                    } @else if (job.status === 'completed') {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" width="11" height="11">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    } @else if (job.status === 'failed') {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" width="11" height="11">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    }
+                    {{ job.status | titlecase }}
+                  </span>
+                </td>
+
+                <!-- Started date -->
+                <td class="col-date">{{ formatDate(job.startedAt ?? job.createdAt) }}</td>
+
+                <!-- Duration -->
+                <td class="col-duration">{{ duration(job) }}</td>
+
+                <!-- Total -->
+                <td class="col-num">{{ job.total }}</td>
+
+                <!-- Migrated -->
+                <td class="col-num" [class.col-num--green]="job.migrated > 0">{{ job.migrated }}</td>
+
+                <!-- Failed -->
+                <td class="col-num" [class.col-num--red]="job.failedCount > 0">{{ job.failedCount }}</td>
+
+                <!-- View button -->
+                <td class="col-view">
+                  <button
+                    class="view-btn"
+                    (click)="$event.stopPropagation(); openJob(job._id)"
+                    aria-label="View migration job"
+                    title="View details"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </button>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="table-footer">{{ jobs().length }} job{{ jobs().length === 1 ? '' : 's' }} total</p>
+    </div>
+  }
+
+</div>

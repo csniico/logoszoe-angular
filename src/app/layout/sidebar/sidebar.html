@@ -1,0 +1,93 @@
+<aside class="sidebar" [class.sidebar--collapsed]="collapsed()">
+
+  <!-- Brand -->
+  <div class="sidebar__brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#16A34A"/>
+        <path d="M8 22L16 10L24 22H8Z" fill="white" fill-opacity="0.9"/>
+        <circle cx="16" cy="19" r="3" fill="white"/>
+      </svg>
+    </div>
+    @if (!collapsed()) {
+      <div class="brand-text">
+        <span class="brand-name">Logos Zoe</span>
+        <span class="brand-badge">Admin</span>
+      </div>
+    }
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar__nav" aria-label="Main navigation">
+    @for (group of navGroups; track group.label) {
+      <div class="nav-group">
+        @if (!collapsed()) {
+          <p class="nav-group__label">{{ group.label }}</p>
+        }
+        <ul class="nav-list">
+          @for (item of group.items; track item.path) {
+            <li>
+              <a
+                class="nav-link"
+                [routerLink]="item.path"
+                routerLinkActive="nav-link--active"
+                (click)="onNavClick()"
+                [title]="collapsed() ? item.label : ''"
+                [attr.aria-label]="collapsed() ? item.label : null"
+              >
+                <svg
+                  class="nav-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path [attr.d]="item.icon"/>
+                </svg>
+                @if (!collapsed()) {
+                  <span class="nav-label">{{ item.label }}</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </nav>
+
+  <!-- User footer -->
+  <div class="sidebar__footer">
+    @if (currentAdmin(); as admin) {
+      <div class="user-cell" [class.user-cell--collapsed]="collapsed()">
+        <div class="user-avatar" aria-hidden="true">
+          {{ admin.name[0].toUpperCase() }}
+        </div>
+        @if (!collapsed()) {
+          <div class="user-info">
+            <span class="user-name">{{ admin.name }}</span>
+            <span class="user-role">{{ admin.role }}</span>
+          </div>
+        }
+      </div>
+    }
+    <button
+      class="signout-btn"
+      [class.signout-btn--collapsed]="collapsed()"
+      (click)="signOut()"
+      [title]="'Sign out'"
+      aria-label="Sign out"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      @if (!collapsed()) {
+        <span>Sign out</span>
+      }
+    </button>
+  </div>
+</aside>

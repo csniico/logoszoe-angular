@@ -1,0 +1,20 @@
+<div class="dashboard-layout">
+  <header class="dashboard-header">
+    <div class="dashboard-header__brand">
+      <span class="brand-name">Logos Zoe</span>
+    </div>
+    <nav class="dashboard-header__nav">
+      @if (authService.currentAdmin(); as admin) {
+        <span class="user-greeting">Hello, {{ admin.name }}</span>
+      }
+      <button class="btn btn--ghost" (click)="signOut()">Sign out</button>
+    </nav>
+  </header>
+
+  <main class="dashboard-main">
+    <div class="dashboard-hero">
+      <h1>Welcome to Logos Zoe</h1>
+      <p>Your dashboard is ready. Features are coming soon.</p>
+    </div>
+  </main>
+</div>

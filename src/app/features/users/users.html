@@ -1,0 +1,310 @@
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Users</h1>
+      <p class="page-subtitle">Registered accounts</p>
+    </div>
+    <button class="btn btn--primary" type="button" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New user
+    </button>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="grid-toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search by name or email…"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        aria-label="Search users"
+      />
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- Role filter -->
+      <div class="select-wrap">
+        <select
+          class="filter-select"
+          [ngModel]="filterRole()"
+          (ngModelChange)="filterRole.set($event)"
+          aria-label="Filter by role"
+        >
+          <option value="all">All roles</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+      </div>
+
+      <!-- Session filter -->
+      <div class="select-wrap">
+        <select
+          class="filter-select"
+          [ngModel]="filterSession()"
+          (ngModelChange)="filterSession.set($event)"
+          aria-label="Filter by session"
+        >
+          <option value="all">All sessions</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="expired">Expired</option>
+        </select>
+      </div>
+
+      <!-- Count badge -->
+      @if (!loading()) {
+        <span class="count-badge">{{ displayed().length }} user{{ displayed().length === 1 ? '' : 's' }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- ── Table ── -->
+  @if (!error()) {
+    <div class="users-table-wrap">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th class="users-table__th">User</th>
+            <th class="users-table__th">Role</th>
+            <th class="users-table__th">Session</th>
+            <th class="users-table__th">Joined</th>
+            <th class="users-table__th users-table__th--action">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loading skeleton -->
+          @if (loading()) {
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr class="users-table__row">
+                <td class="users-table__td">
+                  <div class="user-name-cell">
+                    <div class="skeleton-block" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div>
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+                      <div class="skeleton-line skeleton-line--title"></div>
+                      <div class="skeleton-line skeleton-line--sub"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="users-table__td"><div class="skeleton-line" style="width:60px"></div></td>
+                <td class="users-table__td"><div class="skeleton-line" style="width:60px"></div></td>
+                <td class="users-table__td"><div class="skeleton-line" style="width:80px"></div></td>
+                <td class="users-table__td"></td>
+              </tr>
+            }
+          }
+
+          <!-- Data rows -->
+          @if (!loading()) {
+            @for (user of displayed(); track user._id) {
+              <tr class="users-table__row">
+                <!-- Avatar + name + email -->
+                <td class="users-table__td">
+                  <div class="user-name-cell">
+                    @if (user.profilePicture) {
+                      <img class="user-avatar user-avatar--img" [src]="user.profilePicture" [alt]="fullName(user)" />
+                    } @else {
+                      <div class="user-avatar">{{ initials(user) }}</div>
+                    }
+                    <div>
+                      <div class="user-fullname">{{ fullName(user) }}</div>
+                      <div class="user-email">{{ user.email }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Role (toggleable pill — promotion to admin requires superadmin) -->
+                <td class="users-table__td">
+                  <button
+                    class="role-btn"
+                    [class.role-btn--admin]="user.role === 'admin'"
+                    [class.role-btn--user]="user.role === 'user'"
+                    [disabled]="updatingRoleId() === user._id || (!isSuperAdmin() && user.role === 'user')"
+                    (click)="toggleRole(user)"
+                    [title]="!isSuperAdmin() && user.role === 'user'
+                      ? 'Only superadmins can promote to admin'
+                      : 'Click to change to ' + (user.role === 'admin' ? 'user' : 'admin')"
+                    type="button"
+                  >
+                    @if (updatingRoleId() === user._id) {
+                      <span class="spinner spinner--sm"></span>
+                    } @else {
+                      {{ user.role }}
+                    }
+                  </button>
+                </td>
+
+                <!-- Session -->
+                <td class="users-table__td">
+                  <span
+                    class="session-pill"
+                    [class.session-pill--active]="user.session === 'active'"
+                    [class.session-pill--inactive]="user.session === 'inactive'"
+                    [class.session-pill--expired]="user.session === 'expired'"
+                  >{{ user.session }}</span>
+                </td>
+
+                <!-- Joined -->
+                <td class="users-table__td users-table__td--muted">
+                  {{ (user.createdAt | date: 'mediumDate') ?? '—' }}
+                </td>
+
+                <!-- Actions -->
+                <td class="users-table__td users-table__td--action">
+                  <button
+                    class="icon-btn icon-btn--danger"
+                    title="Delete user"
+                    type="button"
+                    (click)="delete(user._id, fullName(user))"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+
+            @if (displayed().length === 0) {
+              <tr>
+                <td colspan="5" class="empty-cell">No users match your filters.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>
+
+<!-- ── Create user slide-over ── -->
+@if (showCreate()) {
+  <div class="modal-backdrop" (click)="closeCreate()" aria-hidden="true"></div>
+  <aside class="create-panel" role="dialog" aria-modal="true" aria-label="Create new user">
+
+    <div class="create-panel__header">
+      <h2 class="create-panel__title">New user</h2>
+      <button class="create-panel__close" type="button" (click)="closeCreate()" [disabled]="creating()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="create-panel__body">
+
+      <!-- Name row -->
+      <div class="cf-row cf-row--2col">
+        <div class="cf-field">
+          <label class="cf-label" for="cu-firstname">First name <span aria-hidden="true">*</span></label>
+          <input
+            id="cu-firstname" type="text" class="cf-input"
+            placeholder="e.g. Kofi"
+            [(ngModel)]="createForm.firstname"
+            [disabled]="creating()"
+            autocomplete="given-name"
+          />
+        </div>
+        <div class="cf-field">
+          <label class="cf-label" for="cu-lastname">Last name <span aria-hidden="true">*</span></label>
+          <input
+            id="cu-lastname" type="text" class="cf-input"
+            placeholder="e.g. Mensah"
+            [(ngModel)]="createForm.lastname"
+            [disabled]="creating()"
+            autocomplete="family-name"
+          />
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="cf-field">
+        <label class="cf-label" for="cu-email">Email <span aria-hidden="true">*</span></label>
+        <input
+          id="cu-email" type="email" class="cf-input"
+          placeholder="e.g. kofi@example.com"
+          [(ngModel)]="createForm.email"
+          [disabled]="creating()"
+          autocomplete="email"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="cf-field">
+        <label class="cf-label" for="cu-password">Password <span aria-hidden="true">*</span></label>
+        <input
+          id="cu-password" type="password" class="cf-input"
+          placeholder="Min 12 chars"
+          [(ngModel)]="createForm.password"
+          [disabled]="creating()"
+          autocomplete="new-password"
+        />
+        <p class="cf-hint">At least 12 characters with uppercase, lowercase, number &amp; symbol.</p>
+      </div>
+
+      <!-- Role -->
+      <div class="cf-field">
+        <span class="cf-label">Role <span aria-hidden="true">*</span></span>
+        <div class="cf-radio-list" role="radiogroup" aria-label="Select role">
+          @for (opt of roleOptions(); track opt.value) {
+            <label
+              class="cf-radio-item"
+              [class.cf-radio-item--selected]="createForm.role === opt.value"
+              [class.cf-radio-item--disabled]="creating()"
+            >
+              <input
+                type="radio"
+                class="cf-radio-input"
+                name="cu-role"
+                [value]="opt.value"
+                [(ngModel)]="createForm.role"
+                [disabled]="creating()"
+              />
+              <span class="cf-radio-body">
+                <span class="cf-radio-label">{{ opt.label }}</span>
+                <span class="cf-radio-desc">{{ opt.description }}</span>
+              </span>
+              <span class="cf-radio-check" aria-hidden="true">
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="2 6 5 9 10 3"/></svg>
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+
+      <!-- Error -->
+      @if (createError()) {
+        <div class="cf-error">{{ createError() }}</div>
+      }
+
+    </div>
+
+    <div class="create-panel__footer">
+      <button class="btn btn--ghost btn--sm" type="button" (click)="closeCreate()" [disabled]="creating()">Cancel</button>
+      <button class="btn btn--primary btn--sm" type="button" (click)="submitCreate()" [disabled]="creating()">
+        @if (creating()) { <span class="spinner spinner--sm"></span> Creating… } @else { Create user }
+      </button>
+    </div>
+
+  </aside>
+}

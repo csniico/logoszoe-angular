@@ -1,0 +1,346 @@
+<div class="page create-page">
+
+  <!-- Back -->
+  <a routerLink="/articles" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Articles
+  </a>
+
+  <div class="create-header">
+    <h1 class="page-title">New article</h1>
+    <p class="page-subtitle">Fill in the steps below — only the title is required.</p>
+  </div>
+
+  <!-- ── Step indicator ─────────────────────────────────────── -->
+  <div class="stepper" role="list">
+    @for (step of steps; track step.id) {
+      <button
+        class="stepper__step"
+        role="listitem"
+        [class.stepper__step--active]="currentStep() === step.id"
+        [class.stepper__step--done]="currentStep() > step.id"
+        [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+        (click)="goToStep(step.id)"
+        [disabled]="step.id > currentStep()"
+        type="button"
+      >
+        <span class="stepper__circle">
+          @if (currentStep() > step.id) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else {
+            {{ step.id }}
+          }
+        </span>
+        <span class="stepper__label">{{ step.label }}</span>
+      </button>
+      @if (step.id < steps.length) {
+        <span class="stepper__line" [class.stepper__line--done]="currentStep() > step.id" aria-hidden="true"></span>
+      }
+    }
+  </div>
+
+  <!-- ── Step card ──────────────────────────────────────────── -->
+  <div class="step-card">
+
+    <!-- STEP 1 ─ Basics -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">1</span>
+          <div>
+            <h2 class="step-title">Basic information</h2>
+            <p class="step-desc">Give your article a title, pick a category, and add an optional author.</p>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="art-title">
+            Title <span class="required-star">*</span>
+          </label>
+          <input
+            id="art-title"
+            type="text"
+            class="form-input"
+            placeholder="e.g. Do You Desire to Receive the Gift?"
+            [(ngModel)]="title"
+            maxlength="200"
+            autofocus
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="art-category">Category <span class="optional-tag">optional</span></label>
+          <select id="art-category" class="form-input" [(ngModel)]="categoryId">
+            <option value="">No category</option>
+            @for (cat of categories(); track cat._id) {
+              <option [value]="cat._id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="art-author">Author <span class="optional-tag">optional</span></label>
+          <input
+            id="art-author"
+            type="text"
+            class="form-input"
+            placeholder="e.g. John Smith"
+            [(ngModel)]="author"
+            maxlength="120"
+          />
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2 ─ Cover image -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">2</span>
+          <div>
+            <h2 class="step-title">Cover image <span class="optional-tag">optional</span></h2>
+            <p class="step-desc">Upload a cover image — press "Upload" then continue.</p>
+          </div>
+        </div>
+
+        @if (imageUrl) {
+          <!-- Uploaded -->
+          <div class="banner-done">
+            <img class="banner-preview-img" [src]="imageUrl" alt="Cover image" />
+            <div class="banner-done-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="icon-success" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Cover image uploaded</span>
+              <button class="link-btn" type="button" (click)="removeImage()">Change</button>
+            </div>
+          </div>
+        } @else {
+          <!-- Upload zone -->
+          <div class="upload-area">
+            @if (imagePreviewUrl()) {
+              <img class="banner-preview-img" [src]="imagePreviewUrl()!" alt="Preview" />
+            } @else {
+              <label class="upload-drop" for="image-input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>Click to choose image</span>
+                <span class="upload-hint">JPG, PNG or WebP — shown as article cover</span>
+              </label>
+            }
+            <input id="image-input" type="file" accept="image/*" class="file-input-hidden" (change)="onImageFileChange($event)" />
+          </div>
+
+          @if (imagePreviewUrl() && !imageUrl) {
+            <div class="upload-actions">
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="uploadingImage()" (click)="uploadImage()">
+                @if (uploadingImage()) { <span class="spinner spinner--sm"></span> Uploading… }
+                @else { Upload image }
+              </button>
+              <button class="btn btn--ghost btn--sm" type="button" (click)="removeImage()">Remove</button>
+            </div>
+          }
+          @if (imageUploadError()) {
+            <p class="field-error">{{ imageUploadError() }}</p>
+          }
+        }
+      </div>
+    }
+
+    <!-- STEP 3 ─ Content -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">3</span>
+          <div>
+            <h2 class="step-title">Article content <span class="optional-tag">optional</span></h2>
+            <p class="step-desc">Upload a document to convert it, or write HTML directly.</p>
+          </div>
+        </div>
+
+        <!-- Mode toggle tabs -->
+        <div class="content-mode-tabs">
+          <button
+            class="content-mode-tab"
+            [class.content-mode-tab--active]="contentMode() === 'upload'"
+            type="button"
+            (click)="contentMode.set('upload')"
+          >Upload document</button>
+          <button
+            class="content-mode-tab"
+            [class.content-mode-tab--active]="contentMode() === 'editor'"
+            type="button"
+            (click)="contentMode.set('editor')"
+          >Write HTML</button>
+        </div>
+
+        <!-- Upload mode -->
+        @if (contentMode() === 'upload') {
+          <div class="form-field">
+            <label class="form-label">Document <span class="optional-tag">optional</span></label>
+
+            @if (!docFileName()) {
+              <label class="upload-drop upload-drop--doc" for="doc-input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Drop a Word or PDF document here</span>
+                <span class="upload-hint">.docx · .doc · .pdf</span>
+              </label>
+              <input id="doc-input" type="file" accept=".docx,.doc,.pdf" class="file-input-hidden" (change)="onDocumentFileChange($event)" />
+            } @else {
+
+              <!-- Pipeline status card -->
+              <div class="pipeline-card" [class.pipeline-card--done]="pipelineComplete()" [class.pipeline-card--error]="pipelineState()?.stage === 'error'">
+                <div class="pipeline-file-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span class="pipeline-filename">{{ docFileName() }}</span>
+                  @if (!pipelineRunning()) {
+                    <button class="link-btn" type="button" (click)="clearDocument()">Change file</button>
+                  }
+                </div>
+
+                @if (pipelineRunning()) {
+                  <div class="pipeline-progress">
+                    <div class="pipeline-bar-track">
+                      <div class="pipeline-bar-fill" [style.width.%]="pipelineState()?.progress ?? 0"></div>
+                    </div>
+                    <div class="pipeline-stage-row">
+                      <div class="pipeline-dots">
+                        <span class="dot dot--bounce" style="animation-delay:0ms"></span>
+                        <span class="dot dot--bounce" style="animation-delay:150ms"></span>
+                        <span class="dot dot--bounce" style="animation-delay:300ms"></span>
+                      </div>
+                      <span class="pipeline-stage-msg">{{ pipelineState()?.message }}</span>
+                      @if (pipelineState()?.imageTask) {
+                        <span class="pipeline-task-counter">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="pipeline-counter-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                          {{ pipelineState()!.imageTask!.current }} / {{ pipelineState()!.imageTask!.total }} images
+                        </span>
+                      }
+                      @if (pipelineState()?.bibleTask) {
+                        <span class="pipeline-task-counter pipeline-task-counter--bible">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="pipeline-counter-icon" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                          {{ pipelineState()!.bibleTask!.current }} / {{ pipelineState()!.bibleTask!.total }} passages
+                        </span>
+                      }
+                    </div>
+                  </div>
+                } @else if (pipelineState()?.stage === 'complete') {
+                  <div class="pipeline-success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>
+                      Document processed — HTML ready
+                      @if (biblePassages.length) {
+                        <span class="pipeline-passage-badge">{{ biblePassages.length }} passage{{ biblePassages.length === 1 ? '' : 's' }} extracted</span>
+                      }
+                    </span>
+                  </div>
+                } @else if (pipelineState()?.stage === 'error') {
+                  <div class="pipeline-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ pipelineState()?.message ?? 'Processing failed' }}
+                  </div>
+                }
+              </div>
+
+              <!-- HTML editor shown after pipeline completes -->
+              @if (pipelineComplete()) {
+                <div class="html-editor-wrap">
+                  <p class="editor-hint">Review and edit the generated HTML before saving.</p>
+                  <app-html-editor [value]="content" (valueChange)="content = $event" />
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- Editor mode -->
+        @if (contentMode() === 'editor') {
+          <div class="form-field">
+            <label class="form-label">HTML content <span class="optional-tag">optional</span></label>
+            <div class="html-editor-wrap">
+              <app-html-editor [value]="content" (valueChange)="content = $event" />
+              <p class="editor-hint">Bible references in your HTML will be auto-detected when the article is saved.</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- STEP 4 ─ Publish -->
+    @if (currentStep() === 4) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">4</span>
+          <div>
+            <h2 class="step-title">Publish</h2>
+            <p class="step-desc">Review what will be created, then publish or save as a draft.</p>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="create-summary">
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Title</span>
+            <span class="create-summary__row-val">{{ title || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Category</span>
+            <span class="create-summary__row-val">{{ selectedCategoryName() }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Author</span>
+            <span class="create-summary__row-val">{{ author || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Cover image</span>
+            <span class="create-summary__row-val">{{ imageUrl ? 'Uploaded' : 'None' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Content</span>
+            <span class="create-summary__row-val">{{ content ? 'Ready' : 'None' }}</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="toggle-field">
+            <span class="form-label" style="margin:0">Publish immediately</span>
+            <button
+              class="toggle" [class.toggle--on]="published"
+              role="switch" [attr.aria-checked]="published"
+              type="button"
+              (click)="published = !published"
+            >
+              <span class="toggle__thumb"></span>
+            </button>
+          </label>
+          <p class="form-hint-text">You can always publish or unpublish from the article detail page.</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Nav buttons ── -->
+    <div class="step-nav">
+      @if (saveError()) {
+        <p class="field-error">{{ saveError() }}</p>
+      }
+      <div class="step-nav-btns">
+        @if (currentStep() > 1) {
+          <button class="btn btn--ghost" type="button" (click)="back()">Back</button>
+        }
+        @if (currentStep() < 4) {
+          <button class="btn btn--primary" type="button" [disabled]="!canGoNext()" (click)="next()">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon btn-icon--right" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        } @else {
+          <button class="btn btn--primary" type="button" [disabled]="saving() || !title.trim()" (click)="save()">
+            @if (saving()) { <span class="spinner spinner--sm"></span> Creating… }
+            @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Create article
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+  </div><!-- /step-card -->
+
+</div>

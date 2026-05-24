@@ -1,0 +1,309 @@
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Videos</h1>
+      <p class="page-subtitle">Manage your YouTube video library</p>
+    </div>
+    <a routerLink="/videos/create" class="btn btn--primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add video
+    </a>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="grid-toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Search videos…"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchInput($event)"
+        aria-label="Search videos"
+      />
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- Category filter -->
+      @if (categories().length > 0) {
+        <div class="select-wrap">
+          <select
+            class="filter-select"
+            [ngModel]="filterCategory()"
+            (ngModelChange)="filterCategory.set($event)"
+            aria-label="Filter by category"
+          >
+            <option value="">All categories</option>
+            @for (cat of categories(); track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- Sort -->
+      <div class="select-wrap">
+        <select
+          class="filter-select"
+          [ngModel]="sortBy()"
+          (ngModelChange)="sortBy.set($event)"
+          aria-label="Sort videos"
+        >
+          <option value="date">Newest first</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+      </div>
+
+      <!-- View toggle -->
+      <div class="view-toggle" role="group" aria-label="View mode">
+        <button
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="viewMode() === 'grid'"
+          type="button"
+          (click)="viewMode.set('grid')"
+          title="Grid view"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+        <button
+          class="view-toggle__btn"
+          [class.view-toggle__btn--active]="viewMode() === 'table'"
+          type="button"
+          (click)="viewMode.set('table')"
+          title="Table view"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  @if (!error()) {
+
+    <!-- ── Grid view ── -->
+    @if (viewMode() === 'grid') {
+      <div class="vid-grid" [class.vid-grid--loading]="loading()">
+
+        <!-- Skeletons -->
+        @if (loading()) {
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <div class="vid-card vid-card--skeleton">
+              <div class="vid-card__thumb skeleton-block"></div>
+              <div class="vid-card__body">
+                <div class="skeleton-line skeleton-line--title"></div>
+                <div class="skeleton-line skeleton-line--sub"></div>
+              </div>
+            </div>
+          }
+        }
+
+        @if (!loading()) {
+          @for (v of displayed(); track v._id) {
+            <article class="vid-card">
+              <div class="vid-card__thumb">
+                <img [src]="thumbUrl(v.youtubeId)" [alt]="v.title" loading="lazy" />
+                <a
+                  class="vid-card__play-overlay"
+                  [href]="ytUrl(v.youtubeId)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [title]="'Watch on YouTube: ' + v.title"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+                </a>
+              </div>
+              <div class="vid-card__body">
+                <span class="vid-card__cat">{{ v.category }}</span>
+                <h3 class="vid-card__title">{{ v.title }}</h3>
+                <p class="vid-card__desc">{{ v.description }}</p>
+                <div class="vid-card__footer">
+                  <span class="vid-card__date">{{ v.createdAt | date: 'mediumDate' }}</span>
+                  <button
+                    class="icon-btn icon-btn--danger"
+                    type="button"
+                    title="Delete video"
+                    (click)="delete(v._id, v.title, $event)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+
+          @if (displayed().length === 0) {
+            <div class="state-cell" style="grid-column:1/-1">No videos match your filters.</div>
+          }
+        }
+      </div>
+    }
+
+    <!-- ── Table view ── -->
+    @if (viewMode() === 'table') {
+      <div class="vid-table-wrap">
+        <table class="vid-table">
+          <thead>
+            <tr>
+              <th class="vid-table__th vid-table__th--thumb"></th>
+              <th class="vid-table__th">Title</th>
+              <th class="vid-table__th">Category</th>
+              <th class="vid-table__th">Date</th>
+              <th class="vid-table__th vid-table__th--action">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (i of [1,2,3,4,5]; track i) {
+                <tr class="vid-table__row">
+                  <td class="vid-table__td vid-table__td--thumb"><div class="skeleton-block" style="width:72px;height:42px;border-radius:6px"></div></td>
+                  <td class="vid-table__td"><div class="skeleton-line skeleton-line--title"></div><div class="skeleton-line skeleton-line--sub" style="margin-top:4px"></div></td>
+                  <td class="vid-table__td"><div class="skeleton-line" style="width:70px"></div></td>
+                  <td class="vid-table__td"><div class="skeleton-line" style="width:80px"></div></td>
+                  <td class="vid-table__td"></td>
+                </tr>
+              }
+            }
+            @if (!loading()) {
+              @for (v of displayed(); track v._id) {
+                <tr class="vid-table__row">
+                  <td class="vid-table__td vid-table__td--thumb">
+                    <img class="vid-table__thumb" [src]="thumbUrl(v.youtubeId)" [alt]="v.title" loading="lazy" />
+                  </td>
+                  <td class="vid-table__td vid-table__td--title">
+                    <div class="vid-table__title">{{ v.title }}</div>
+                    <div class="vid-table__desc">{{ v.description }}</div>
+                  </td>
+                  <td class="vid-table__td">
+                    <span class="vid-table__cat">{{ v.category }}</span>
+                  </td>
+                  <td class="vid-table__td vid-table__td--muted">{{ v.createdAt | date: 'mediumDate' }}</td>
+                  <td class="vid-table__td vid-table__td--action">
+                    <div class="row-actions">
+                      <a
+                        class="icon-btn"
+                        [href]="ytUrl(v.youtubeId)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open on YouTube"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                      </a>
+                      <button
+                        class="icon-btn icon-btn--danger"
+                        type="button"
+                        title="Delete video"
+                        (click)="delete(v._id, v.title, $event)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @if (displayed().length === 0) {
+                <tr><td colspan="5" class="empty-cell">No videos match your filters.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- ── Backend search results ── -->
+  @if (showBackendResults()) {
+    <div class="backend-search">
+      @if (searchingBackend()) {
+        <div class="backend-search__banner backend-search__banner--loading">
+          <span class="spinner spinner--sm"></span>
+          Searching all videos…
+        </div>
+      } @else if (backendSearched()) {
+        @if (backendResults().length > 0) {
+          <div class="backend-search__banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="backend-search__icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            {{ backendTotal() }} result{{ backendTotal() !== 1 ? 's' : '' }} found across all videos
+          </div>
+          <div class="vid-table-wrap">
+            <table class="vid-table">
+              <thead><tr>
+                <th class="vid-table__th vid-table__th--thumb"></th>
+                <th class="vid-table__th">Title</th>
+                <th class="vid-table__th">Category</th>
+                <th class="vid-table__th">Date</th>
+                <th class="vid-table__th vid-table__th--action">Actions</th>
+              </tr></thead>
+              <tbody>
+                @for (v of backendResults(); track v._id) {
+                  <tr class="vid-table__row">
+                    <td class="vid-table__td vid-table__td--thumb">
+                      <img class="vid-table__thumb" [src]="thumbUrl(v.youtubeId)" [alt]="v.title" loading="lazy" />
+                    </td>
+                    <td class="vid-table__td vid-table__td--title">
+                      <div class="vid-table__title">{{ v.title }}</div>
+                      <div class="vid-table__desc">{{ v.description }}</div>
+                    </td>
+                    <td class="vid-table__td"><span class="vid-table__cat">{{ v.category }}</span></td>
+                    <td class="vid-table__td vid-table__td--muted">{{ v.createdAt | date: 'mediumDate' }}</td>
+                    <td class="vid-table__td vid-table__td--action">
+                      <div class="row-actions">
+                        <a class="icon-btn" [href]="ytUrl(v.youtubeId)" target="_blank" rel="noopener noreferrer" title="Open on YouTube">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                          </svg>
+                        </a>
+                        <button class="icon-btn icon-btn--danger" type="button" title="Delete video" (click)="delete(v._id, v.title, $event)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="state-cell">No results found for "{{ searchQuery() }}".</div>
+        }
+      }
+    </div>
+  }
+
+</div>

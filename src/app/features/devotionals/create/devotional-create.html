@@ -1,0 +1,342 @@
+<div class="page create-page">
+
+  <!-- Back -->
+  <a routerLink="/devotionals" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Devotionals
+  </a>
+
+  <div class="create-header">
+    <h1 class="page-title">New devotional</h1>
+    <p class="page-subtitle">Upload a Word document to auto-extract the devotional fields.</p>
+  </div>
+
+  <!-- ── Step indicator ── -->
+  <div class="stepper" role="list">
+    @for (step of steps; track step.id) {
+      <button
+        class="stepper__step"
+        role="listitem"
+        [class.stepper__step--active]="currentStep() === step.id"
+        [class.stepper__step--done]="currentStep() > step.id"
+        [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+        (click)="goToStep(step.id)"
+        [disabled]="step.id > currentStep()"
+        type="button"
+      >
+        <span class="stepper__circle">
+          @if (currentStep() > step.id) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else {
+            {{ step.id }}
+          }
+        </span>
+        <span class="stepper__label">{{ step.label }}</span>
+      </button>
+      @if (step.id < steps.length) {
+        <span class="stepper__line" [class.stepper__line--done]="currentStep() > step.id" aria-hidden="true"></span>
+      }
+    }
+  </div>
+
+  <!-- ── Step card ── -->
+  <div class="step-card">
+
+    <!-- STEP 1 — Date & Thumbnail -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">1</span>
+          <div>
+            <h2 class="step-title">Date &amp; Thumbnail</h2>
+            <p class="step-desc">Set the devotional date and optionally upload a banner image.</p>
+          </div>
+        </div>
+
+        <!-- Date row -->
+        <div class="form-row-3">
+          <div class="form-field">
+            <label class="form-label" for="dev-day">Day <span class="required-star">*</span></label>
+            <input
+              id="dev-day"
+              type="number"
+              class="form-input"
+              placeholder="1–31"
+              [(ngModel)]="day"
+              min="1"
+              max="31"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="dev-month">Month <span class="required-star">*</span></label>
+            <select id="dev-month" class="form-input" [(ngModel)]="month">
+              @for (m of monthOptions; track m.value) {
+                <option [value]="m.value">{{ m.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="dev-year">Year <span class="required-star">*</span></label>
+            <input
+              id="dev-year"
+              type="number"
+              class="form-input"
+              placeholder="e.g. 2025"
+              [(ngModel)]="year"
+              min="2000"
+              max="2099"
+            />
+          </div>
+        </div>
+
+        <!-- Thumbnail upload -->
+        <div class="form-field">
+          <label class="form-label">Banner / thumbnail <span class="optional-tag">optional</span></label>
+
+          @if (thumbnailUrl) {
+            <div class="banner-done">
+              <img class="banner-preview-img" [src]="thumbnailUrl" alt="Banner image" />
+              <div class="banner-done-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="icon-success" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Thumbnail uploaded</span>
+                <button class="link-btn" type="button" (click)="removeThumbnail()">Change</button>
+              </div>
+            </div>
+          } @else {
+            <div class="upload-area">
+              @if (thumbnailPreviewUrl()) {
+                <img class="banner-preview-img" [src]="thumbnailPreviewUrl()!" alt="Preview" />
+              } @else {
+                <label class="upload-drop" for="thumbnail-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>Click to choose image</span>
+                  <span class="upload-hint">JPG, PNG or WebP — shown as devotional banner</span>
+                </label>
+              }
+              <input id="thumbnail-input" type="file" accept="image/*" class="file-input-hidden" (change)="onThumbnailFileChange($event)" />
+            </div>
+
+            @if (thumbnailPreviewUrl() && !thumbnailUrl) {
+              <div class="upload-actions">
+                <button class="btn btn--primary btn--sm" type="button" [disabled]="uploadingThumbnail()" (click)="uploadThumbnail()">
+                  @if (uploadingThumbnail()) { <span class="spinner spinner--sm"></span> Uploading… }
+                  @else { Upload image }
+                </button>
+                <button class="btn btn--ghost btn--sm" type="button" (click)="removeThumbnail()">Remove</button>
+              </div>
+            }
+            @if (thumbnailUploadError()) {
+              <p class="field-error">{{ thumbnailUploadError() }}</p>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2 — Document -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">2</span>
+          <div>
+            <h2 class="step-title">Document</h2>
+            <p class="step-desc">Upload a Word document — fields are extracted automatically.</p>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Document <span class="required-star">*</span></label>
+
+          @if (!docFileName()) {
+            <label class="upload-drop upload-drop--doc" for="doc-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Drop a Word document here</span>
+              <span class="upload-hint">.docx · .doc</span>
+            </label>
+            <input id="doc-input" type="file" accept=".docx,.doc" class="file-input-hidden" (change)="onDocumentFileChange($event)" />
+          } @else {
+
+            <!-- Pipeline status card -->
+            <div class="pipeline-card" [class.pipeline-card--done]="pipelineComplete" [class.pipeline-card--error]="pipelineState()?.stage === 'error'">
+              <div class="pipeline-file-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="pipeline-filename">{{ docFileName() }}</span>
+                @if (!pipelineRunning) {
+                  <button class="link-btn" type="button" (click)="clearDocument()">Change file</button>
+                }
+              </div>
+
+              @if (pipelineRunning) {
+                <div class="pipeline-progress">
+                  <div class="pipeline-bar-track">
+                    <div class="pipeline-bar-fill" [style.width.%]="pipelineState()?.progress ?? 0"></div>
+                  </div>
+                  <div class="pipeline-stage-row">
+                    <div class="pipeline-dots">
+                      <span class="dot dot--bounce" style="animation-delay:0ms"></span>
+                      <span class="dot dot--bounce" style="animation-delay:150ms"></span>
+                      <span class="dot dot--bounce" style="animation-delay:300ms"></span>
+                    </div>
+                    <span class="pipeline-stage-msg">{{ pipelineState()?.message }}</span>
+                  </div>
+                </div>
+              } @else if (pipelineState()?.stage === 'complete') {
+                <div class="pipeline-success">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Document extracted successfully</span>
+                </div>
+              } @else if (pipelineState()?.stage === 'error') {
+                <div class="pipeline-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  {{ pipelineState()?.message ?? 'Processing failed' }}
+                </div>
+              }
+            </div>
+
+            <!-- Extraction fields + summary after pipeline completes -->
+            @if (pipelineComplete) {
+              <div class="extraction-fields">
+                <div class="form-field">
+                  <label class="form-label" for="dev-title">Title <span class="required-star">*</span></label>
+                  <input id="dev-title" type="text" class="form-input" [(ngModel)]="title" placeholder="Devotional title" maxlength="200" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="dev-author">Author <span class="optional-tag">optional</span></label>
+                  <input id="dev-author" type="text" class="form-input" [(ngModel)]="author" placeholder="e.g. Rev. Alex Buabeng-Korsah" maxlength="120" />
+                </div>
+              </div>
+
+              <!-- Extraction summary grid -->
+              <div class="extraction-summary">
+                <div class="es-row"><span class="es-label">Theme scripture</span><span class="es-val">{{ extracted()?.themeScripture ? 'Found' : '—' }}</span></div>
+                <div class="es-row"><span class="es-label">Content</span><span class="es-val">{{ extracted()?.content ? 'Found' : '—' }}</span></div>
+                <div class="es-row"><span class="es-label">Prep questions</span><span class="es-val">{{ extracted()?.preparatoryQuestions?.length ?? 0 }} found</span></div>
+                <div class="es-row"><span class="es-label">Meditation Qs</span><span class="es-val">{{ extracted()?.questionsToHelpYouMeditate?.length ?? 0 }} found</span></div>
+                <div class="es-row"><span class="es-label">Prayer</span><span class="es-val">{{ extracted()?.prayer ? 'Found' : '—' }}</span></div>
+                <div class="es-row"><span class="es-label">Further reading</span><span class="es-val">{{ extracted()?.furtherReading ? 'Found' : '—' }}</span></div>
+                <div class="es-row"><span class="es-label">Bible plan</span><span class="es-val">{{ extracted()?.oneYearBiblePlan ? 'Found' : '—' }}</span></div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 3 — Review & Publish -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <div class="step-heading">
+          <span class="step-num">3</span>
+          <div>
+            <h2 class="step-title">Review &amp; publish</h2>
+            <p class="step-desc">Review what will be created, then publish or save as a draft.</p>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="create-summary">
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Date</span>
+            <span class="create-summary__row-val">{{ formattedDate }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Title</span>
+            <span class="create-summary__row-val">{{ title || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Author</span>
+            <span class="create-summary__row-val">{{ author || '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Thumbnail</span>
+            <span class="create-summary__row-val">{{ thumbnailUrl ? 'Uploaded' : 'None' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Theme scripture</span>
+            <span class="create-summary__row-val">{{ extracted()?.themeScripture ? 'Found' : '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Content</span>
+            <span class="create-summary__row-val">{{ extracted()?.content ? 'Ready' : 'None' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Prep questions</span>
+            <span class="create-summary__row-val">{{ extracted()?.preparatoryQuestions?.length ?? 0 }} question(s)</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Meditation Qs</span>
+            <span class="create-summary__row-val">{{ extracted()?.questionsToHelpYouMeditate?.length ?? 0 }} question(s)</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Prayer</span>
+            <span class="create-summary__row-val">{{ extracted()?.prayer ? 'Added' : '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Further reading</span>
+            <span class="create-summary__row-val">{{ extracted()?.furtherReading ? 'Added' : '—' }}</span>
+          </div>
+          <div class="create-summary__row">
+            <span class="create-summary__row-label">Bible plan</span>
+            <span class="create-summary__row-val">{{ extracted()?.oneYearBiblePlan ? 'Added' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="toggle-field">
+            <span class="form-label" style="margin:0">Publish immediately</span>
+            <button
+              class="toggle" [class.toggle--on]="published"
+              role="switch" [attr.aria-checked]="published"
+              type="button"
+              (click)="published = !published"
+            >
+              <span class="toggle__thumb"></span>
+            </button>
+          </label>
+          <p class="form-hint-text">You can always publish or unpublish from the devotional detail page.</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Nav buttons ── -->
+    <div class="step-nav">
+      @if (saveError()) {
+        <p class="field-error">{{ saveError() }}</p>
+      }
+      <div class="step-nav-btns">
+        @if (currentStep() > 1) {
+          <button class="btn btn--ghost" type="button" (click)="back()">Back</button>
+        }
+        @if (currentStep() < 3) {
+          <button
+            class="btn btn--primary"
+            type="button"
+            [disabled]="!canGoNext()"
+            (click)="next()"
+          >
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon btn-icon--right" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        } @else {
+          <button
+            class="btn btn--primary"
+            type="button"
+            [disabled]="saving() || !title.trim()"
+            (click)="save()"
+          >
+            @if (saving()) {
+              <span class="spinner spinner--sm"></span> Creating…
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Create devotional
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+  </div><!-- /step-card -->
+
+</div>

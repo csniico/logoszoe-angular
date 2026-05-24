@@ -1,0 +1,124 @@
+<div class="bpp">
+
+  <!-- Saved passages list -->
+  @if (passages.length) {
+    <ul class="bpp__list">
+      @for (p of passages; track p.ref; let i = $index) {
+        <li class="bpp__item">
+          <div class="bpp__item-ref">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <strong>{{ p.ref }}</strong>
+          </div>
+          <ul class="bpp__verses">
+            @for (v of p.passage; track $index; let vi = $index) {
+              <li class="bpp__verse">
+                <span class="bpp__verse-num">{{ getVerseNumber(p.ref, vi) }}</span>
+                {{ v }}
+              </li>
+            }
+          </ul>
+          <button class="bpp__remove" (click)="removePassage(i)" title="Remove passage" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (!pickerOpen()) {
+    <p class="bpp__empty">No passages added yet.</p>
+  }
+
+  <!-- Add passage button -->
+  @if (!pickerOpen()) {
+    <button class="bpp__add-btn" type="button" (click)="openPicker()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add passage
+    </button>
+  }
+
+  <!-- ── Picker form ── -->
+  @if (pickerOpen()) {
+    <div class="bpp__picker">
+
+      <div class="bpp__picker-row">
+
+        <!-- Book -->
+        <div class="bpp__field">
+          <label class="bpp__label">Book</label>
+          @if (loadingBooks()) {
+            <div class="bpp__loading">Loading books…</div>
+          } @else {
+            <select class="bpp__select" [ngModel]="selectedBook()?.abbrev" (ngModelChange)="onBookChange($event)">
+              <option value="" disabled selected>Select book</option>
+              @for (book of books(); track book.abbrev) {
+                <option [value]="book.abbrev">{{ book.name }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        <!-- Chapter -->
+        <div class="bpp__field">
+          <label class="bpp__label">Chapter</label>
+          <select class="bpp__select" [disabled]="!selectedBook()" [ngModel]="selectedChapter()" (ngModelChange)="onChapterChange(+$event)">
+            <option [value]="null" disabled selected>—</option>
+            @for (ch of chapterList(); track ch) {
+              <option [value]="ch">{{ ch }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Start verse -->
+        <div class="bpp__field">
+          <label class="bpp__label">From verse</label>
+          @if (loadingVerses()) {
+            <div class="bpp__loading">Loading…</div>
+          } @else {
+            <select class="bpp__select" [disabled]="!chapterVerses()" [ngModel]="startVerse()" (ngModelChange)="startVerse.set(+$event); endVerse.set(null)">
+              <option [value]="null" disabled selected>—</option>
+              @for (v of verseList(); track v) {
+                <option [value]="v">{{ v }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        <!-- End verse (optional) -->
+        <div class="bpp__field">
+          <label class="bpp__label">To verse <span class="bpp__optional">(optional)</span></label>
+          <select class="bpp__select" [disabled]="!startVerse()" [ngModel]="endVerse()" (ngModelChange)="endVerse.set(+$event || null)">
+            <option [value]="null">— (single)</option>
+            @for (v of verseList(); track v) {
+              @if (v > (startVerse() ?? 0)) {
+                <option [value]="v">{{ v }}</option>
+              }
+            }
+          </select>
+        </div>
+
+      </div><!-- /picker-row -->
+
+      <!-- Preview -->
+      @if (previewPassage().length) {
+        <div class="bpp__preview">
+          <p class="bpp__preview-ref">{{ previewRef() }}</p>
+          @for (v of previewPassage(); track $index; let vi = $index) {
+            <p class="bpp__preview-verse">
+              <sup class="bpp__sup">{{ (startVerse() ?? 1) + vi }}</sup>{{ v }}
+            </p>
+          }
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="bpp__actions">
+        <button class="btn btn--primary btn--sm" type="button" [disabled]="!canAdd()" (click)="addPassage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          Add to list
+        </button>
+        <button class="btn btn--ghost btn--sm" type="button" (click)="closePicker()">Cancel</button>
+      </div>
+
+    </div><!-- /picker -->
+  }
+
+</div>

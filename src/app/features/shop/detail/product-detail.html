@@ -1,0 +1,274 @@
+<div class="page detail-page">
+
+  <!-- Back -->
+  <a routerLink="/shop" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Shop
+  </a>
+
+  @if (loading()) {
+    <div class="state-cell"><div class="spinner"></div> Loading…</div>
+
+  } @else if (error()) {
+    <div class="state-cell state-cell--error">{{ error() }}</div>
+
+  } @else if (product(); as prod) {
+
+    <!-- ── Page header ── -->
+    <div class="page-header">
+      <div class="detail-title-row">
+        <span class="status-chip status-chip--{{ prod.status }}">{{ statusLabel() }}</span>
+        <h1 class="page-title">{{ prod.title }}</h1>
+      </div>
+
+      <div class="header-actions">
+        <button
+          class="btn btn--sm btn--danger-outline"
+          [disabled]="deleting() || saving()"
+          (click)="deleteProduct()"
+        >
+          @if (deleting()) {
+            <span class="spinner spinner--sm"></span> Deleting…
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+            Delete
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (saveError()) {
+      <div class="alert alert--error">{{ saveError() }}</div>
+    }
+
+    <!-- ── Hero row: image left · core fields right ── -->
+    <div class="hero-row">
+
+      <!-- Left: product image -->
+      <div class="hero-row__image field-card">
+        <div class="field-card__header">
+          <span class="field-card__label">Product image</span>
+          @if (editingField() !== 'imageUrl') {
+            <button class="edit-btn" (click)="startEdit('imageUrl')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          }
+        </div>
+
+        @if (editingField() !== 'imageUrl') {
+          @if (prod.imageUrl) {
+            <img class="hero-img" [src]="prod.imageUrl" [alt]="prod.title" />
+          } @else {
+            <div class="no-image">No image</div>
+          }
+        } @else {
+          <div class="upload-zone">
+            @if (imagePreviewUrl()) {
+              <img class="hero-img" [src]="imagePreviewUrl()!" alt="Preview" />
+            } @else if (prod.imageUrl) {
+              <img class="hero-img" [src]="prod.imageUrl" [alt]="prod.title" />
+            } @else {
+              <div class="upload-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                <span>Select an image</span>
+              </div>
+            }
+            <label class="upload-label">
+              <input type="file" accept="image/*" class="upload-input" (change)="onImageFileChange($event)" />
+              <span class="btn btn--ghost btn--sm">Choose file</span>
+            </label>
+            @if (imageUploadError()) {
+              <p class="field-error">{{ imageUploadError() }}</p>
+            }
+          </div>
+          <div class="field-card__actions">
+            <button class="btn btn--primary btn--sm" [disabled]="!pendingImageFile || uploadingImage()" (click)="uploadImage()">
+              @if (uploadingImage()) { <span class="spinner spinner--sm"></span> Uploading… } @else { Upload &amp; save }
+            </button>
+            <button class="btn btn--ghost btn--sm" (click)="cancelImageEdit()">Cancel</button>
+          </div>
+        }
+      </div>
+
+      <!-- Right: title, price, status, category stacked -->
+      <div class="hero-row__meta">
+
+        <!-- Title -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Title</span>
+            @if (editingField() !== 'title') {
+              <button class="edit-btn" (click)="startEdit('title')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'title') {
+            <span class="field-value">{{ prod.title }}</span>
+          } @else {
+            <input type="text" class="field-input" [value]="draftString" (input)="setDraftString($any($event.target).value)" />
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'title' }"></ng-container>
+          }
+        </div>
+
+        <!-- Price -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Price ($)</span>
+            @if (editingField() !== 'price') {
+              <button class="edit-btn" (click)="startEdit('price')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'price') {
+            <span class="field-value field-value--price">${{ prod.price.toFixed(2) }}</span>
+          } @else {
+            <input type="number" min="0" step="0.01" class="field-input" [value]="draftNumber" (input)="setDraftNumber(+$any($event.target).value)" />
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'price' }"></ng-container>
+          }
+        </div>
+
+        <!-- Status -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Status</span>
+            @if (editingField() !== 'status') {
+              <button class="edit-btn" (click)="startEdit('status')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'status') {
+            <span class="status-chip status-chip--{{ prod.status }}">{{ statusLabel() }}</span>
+          } @else {
+            <select class="field-select" [value]="draftString" (change)="setDraftString($any($event.target).value)">
+              @for (s of productStatuses; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'status' }"></ng-container>
+          }
+        </div>
+
+        <!-- Category -->
+        <div class="field-card">
+          <div class="field-card__header">
+            <span class="field-card__label">Category</span>
+            @if (editingField() !== 'category') {
+              <button class="edit-btn" (click)="startEdit('category')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+            }
+          </div>
+          @if (editingField() !== 'category') {
+            <span class="field-value field-value--cat">{{ categoryLabel() }}</span>
+          } @else {
+            <select class="field-select" [value]="draftString" (change)="setDraftString($any($event.target).value)">
+              @for (c of productCategories; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+            <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'category' }"></ng-container>
+          }
+        </div>
+
+      </div>
+    </div><!-- /hero-row -->
+
+    <!-- ── Second row: description + quantity ── -->
+    <div class="fields-grid">
+
+      <!-- Description -->
+      <div class="field-card field-card--full">
+        <div class="field-card__header">
+          <span class="field-card__label">Description</span>
+          @if (editingField() !== 'description') {
+            <button class="edit-btn" (click)="startEdit('description')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          }
+        </div>
+        @if (editingField() !== 'description') {
+          <p class="field-value field-value--desc">{{ prod.description || '—' }}</p>
+        } @else {
+          <textarea class="field-textarea" rows="5" [value]="draftString" (input)="setDraftString($any($event.target).value)"></textarea>
+          <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'description' }"></ng-container>
+        }
+      </div>
+
+      <!-- Quantity -->
+      <div class="field-card">
+        <div class="field-card__header">
+          <span class="field-card__label">Quantity</span>
+          @if (editingField() !== 'quantity') {
+            <button class="edit-btn" (click)="startEdit('quantity')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          }
+        </div>
+        @if (editingField() !== 'quantity') {
+          <span class="field-value">{{ prod.quantity }}</span>
+        } @else {
+          <input type="number" min="0" step="1" class="field-input" [value]="draftNumber" (input)="setDraftNumber(+$any($event.target).value)" />
+          <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'quantity' }"></ng-container>
+        }
+      </div>
+
+      <!-- Slug (read-only) -->
+      <div class="field-card">
+        <div class="field-card__header">
+          <span class="field-card__label">Slug</span>
+          <span class="readonly-badge">read-only</span>
+        </div>
+        <code class="slug">{{ prod.slug }}</code>
+      </div>
+
+    </div><!-- /fields-grid -->
+
+    <!-- ── Stats ── -->
+    <div class="stat-strip">
+      <div class="stat-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Created <strong>{{ prod.createdAt | date:'MMM d, y' }}</strong></span>
+      </div>
+      @if (prod.updatedAt) {
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span>Updated <strong>{{ prod.updatedAt | date:'MMM d, y' }}</strong></span>
+        </div>
+      }
+    </div>
+
+  } @else {
+    <div class="state-cell state-cell--error">Product not found.</div>
+  }
+</div>
+
+<!-- ── Shared save / cancel template ── -->
+<ng-template #saveCancel let-field="field">
+  <div class="field-card__actions">
+    @if (saveError()) { <span class="field-error">{{ saveError() }}</span> }
+    <button class="btn btn--primary btn--sm" [disabled]="saving()" (click)="saveField(field)">
+      @if (saving()) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
+    </button>
+    <button class="btn btn--ghost btn--sm" [disabled]="saving()" (click)="cancelEdit()">Cancel</button>
+  </div>
+</ng-template>

@@ -1,0 +1,226 @@
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">
+        Course Videos
+        @if (!loading()) {
+          <span class="count-badge">{{ videos().length }}</span>
+        }
+      </h1>
+      <p class="page-subtitle">Upload and manage videos for course lessons</p>
+    </div>
+    <button class="btn btn--primary" type="button" (click)="showUpload.set(!showUpload())">
+      @if (showUpload()) {
+        Cancel
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+        Upload video
+      }
+    </button>
+  </div>
+
+  <!-- ── Upload panel ── -->
+  @if (showUpload()) {
+    <div class="upload-panel">
+      <h3 class="upload-panel__title">Upload new video</h3>
+
+      <div class="form-field">
+        <label class="form-label" for="cv-title">Title <span class="required-star">*</span></label>
+        <input id="cv-title" class="form-input" type="text" [(ngModel)]="newTitle" placeholder="Video title" maxlength="200" />
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="cv-description">Description</label>
+        <textarea id="cv-description" class="form-textarea" rows="3" [(ngModel)]="newDescription" placeholder="Optional description…" maxlength="2000"></textarea>
+      </div>
+
+      <!-- ── Video file picker + preview ── -->
+      <div class="form-field">
+        <label class="form-label" for="cv-video">Video file <span class="required-star">*</span></label>
+        <label class="file-input-label" [class.file-input-label--has-file]="pendingVideoFile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="file-icon">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/>
+            <line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+          </svg>
+          <span class="file-input-label__name">{{ pendingVideoFile ? pendingVideoFile.name : 'Choose video file…' }}</span>
+          @if (pendingVideoFile) {
+            <span class="file-input-label__change">Change</span>
+          }
+          <input id="cv-video" type="file" accept="video/*" class="file-input-hidden" (change)="onVideoFileChange($event)" />
+        </label>
+
+        @if (videoPreviewUrl()) {
+          <div class="media-preview media-preview--video">
+            <video [src]="videoPreviewUrl()!" controls preload="metadata" class="video-preview-player">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        }
+      </div>
+
+      <!-- ── Thumbnail picker + preview ── -->
+      <div class="form-field">
+        <label class="form-label" for="cv-thumb">Thumbnail <span class="form-label__optional">(optional)</span></label>
+        <label class="file-input-label" [class.file-input-label--has-file]="pendingThumbFile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="file-icon">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span class="file-input-label__name">{{ pendingThumbFile ? pendingThumbFile.name : 'Choose thumbnail image…' }}</span>
+          @if (pendingThumbFile) {
+            <span class="file-input-label__change">Change</span>
+          }
+          <input id="cv-thumb" type="file" accept="image/*" class="file-input-hidden" (change)="onThumbFileChange($event)" />
+        </label>
+
+        @if (thumbPreviewUrl()) {
+          <div class="media-preview media-preview--image">
+            <img [src]="thumbPreviewUrl()!" alt="Thumbnail preview" class="thumb-preview-img" />
+          </div>
+        }
+      </div>
+
+      @if (uploadProgress()) {
+        <div class="upload-progress">
+          <span class="spinner spinner--sm"></span>
+          {{ uploadProgress() }}
+        </div>
+      }
+
+      @if (uploadError()) {
+        <p class="field-error">{{ uploadError() }}</p>
+      }
+
+      <div class="upload-panel__actions">
+        <button class="btn btn--ghost btn--sm" type="button" (click)="cancelUpload()">Cancel</button>
+        <button
+          class="btn btn--primary btn--sm"
+          type="button"
+          [disabled]="!pendingVideoFile || !newTitle.trim() || uploadingVideo()"
+          (click)="upload()"
+        >
+          @if (uploadingVideo()) { <span class="spinner spinner--sm"></span> Uploading… }
+          @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+              <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            Upload
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  @if (!error()) {
+
+    <!-- ── Loading skeletons ── -->
+    @if (loading()) {
+      <div class="cv-grid">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="cv-card cv-card--skeleton">
+            <div class="cv-card__thumb skeleton-block"></div>
+            <div class="cv-card__body">
+              <div class="skeleton-line skeleton-line--title"></div>
+              <div class="skeleton-line skeleton-line--sub" style="margin-top:6px"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Empty state ── -->
+    @if (!loading() && videos().length === 0) {
+      <div class="empty-state">
+        <div class="empty-state__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+            <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/>
+            <line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+          </svg>
+        </div>
+        <p class="empty-state__text">No course videos yet.</p>
+        <p class="empty-state__hint">Upload a video to get started.</p>
+        <button class="btn btn--primary btn--sm" type="button" (click)="showUpload.set(true)">Upload first video</button>
+      </div>
+    }
+
+    <!-- ── Video grid ── -->
+    @if (!loading() && videos().length > 0) {
+      <div class="cv-grid">
+        @for (v of videos(); track v._id) {
+          <article class="cv-card" [routerLink]="['/course-videos', v._id]" style="cursor:pointer">
+            <!-- Thumbnail -->
+            <div class="cv-card__thumb">
+              @if (v.thumbnailUrl) {
+                <img [src]="v.thumbnailUrl" [alt]="v.title" loading="lazy" />
+              } @else {
+                <div class="cv-card__thumb-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                    <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/>
+                    <line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+                  </svg>
+                </div>
+              }
+
+              <!-- Duration badge -->
+              @if (v.durationSec) {
+                <span class="cv-card__duration">{{ formatDuration(v.durationSec) }}</span>
+              }
+
+              <!-- Delete button -->
+              <button
+                class="cv-card__delete"
+                type="button"
+                [title]="'Delete ' + v.title"
+                [disabled]="deletingId() === v._id"
+                (click)="delete(v._id, v.title)"
+              >
+                @if (deletingId() === v._id) {
+                  <span class="spinner spinner--sm"></span>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  </svg>
+                }
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="cv-card__body">
+              <h3 class="cv-card__title">{{ v.title }}</h3>
+              @if (v.description) {
+                <p class="cv-card__desc">{{ v.description }}</p>
+              }
+              <span class="cv-card__date">{{ v.createdAt | date: 'mediumDate' }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+  }
+
+</div>
