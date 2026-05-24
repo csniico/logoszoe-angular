@@ -8,7 +8,10 @@ import { PaginatedResponse } from '../models/paginated-response.model';
 @Injectable({ providedIn: 'root' })
 export class PodcastService {
   private readonly http = inject(HttpClient);
+  /** Public read endpoint (paginated). */
   private readonly base = `${environment.apiUrl}/podcasts`;
+  /** Admin write endpoint — AdminGuard on server. */
+  private readonly adminBase = `${environment.apiUrl}/admin/podcasts`;
 
   getAll(page = 1, limit = 25): Observable<PaginatedResponse<Podcast>> {
     return this.http.get<PaginatedResponse<Podcast>>(this.base, {
@@ -25,14 +28,14 @@ export class PodcastService {
   }
 
   create(data: Partial<Podcast>): Observable<Podcast> {
-    return this.http.post<Podcast>(this.base, data);
+    return this.http.post<Podcast>(this.adminBase, data);
   }
 
   update(id: string, patch: Partial<Podcast>): Observable<Podcast> {
-    return this.http.patch<Podcast>(`${this.base}/${id}`, patch);
+    return this.http.patch<Podcast>(`${this.adminBase}/${id}`, patch);
   }
 
   delete(id: string): Observable<{ deletedCount: number }> {
-    return this.http.delete<{ deletedCount: number }>(`${this.base}/${id}`);
+    return this.http.delete<{ deletedCount: number }>(`${this.adminBase}/${id}`);
   }
 }

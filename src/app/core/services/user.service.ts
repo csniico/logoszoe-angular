@@ -9,10 +9,13 @@ export type CreateUserRole = 'user' | 'admin' | 'superadmin';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
+  /** User JWT endpoint — used only for reading the signed-in admin's own profile. */
   private readonly base = `${environment.apiUrl}/users`;
+  /** Admin endpoint — AdminGuard on server. */
+  private readonly adminBase = `${environment.apiUrl}/admin/users`;
 
   getAll(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.base}/all`);
+    return this.http.get<User[]>(`${this.adminBase}/all`);
   }
 
   /** Create an app user (goes to the users collection). */
@@ -23,7 +26,7 @@ export class UserService {
     password: string;
     role: UserRole;
   }): Observable<User> {
-    return this.http.post<User>(this.base, data);
+    return this.http.post<User>(this.adminBase, data);
   }
 
   /** Create an admin-panel user (goes to the adminUsers collection). */
@@ -41,10 +44,10 @@ export class UserService {
   }
 
   updateRole(id: string, role: UserRole): Observable<User> {
-    return this.http.patch<User>(`${this.base}/${id}/role`, { role });
+    return this.http.patch<User>(`${this.adminBase}/${id}/role`, { role });
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+    return this.http.delete<void>(`${this.adminBase}/${id}`);
   }
 }

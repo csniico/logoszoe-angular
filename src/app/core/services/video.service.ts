@@ -7,7 +7,10 @@ import { Video } from '../models/video.model';
 @Injectable({ providedIn: 'root' })
 export class VideoService {
   private readonly http = inject(HttpClient);
+  /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/videos`;
+  /** Admin write endpoint — SuperAdminGuard on server. */
+  private readonly adminBase = `${environment.apiUrl}/admin/videos`;
 
   getAll(): Observable<Video[]> {
     return this.http.get<Video[]>(this.base);
@@ -18,10 +21,10 @@ export class VideoService {
   }
 
   create(data: Partial<Video>): Observable<Video> {
-    return this.http.post<Video>(this.base, data);
+    return this.http.post<Video>(this.adminBase, data);
   }
 
   delete(id: string): Observable<{ deletedCount: number }> {
-    return this.http.delete<{ deletedCount: number }>(`${this.base}/${id}`);
+    return this.http.delete<{ deletedCount: number }>(`${this.adminBase}/${id}`);
   }
 }

@@ -13,7 +13,8 @@ export interface PresignedUrlResponse {
 @Injectable({ providedIn: 'root' })
 export class StorageService {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/storage`;
+  /** Admin storage endpoint — AdminGuard on server. */
+  private readonly base = `${environment.apiUrl}/admin/storage`;
 
   getPresignedUrl(key: string, mimeType: string): Observable<PresignedUrlResponse> {
     return this.http.post<PresignedUrlResponse>(`${this.base}/presigned-url`, {

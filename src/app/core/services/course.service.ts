@@ -7,7 +7,10 @@ import { Course, Lesson, Question, Submission, EnrichedSubmission } from '../mod
 @Injectable({ providedIn: 'root' })
 export class CourseService {
   private readonly http = inject(HttpClient);
+  /** Public read endpoint — no guard on server. */
   private readonly base = `${environment.apiUrl}/courses`;
+  /** Admin write + submissions endpoint — AdminGuard on server. */
+  private readonly adminBase = `${environment.apiUrl}/admin/courses`;
 
   getAll(): Observable<Course[]> {
     return this.http.get<Course[]>(this.base);
@@ -18,15 +21,15 @@ export class CourseService {
   }
 
   create(data: Partial<Course>): Observable<Course> {
-    return this.http.post<Course>(this.base, data);
+    return this.http.post<Course>(this.adminBase, data);
   }
 
   update(id: string, patch: Partial<Course>): Observable<Course> {
-    return this.http.patch<Course>(`${this.base}/${id}`, patch);
+    return this.http.patch<Course>(`${this.adminBase}/${id}`, patch);
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`);
+    return this.http.delete<void>(`${this.adminBase}/${id}`);
   }
 
   getLessons(courseId: string): Observable<Lesson[]> {
@@ -34,19 +37,19 @@ export class CourseService {
   }
 
   createLesson(courseId: string, data: Partial<Lesson>): Observable<Lesson> {
-    return this.http.post<Lesson>(`${this.base}/${courseId}/lessons`, data);
+    return this.http.post<Lesson>(`${this.adminBase}/${courseId}/lessons`, data);
   }
 
   updateLesson(courseId: string, lessonId: string, patch: Partial<Lesson>): Observable<Lesson> {
-    return this.http.patch<Lesson>(`${this.base}/${courseId}/lessons/${lessonId}`, patch);
+    return this.http.patch<Lesson>(`${this.adminBase}/${courseId}/lessons/${lessonId}`, patch);
   }
 
   deleteLesson(courseId: string, lessonId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${courseId}/lessons/${lessonId}`);
+    return this.http.delete<void>(`${this.adminBase}/${courseId}/lessons/${lessonId}`);
   }
 
   reorderLessons(courseId: string, lessonIds: string[]): Observable<void> {
-    return this.http.patch<void>(`${this.base}/${courseId}/lessons/reorder`, { lessonIds });
+    return this.http.patch<void>(`${this.adminBase}/${courseId}/lessons/reorder`, { lessonIds });
   }
 
   // ── Questions ──────────────────────────────────────────────────────────
@@ -56,27 +59,27 @@ export class CourseService {
   }
 
   createQuestion(courseId: string, lessonId: string, data: Partial<Question>): Observable<Question> {
-    return this.http.post<Question>(`${this.base}/${courseId}/lessons/${lessonId}/questions`, data);
+    return this.http.post<Question>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions`, data);
   }
 
   updateQuestion(courseId: string, lessonId: string, questionId: string, patch: Partial<Question>): Observable<Question> {
-    return this.http.patch<Question>(`${this.base}/${courseId}/lessons/${lessonId}/questions/${questionId}`, patch);
+    return this.http.patch<Question>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions/${questionId}`, patch);
   }
 
   deleteQuestion(courseId: string, lessonId: string, questionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${courseId}/lessons/${lessonId}/questions/${questionId}`);
+    return this.http.delete<void>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions/${questionId}`);
   }
 
   // ── Submissions ────────────────────────────────────────────────────────
 
   getSubmissions(courseId: string, lessonId: string): Observable<Submission[]> {
-    return this.http.get<Submission[]>(`${this.base}/${courseId}/lessons/${lessonId}/submissions`);
+    return this.http.get<Submission[]>(`${this.adminBase}/${courseId}/lessons/${lessonId}/submissions`);
   }
 
   getAllSubmissions(filters: { courseId?: string; lessonId?: string } = {}): Observable<EnrichedSubmission[]> {
     const params: Record<string, string> = {};
     if (filters.courseId) params['courseId'] = filters.courseId;
     if (filters.lessonId) params['lessonId'] = filters.lessonId;
-    return this.http.get<EnrichedSubmission[]>(`${this.base}/submissions`, { params });
+    return this.http.get<EnrichedSubmission[]>(`${this.adminBase}/submissions`, { params });
   }
 }

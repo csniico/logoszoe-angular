@@ -7,7 +7,10 @@ import { CourseVideo } from '../models/course-video.model';
 @Injectable({ providedIn: 'root' })
 export class CourseVideoService {
   private readonly http = inject(HttpClient);
+  /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/course-videos`;
+  /** Admin write endpoint — AdminGuard on server. */
+  private readonly adminBase = `${environment.apiUrl}/admin/course-videos`;
 
   getAll(): Observable<CourseVideo[]> {
     return this.http.get<CourseVideo[]>(this.base);
@@ -18,14 +21,14 @@ export class CourseVideoService {
   }
 
   create(data: Partial<CourseVideo>): Observable<CourseVideo> {
-    return this.http.post<CourseVideo>(this.base, data);
+    return this.http.post<CourseVideo>(this.adminBase, data);
   }
 
   update(id: string, patch: Pick<CourseVideo, 'title'> & Partial<Pick<CourseVideo, 'description'>>): Observable<CourseVideo> {
-    return this.http.patch<CourseVideo>(`${this.base}/${id}`, patch);
+    return this.http.patch<CourseVideo>(`${this.adminBase}/${id}`, patch);
   }
 
   delete(id: string): Observable<{ deletedCount: number }> {
-    return this.http.delete<{ deletedCount: number }>(`${this.base}/${id}`);
+    return this.http.delete<{ deletedCount: number }>(`${this.adminBase}/${id}`);
   }
 }
