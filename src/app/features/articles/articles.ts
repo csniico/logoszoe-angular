@@ -239,6 +239,10 @@ export class ArticlesComponent implements OnInit, OnDestroy {
   }
 
   // ── Category helpers ──────────────────────────────────────────
+  articleCountForCat(catId: string): number {
+    return this.articles().filter((a) => this.catId(a) === catId).length;
+  }
+
   catName(art: Article): string {
     const c = articleCat(art);
     return c ? c.name : '—';

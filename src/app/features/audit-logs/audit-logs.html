@@ -1,0 +1,119 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Audit Logs</h1>
+      <p class="page-subtitle">
+        Read-only record of every API request.
+        @if (!loading() && total() > 0) { <span class="total-badge">{{ total() | number }} entries</span> }
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Filters ── -->
+  <div class="card filters-card">
+    <div class="filters-grid">
+
+      <div class="filter-field">
+        <label class="filter-label">Method</label>
+        <select class="form-input form-input--sm" [(ngModel)]="filterMethod">
+          <option value="">All</option>
+          @for (m of methods; track m) {
+            <option [value]="m">{{ m }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Path contains</label>
+        <input type="text" class="form-input form-input--sm" placeholder="/admin/…" [(ngModel)]="filterPath" (keydown.enter)="applyFilters()" />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Status code</label>
+        <input type="number" class="form-input form-input--sm" placeholder="e.g. 404" [(ngModel)]="filterStatus" (keydown.enter)="applyFilters()" />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">Admin ID (last 6)</label>
+        <input type="text" class="form-input form-input--sm" placeholder="…abc123" [(ngModel)]="filterAdminId" (keydown.enter)="applyFilters()" />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">From</label>
+        <input type="datetime-local" class="form-input form-input--sm" [(ngModel)]="filterFrom" />
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-label">To</label>
+        <input type="datetime-local" class="form-input form-input--sm" [(ngModel)]="filterTo" />
+      </div>
+
+    </div>
+
+    <div class="filters-actions">
+      <button class="btn btn--primary btn--sm" (click)="applyFilters()">Apply filters</button>
+      @if (hasActiveFilters) {
+        <button class="btn btn--ghost btn--sm" (click)="clearFilters()">Clear</button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="card table-card">
+    @if (loading()) {
+      <div class="state-msg">
+        <span class="spinner"></span> Loading…
+      </div>
+    } @else if (error()) {
+      <div class="state-msg state-msg--error">{{ error() }}</div>
+    } @else if (logs().length === 0) {
+      <div class="state-msg">No audit logs match your filters.</div>
+    } @else {
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Method</th>
+              <th>Path</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Actor</th>
+              <th>Role</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs(); track log._id) {
+              <tr>
+                <td class="col-time">{{ formatTime(log.timestamp) }}</td>
+                <td><span class="method-badge" [class]="methodClass(log.method)">{{ log.method }}</span></td>
+                <td class="col-path" [title]="log.path">{{ log.path }}</td>
+                <td><span class="status-badge" [class]="statusClass(log.statusCode)">{{ log.statusCode }}</span></td>
+                <td class="col-num">{{ formatDuration(log.durationMs) }}</td>
+                <td class="col-actor" [title]="log.adminId || log.userId || ''">{{ actor(log) }}</td>
+                <td>{{ log.role || '—' }}</td>
+                <td class="col-ip">{{ log.ip || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <span class="pagination__info">
+            Page {{ currentPage() }} of {{ totalPages() }}
+          </span>
+          <div class="pagination__btns">
+            <button class="btn btn--ghost btn--sm" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">← Prev</button>
+            <button class="btn btn--ghost btn--sm" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">Next →</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+</div>

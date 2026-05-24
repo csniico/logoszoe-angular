@@ -236,6 +236,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/profile/profile').then((m) => m.ProfileComponent),
       },
+      {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./features/audit-logs/audit-logs').then((m) => m.AuditLogsComponent),
+      },
     ],
   },
 

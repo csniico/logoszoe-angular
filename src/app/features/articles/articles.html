@@ -36,20 +36,6 @@
     </div>
 
     <div class="toolbar-controls">
-      <!-- Category filter -->
-      <div class="select-wrap">
-        <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <path d="M4 6h16M7 12h10M10 18h4"/>
-        </svg>
-        <select class="filter-select" [value]="filterCategoryId()" (change)="filterCategoryId.set($any($event.target).value)">
-          <option value="">All categories</option>
-          @for (cat of categoryOptions(); track cat._id) {
-            <option [value]="cat._id">{{ cat.name }}</option>
-          }
-        </select>
-        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-
       <!-- Status filter -->
       <div class="select-wrap">
         <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -112,6 +98,35 @@
       </div>
     </div>
   </div>
+
+  <!-- ── Category tabs ── -->
+  @if (!loading() && !error() && categoryOptions().length > 0) {
+    <div class="cat-tabs" role="tablist" aria-label="Filter by category">
+      <button
+        class="cat-tab"
+        [class.cat-tab--active]="filterCategoryId() === ''"
+        role="tab"
+        [attr.aria-selected]="filterCategoryId() === ''"
+        (click)="filterCategoryId.set('')"
+      >
+        All
+        <span class="cat-tab__count">{{ articles().length }}</span>
+      </button>
+      @for (cat of categoryOptions(); track cat._id) {
+        <button
+          class="cat-tab"
+          [class.cat-tab--active]="filterCategoryId() === cat._id"
+          role="tab"
+          [attr.aria-selected]="filterCategoryId() === cat._id"
+          (click)="filterCategoryId.set(cat._id)"
+        >
+          <span class="cat-tab__dot" [style.background]="cat.color ?? '#16A34A'"></span>
+          {{ cat.name }}
+          <span class="cat-tab__count">{{ articleCountForCat(cat._id) }}</span>
+        </button>
+      }
+    </div>
+  }
 
   <!-- ── Selection bar ── -->
   @if (canSelect() && selectedDraftIds().length > 0) {
