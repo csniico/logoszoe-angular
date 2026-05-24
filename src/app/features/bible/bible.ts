@@ -30,25 +30,59 @@ export class BibleComponent implements OnInit {
   readonly loadingVerses   = signal(false);
   readonly errorVerses     = signal<string | null>(null);
 
+  // ── Canonical biblical order ───────────────────────────────────────────────
+  private static readonly OT_ORDER = [
+    'Genesis','Exodus','Leviticus','Numbers','Deuteronomy',
+    'Joshua','Judges','Ruth','1 Samuel','2 Samuel',
+    '1 Kings','2 Kings','1 Chronicles','2 Chronicles',
+    'Ezra','Nehemiah','Esther','Job','Psalms','Proverbs',
+    'Ecclesiastes','Song of Solomon','Isaiah','Jeremiah',
+    'Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos',
+    'Obadiah','Jonah','Micah','Nahum','Habakkuk',
+    'Zephaniah','Haggai','Zechariah','Malachi',
+  ];
+
+  private static readonly NT_ORDER = [
+    'Matthew','Mark','Luke','John','Acts','Romans',
+    '1 Corinthians','2 Corinthians','Galatians','Ephesians',
+    'Philippians','Colossians','1 Thessalonians','2 Thessalonians',
+    '1 Timothy','2 Timothy','Titus','Philemon','Hebrews',
+    'James','1 Peter','2 Peter','1 John','2 John','3 John',
+    'Jude','Revelation',
+  ];
+
+  private static readonly CANONICAL_ORDER = [
+    ...BibleComponent.OT_ORDER,
+    ...BibleComponent.NT_ORDER,
+  ];
+
+  private sortByCanon(list: BibleBook[]): BibleBook[] {
+    return [...list].sort((a, b) => {
+      const ai = BibleComponent.CANONICAL_ORDER.indexOf(a.name);
+      const bi = BibleComponent.CANONICAL_ORDER.indexOf(b.name);
+      // Unknown books fall to the end
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+  }
+
   // ── Computed ──────────────────────────────────────────────────────────────
   readonly filteredBooks = computed<BibleBook[]>(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.books();
-    return this.books().filter(
-      (b) => b.name.toLowerCase().includes(q) || b.abbrev.toLowerCase().includes(q),
-    );
+    const list = q
+      ? this.books().filter(
+          (b) => b.name.toLowerCase().includes(q) || b.abbrev.toLowerCase().includes(q),
+        )
+      : [...this.books()];
+    return this.sortByCanon(list);
   });
 
-  /** OT = first 39 books, NT = books 40-66 by position in the full books array */
-  readonly otBooks = computed<BibleBook[]>(() => {
-    const all = this.books();
-    return this.filteredBooks().filter((b) => all.indexOf(b) < 39);
-  });
+  readonly otBooks = computed<BibleBook[]>(() =>
+    this.filteredBooks().filter((b) => BibleComponent.OT_ORDER.includes(b.name)),
+  );
 
-  readonly ntBooks = computed<BibleBook[]>(() => {
-    const all = this.books();
-    return this.filteredBooks().filter((b) => all.indexOf(b) >= 39);
-  });
+  readonly ntBooks = computed<BibleBook[]>(() =>
+    this.filteredBooks().filter((b) => BibleComponent.NT_ORDER.includes(b.name)),
+  );
 
   /** Array of chapter indices [1 … chaptersCount] for the selected book */
   readonly chapterNumbers = computed<number[]>(() => {

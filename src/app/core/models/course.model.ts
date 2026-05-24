@@ -1,4 +1,4 @@
-export type LessonType = 'text' | 'video';
+export type LessonType = 'text' | 'document' | 'video' | 'audio' | 'link';
 export type QuestionType = 'multiple_choice' | 'text_input';
 
 export interface QuestionOption {

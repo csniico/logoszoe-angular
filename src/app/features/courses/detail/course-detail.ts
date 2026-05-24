@@ -8,6 +8,7 @@ import { CourseVideoService } from '../../../core/services/course-video.service'
 import { StorageService } from '../../../core/services/storage.service';
 import { Course, Lesson, LessonType, Question, QuestionType, QuestionOption } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-course-detail',
@@ -48,13 +49,35 @@ export class CourseDetailComponent implements OnInit {
   readonly coverImgError    = signal(false);
   pendingImageFile: File | null = null;
 
+  // ── User preview ──────────────────────────────────────────────
+  readonly viewMode             = signal<'admin' | 'user'>('admin');
+  readonly userExpandedLessonId = signal<string | null>(null);
+  readonly openLesson           = signal<Lesson | null>(null);
+  readonly completedLessonIds   = signal<Set<string>>(new Set());
+
   // ── Add lesson form ───────────────────────────────────────────
-  readonly showAddLesson   = signal(false);
-  readonly newLessonType   = signal<LessonType>('text');
-  readonly addingLesson    = signal(false);
-  readonly addLessonError  = signal<string | null>(null);
-  newLessonTitle   = '';
-  newLessonContent = '';
+  readonly showAddLesson    = signal(false);
+  readonly addLessonMenuOpen = signal(false);
+  readonly newLessonType    = signal<LessonType>('document');
+  readonly addingLesson     = signal(false);
+  readonly addLessonError   = signal<string | null>(null);
+  newLessonTitle = '';
+
+  // document type
+  readonly newLessonDocFile  = signal<File | null>(null);
+  readonly parsingDoc        = signal(false);
+  readonly parsedDocHtml     = signal('');
+  readonly docParseError     = signal<string | null>(null);
+  readonly newDocContentKey  = signal('');
+
+  // audio type
+  readonly uploadingAudio = signal(false);
+  readonly newAudioUrl    = signal('');
+  readonly newAudioKey    = signal('');
+  newAudioDuration        = 0;
+
+  // link type
+  newLessonUrl = '';
 
   // Video picker for video lessons
   readonly videos          = signal<CourseVideo[]>([]);
@@ -114,6 +137,10 @@ export class CourseDetailComponent implements OnInit {
     return this.route.snapshot.paramMap.get('id') ?? '';
   }
 
+  get viewAsUserUrl(): string {
+    return `${environment.userAppUrl}/courses/${this.courseId}`;
+  }
+
   // ── Lifecycle ─────────────────────────────────────────────────
   ngOnInit(): void {
     const id = this.courseId;
@@ -131,6 +158,34 @@ export class CourseDetailComponent implements OnInit {
     this.courseVideoService.getAll().subscribe({
       next: (vids) => this.videos.set(vids),
       error: () => { /* non-fatal */ },
+    });
+  }
+
+  // ── User preview ─────────────────────────────────────────────
+  toggleViewMode(): void {
+    this.viewMode.update(m => m === 'admin' ? 'user' : 'admin');
+    this.openLesson.set(null);
+    this.userExpandedLessonId.set(null);
+  }
+
+  toggleUserLesson(id: string): void {
+    this.userExpandedLessonId.update(cur => cur === id ? null : id);
+  }
+
+  openLessonDetail(lesson: Lesson): void {
+    this.openLesson.set(lesson);
+    this.loadQuestionsForLesson(lesson._id);
+  }
+
+  closeLessonDetail(): void {
+    this.openLesson.set(null);
+  }
+
+  markComplete(lessonId: string): void {
+    this.completedLessonIds.update(set => {
+      const next = new Set(set);
+      next.add(lessonId);
+      return next;
     });
   }
 
@@ -215,35 +270,159 @@ export class CourseDetailComponent implements OnInit {
   }
 
   // ── Lesson management ─────────────────────────────────────────
+
+  /** Open the type-specific add panel from the dropdown. */
+  openAddLesson(type: LessonType): void {
+    this.newLessonType.set(type);
+    this.newLessonTitle = '';
+    this.newLessonUrl   = '';
+    this.newLessonDocFile.set(null);
+    this.parsedDocHtml.set('');
+    this.docParseError.set(null);
+    this.newDocContentKey.set('');
+    this.newAudioUrl.set('');
+    this.newAudioKey.set('');
+    this.newAudioDuration = 0;
+    this.selectedVideoId.set(null);
+    this.addLessonError.set(null);
+    this.addLessonMenuOpen.set(false);
+    this.showAddLesson.set(true);
+  }
+
+  cancelAddLesson(): void {
+    this.showAddLesson.set(false);
+  }
+
+  // ── Document upload ───────────────────────────────────────────
+  onDocFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.newLessonDocFile.set(file);
+    this.parsedDocHtml.set('');
+    this.docParseError.set(null);
+    this.newDocContentKey.set('');
+    void this.parseDocFile(file);
+  }
+
+  private async parseDocFile(file: File): Promise<void> {
+    this.parsingDoc.set(true);
+    this.docParseError.set(null);
+    try {
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        // Upload PDF to S3, render as embed
+        this.storageService.uploadFile(file, 'courses/documents').subscribe({
+          next: (r) => {
+            this.newDocContentKey.set(r.fileKey);
+            this.parsedDocHtml.set(
+              `<div class="lesson-pdf-embed"><embed src="${r.fileUrl}" type="application/pdf" width="100%" height="600px" /></div>`,
+            );
+            this.parsingDoc.set(false);
+          },
+          error: () => {
+            this.docParseError.set('PDF upload failed. Please try again.');
+            this.parsingDoc.set(false);
+          },
+        });
+        return;
+      }
+      // DOCX → HTML via mammoth
+      const arrayBuffer = await file.arrayBuffer();
+      const mammoth     = await import('mammoth');
+      const result      = await (mammoth as any).default.convertToHtml({ arrayBuffer });
+      const html: string = result?.value ?? '';
+      if (!html.trim()) {
+        this.docParseError.set('No content extracted. Is this a valid .docx file?');
+      } else {
+        this.parsedDocHtml.set(html);
+      }
+    } catch {
+      this.docParseError.set('Failed to parse document. Please try again.');
+    } finally {
+      this.parsingDoc.set(false);
+    }
+  }
+
+  // ── Audio upload ──────────────────────────────────────────────
+  onAudioFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingAudio.set(true);
+    this.addLessonError.set(null);
+    this.storageService.uploadFile(file, 'courses/audio').subscribe({
+      next: (r) => {
+        this.newAudioUrl.set(r.fileUrl);
+        this.newAudioKey.set(r.fileKey);
+        this.uploadingAudio.set(false);
+        // Detect duration
+        const audio = new Audio(r.fileUrl);
+        audio.addEventListener('loadedmetadata', () => {
+          this.newAudioDuration = Math.round(audio.duration) || 0;
+        });
+      },
+      error: () => {
+        this.addLessonError.set('Audio upload failed. Please try again.');
+        this.uploadingAudio.set(false);
+      },
+    });
+  }
+
+  // ── Validity ──────────────────────────────────────────────────
+  get addLessonValid(): boolean {
+    if (!this.newLessonTitle.trim()) return false;
+    switch (this.newLessonType()) {
+      case 'document': return !!this.parsedDocHtml();
+      case 'video':    return !!this.selectedVideoId();
+      case 'audio':    return !!this.newAudioUrl() && !this.uploadingAudio();
+      case 'link':     return !!this.newLessonUrl.trim();
+      default:         return false;
+    }
+  }
+
+  // ── Submit ────────────────────────────────────────────────────
   addLesson(): void {
-    if (!this.newLessonTitle.trim()) return;
-    const c = this.course();
+    if (!this.addLessonValid) return;
+    const c    = this.course();
+    const type = this.newLessonType();
     if (!c) return;
+
+    let content    = '';
+    let contentKey: string | undefined;
+    let durationSec: number | undefined;
+
+    switch (type) {
+      case 'document':
+        content    = this.parsedDocHtml();
+        contentKey = this.newDocContentKey() || undefined;
+        break;
+      case 'video': {
+        const cv   = this.selectedVideo()!;
+        content    = cv._id;
+        contentKey = cv.videoKey;
+        break;
+      }
+      case 'audio':
+        content    = this.newAudioUrl();
+        contentKey = this.newAudioKey();
+        durationSec = this.newAudioDuration || undefined;
+        break;
+      case 'link':
+        content = this.newLessonUrl.trim();
+        break;
+    }
 
     this.addingLesson.set(true);
     this.addLessonError.set(null);
 
-    let content    = this.newLessonContent;
-    let contentKey: string | undefined;
-    if (this.newLessonType() === 'video' && this.selectedVideo()) {
-      const cv   = this.selectedVideo()!;
-      content    = cv._id;
-      contentKey = cv.videoKey;
-    }
-
-    const order = this.lessons().length + 1;
     this.courseService.createLesson(c._id, {
-      title:   this.newLessonTitle.trim(),
-      type:    this.newLessonType(),
+      title: this.newLessonTitle.trim(),
+      type,
       content,
       contentKey,
-      order,
+      durationSec,
+      order: this.lessons().length + 1,
     }).subscribe({
       next: (lesson) => {
         this.lessons.update((ls) => [...ls, lesson]);
-        this.newLessonTitle   = '';
-        this.newLessonContent = '';
-        this.selectedVideoId.set(null);
         this.showAddLesson.set(false);
         this.addingLesson.set(false);
       },

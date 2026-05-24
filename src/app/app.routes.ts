@@ -4,7 +4,7 @@ import { authGuard, guestGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'users',
+    redirectTo: 'dashboard',
     pathMatch: 'full',
   },
 
@@ -39,6 +39,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layout/shell/shell').then((m) => m.ShellComponent),
     children: [
+      /* Dashboard / Analytics */
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
+      },
+
       /* Content — Courses */
       {
         path: 'courses',
@@ -232,5 +239,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: 'users' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

@@ -50,16 +50,13 @@
 
     } @else {
 
-      <!-- OT Section -->
+      <!-- Old Testament -->
       @if (otBooks().length > 0) {
         <p class="ot-nt-header">Old Testament</p>
         <div class="book-grid">
           @for (book of otBooks(); track book.abbrev) {
-            <button
-              class="book-card"
-              (click)="selectBook(book)"
-              [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'"
-            >
+            <button class="book-card" (click)="selectBook(book)"
+                    [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'">
               <span class="book-card__name">{{ book.name }}</span>
               <span class="book-card__abbrev">{{ book.abbrev }}</span>
               <span class="book-card__chapters">{{ book.chaptersCount }} ch</span>
@@ -68,16 +65,13 @@
         </div>
       }
 
-      <!-- NT Section -->
+      <!-- New Testament -->
       @if (ntBooks().length > 0) {
         <p class="ot-nt-header ot-nt-header--nt">New Testament</p>
         <div class="book-grid">
           @for (book of ntBooks(); track book.abbrev) {
-            <button
-              class="book-card"
-              (click)="selectBook(book)"
-              [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'"
-            >
+            <button class="book-card" (click)="selectBook(book)"
+                    [attr.aria-label]="book.name + ', ' + book.chaptersCount + ' chapters'">
               <span class="book-card__name">{{ book.name }}</span>
               <span class="book-card__abbrev">{{ book.abbrev }}</span>
               <span class="book-card__chapters">{{ book.chaptersCount }} ch</span>

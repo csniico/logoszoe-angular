@@ -1,20 +1,226 @@
-<div class="dashboard-layout">
-  <header class="dashboard-header">
-    <div class="dashboard-header__brand">
-      <span class="brand-name">Logos Zoe</span>
-    </div>
-    <nav class="dashboard-header__nav">
-      @if (authService.currentAdmin(); as admin) {
-        <span class="user-greeting">Hello, {{ admin.name }}</span>
-      }
-      <button class="btn btn--ghost" (click)="signOut()">Sign out</button>
-    </nav>
-  </header>
+<div class="page">
 
-  <main class="dashboard-main">
-    <div class="dashboard-hero">
-      <h1>Welcome to Logos Zoe</h1>
-      <p>Your dashboard is ready. Features are coming soon.</p>
+  <div class="page-header">
+    <h1 class="page-title">Analytics</h1>
+    <p class="page-subtitle">Platform overview — last updated now</p>
+  </div>
+
+  <!-- ── Loading ── -->
+  @if (loading()) {
+    <div class="state-cell">
+      <span class="spinner"></span> Loading analytics…
     </div>
-  </main>
+  }
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  @if (!loading() && !error() && data()) {
+
+    <!-- ══ Row 1: Key stats ══ -->
+    <div class="stats-bar">
+
+      <div class="stat-card stat-card--users">
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ data()!.users.total | number }}</div>
+          <div class="stat-card__label">Total users</div>
+          <div class="stat-card__sub">+{{ data()!.users.newThisWeek }} this week</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--growth">
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ data()!.users.newThisMonth | number }}</div>
+          <div class="stat-card__label">New users (30d)</div>
+          <div class="stat-card__sub">+{{ data()!.users.newThisWeek }} this week</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--completions">
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ data()!.engagement.lessonCompletions | number }}</div>
+          <div class="stat-card__label">Lesson completions</div>
+          <div class="stat-card__sub">{{ data()!.engagement.quizSubmissions | number }} quiz submissions</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--content">
+        <div class="stat-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="stat-card__body">
+          <div class="stat-card__value">{{ totalContent() | number }}</div>
+          <div class="stat-card__label">Total content pieces</div>
+          <div class="stat-card__sub">Across {{ contentItems().length }} content types</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ Row 2: Content breakdown ══ -->
+    <div class="section-title">Content breakdown</div>
+    <div class="content-grid">
+      @for (item of contentItems(); track item.label) {
+        <div class="content-chip">
+          <div class="content-chip__dot" [style.background]="item.color"></div>
+          <div class="content-chip__body">
+            <div class="content-chip__count">{{ item.count | number }}</div>
+            <div class="content-chip__label">{{ item.label }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ══ Row 3: Top content + Top posts ══ -->
+    <div class="two-col">
+
+      <!-- Top content -->
+      <div class="analytics-card">
+        <div class="analytics-card__header">
+          <h2 class="analytics-card__title">Top content by views</h2>
+          <div class="tab-row">
+            <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'articles'"    type="button" (click)="activeTab.set('articles')">Articles</button>
+            <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'devotionals'" type="button" (click)="activeTab.set('devotionals')">Devotionals</button>
+            <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'podcasts'"    type="button" (click)="activeTab.set('podcasts')">Podcasts</button>
+          </div>
+        </div>
+
+        <div class="top-list">
+          @if (activeTab() === 'articles') {
+            @for (item of data()!.topArticles; track item._id; let i = $index) {
+              <div class="top-item">
+                <span class="top-item__rank">{{ i + 1 }}</span>
+                <div class="top-item__info">
+                  <span class="top-item__name">{{ item.title }}</span>
+                  <div class="top-item__bar-wrap">
+                    <div class="top-item__bar" [style.width]="barPct(item.hits, maxHits())"></div>
+                  </div>
+                </div>
+                <span class="top-item__count">{{ item.hits | number }}</span>
+              </div>
+            }
+            @if (data()!.topArticles.length === 0) {
+              <p class="top-empty">No views recorded yet.</p>
+            }
+          }
+
+          @if (activeTab() === 'devotionals') {
+            @for (item of data()!.topDevotionals; track item._id; let i = $index) {
+              <div class="top-item">
+                <span class="top-item__rank">{{ i + 1 }}</span>
+                <div class="top-item__info">
+                  <span class="top-item__name">{{ devotionalLabel(item) }}</span>
+                  <div class="top-item__bar-wrap">
+                    <div class="top-item__bar" [style.width]="barPct(item.hits, maxHits())"></div>
+                  </div>
+                </div>
+                <span class="top-item__count">{{ item.hits | number }}</span>
+              </div>
+            }
+            @if (data()!.topDevotionals.length === 0) {
+              <p class="top-empty">No views recorded yet.</p>
+            }
+          }
+
+          @if (activeTab() === 'podcasts') {
+            @for (item of data()!.topPodcasts; track item._id; let i = $index) {
+              <div class="top-item">
+                <span class="top-item__rank">{{ i + 1 }}</span>
+                <div class="top-item__info">
+                  <span class="top-item__name">{{ item.title }}</span>
+                  <div class="top-item__bar-wrap">
+                    <div class="top-item__bar top-item__bar--podcast" [style.width]="barPct(item.hits, maxHits())"></div>
+                  </div>
+                </div>
+                <span class="top-item__count">{{ item.hits | number }}</span>
+              </div>
+            }
+            @if (data()!.topPodcasts.length === 0) {
+              <p class="top-empty">No plays recorded yet.</p>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Top posts -->
+      <div class="analytics-card">
+        <div class="analytics-card__header">
+          <h2 class="analytics-card__title">Top posts by engagement</h2>
+        </div>
+        <div class="top-list">
+          @for (post of data()!.topPosts; track post._id; let i = $index) {
+            <div class="top-item top-item--post">
+              <span class="top-item__rank">{{ i + 1 }}</span>
+              <div class="top-item__info">
+                <span class="top-item__name">{{ truncate(post.text) }}</span>
+                <div class="post-meta-chips">
+                  <span class="post-chip post-chip--likes">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    {{ post.likeCount }}
+                  </span>
+                  <span class="post-chip post-chip--shares">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    {{ post.shareCount }}
+                  </span>
+                  <span class="post-chip post-chip--replies">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    {{ post.replyCount }}
+                  </span>
+                </div>
+                <div class="top-item__bar-wrap">
+                  <div class="top-item__bar top-item__bar--post"
+                       [style.width]="barPct(post.likeCount + post.shareCount, maxPostScore())"></div>
+                </div>
+              </div>
+            </div>
+          }
+          @if (data()!.topPosts.length === 0) {
+            <p class="top-empty">No posts yet.</p>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ Row 4: User growth chart ══ -->
+    <div class="analytics-card analytics-card--growth">
+      <div class="analytics-card__header">
+        <h2 class="analytics-card__title">New users — last 30 days</h2>
+        <span class="growth-total-badge">{{ data()!.users.newThisMonth | number }} total</span>
+      </div>
+
+      <div class="growth-chart">
+        @for (point of growthSeries(); track point.date) {
+          <div class="growth-col" [title]="formatDate(point.date) + ': ' + point.count + ' new users'">
+            <span class="growth-col__count" [class.growth-col__count--zero]="point.count === 0">
+              @if (point.count > 0) { {{ point.count }} }
+            </span>
+            <div class="growth-col__bar-wrap">
+              <div class="growth-col__bar"
+                   [style.height]="barPct(point.count, maxGrowth())"></div>
+            </div>
+            <span class="growth-col__label">
+              @if ($index % 5 === 0) { {{ formatDate(point.date) }} }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+
+  }
+
 </div>

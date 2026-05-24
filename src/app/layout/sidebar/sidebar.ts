@@ -31,6 +31,16 @@ export class SidebarComponent {
 
   readonly navGroups: NavGroup[] = [
     {
+      label: 'Analytics',
+      items: [
+        {
+          label: 'Dashboard',
+          path: '/dashboard',
+          icon: 'M18 20V10M12 20V4M6 20v-6',
+        },
+      ],
+    },
+    {
       label: 'Content',
       items: [
         {
