@@ -30,10 +30,11 @@
 
   svg { width: 20px; height: 20px; }
 
-  .stat-card--users &       { background: rgba(22,163,74,.1);  color: #16a34a; }
-  .stat-card--growth &      { background: rgba(14,165,233,.1); color: #0ea5e9; }
-  .stat-card--completions & { background: rgba(99,102,241,.1); color: #6366f1; }
-  .stat-card--content &     { background: rgba(245,158,11,.1); color: #f59e0b; }
+  // Sacred Stillness palette — primary blues + gold
+  .stat-card--users &       { background: rgba(90,130,168,.12);  color: #5A82A8; }
+  .stat-card--growth &      { background: rgba(201,160,89,.12);  color: #C9A059; }
+  .stat-card--completions & { background: rgba(58,88,120,.12);   color: #3a5878; }
+  .stat-card--content &     { background: rgba(201,160,89,.12);  color: #a08040; }
 }
 
 .stat-card__body { display: flex; flex-direction: column; gap: 0.15rem; }
@@ -173,7 +174,19 @@
   }
 }
 
-// ── Top list ───────────────────────────────────────────────────────────────────
+// ── Chart wrapper ──────────────────────────────────────────────────────────────
+.chart-wrap {
+  padding: 0.75rem 0.5rem 0.25rem;
+
+  // Trim ApexCharts default margin
+  ::ng-deep .apexcharts-canvas { margin: 0 auto; }
+
+  &--growth {
+    padding: 0.75rem 0.5rem 0;
+  }
+}
+
+// ── Top list (used by top posts) ───────────────────────────────────────────────
 .top-list {
   display: flex;
   flex-direction: column;
@@ -222,32 +235,6 @@
   text-overflow: ellipsis;
 }
 
-.top-item__bar-wrap {
-  height: 5px;
-  background: var(--color-scaffold);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.top-item__bar {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 999px;
-  transition: width 0.4s ease;
-
-  &--podcast { background: #f59e0b; }
-  &--post    { background: #ec4899; }
-}
-
-.top-item__count {
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  min-width: 32px;
-  text-align: right;
-}
-
 .top-empty {
   padding: 1.5rem 1rem;
   font-size: 0.8125rem;
@@ -270,12 +257,13 @@
   padding: 0.1em 0.45em;
   border-radius: 999px;
 
-  &--likes   { background: rgba(236,72,153,.1);  color: #ec4899; border: 1px solid rgba(236,72,153,.25); }
-  &--shares  { background: rgba(14,165,233,.1);  color: #0ea5e9; border: 1px solid rgba(14,165,233,.25); }
-  &--replies { background: rgba(99,102,241,.1);  color: #6366f1; border: 1px solid rgba(99,102,241,.25); }
+  // Sacred Stillness palette
+  &--likes   { background: rgba(201,160,89,.12); color: #a08040; border: 1px solid rgba(201,160,89,.3); }
+  &--shares  { background: rgba(90,130,168,.1);  color: #5A82A8; border: 1px solid rgba(90,130,168,.25); }
+  &--replies { background: rgba(107,114,128,.1); color: #6b7280; border: 1px solid rgba(107,114,128,.2); }
 }
 
-// ── Growth chart ───────────────────────────────────────────────────────────────
+// ── Growth chart total badge ───────────────────────────────────────────────────
 .growth-total-badge {
   font-size: 0.75rem;
   font-weight: 600;
@@ -284,60 +272,6 @@
   border: 1px solid var(--color-primary-border);
   padding: 0.15em 0.6em;
   border-radius: 999px;
-}
-
-.growth-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  padding: 1rem 1rem 0.5rem;
-  height: 140px;
-}
-
-.growth-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  height: 100%;
-}
-
-.growth-col__count {
-  font-size: 0.55rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  line-height: 1;
-  min-height: 10px;
-  text-align: center;
-
-  &--zero { opacity: 0; }
-}
-
-.growth-col__bar-wrap {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-}
-
-.growth-col__bar {
-  width: 100%;
-  background: var(--color-primary);
-  border-radius: 2px 2px 0 0;
-  opacity: 0.75;
-  min-height: 2px;
-  transition: height 0.3s ease;
-
-  &:hover { opacity: 1; }
-}
-
-.growth-col__label {
-  font-size: 0.55rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  text-align: center;
-  min-height: 10px;
 }
 
 // ── State cells ────────────────────────────────────────────────────────────────

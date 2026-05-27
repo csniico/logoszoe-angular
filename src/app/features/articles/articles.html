@@ -120,7 +120,7 @@
           [attr.aria-selected]="filterCategoryId() === cat._id"
           (click)="filterCategoryId.set(cat._id)"
         >
-          <span class="cat-tab__dot" [style.background]="cat.color ?? '#16A34A'"></span>
+          <span class="cat-tab__dot" [style.background]="cat.color ?? '#5A82A8'"></span>
           {{ cat.name }}
           <span class="cat-tab__count">{{ articleCountForCat(cat._id) }}</span>
         </button>

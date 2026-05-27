@@ -6,6 +6,8 @@ import { CourseService } from '../../../core/services/course.service';
 import { ConfirmModalService } from '../../../shared/confirm-modal/confirm-modal.service';
 import { CourseVideoService } from '../../../core/services/course-video.service';
 import { StorageService } from '../../../core/services/storage.service';
+import { DocumentPipelineService } from '../../../core/services/document-pipeline.service';
+import { PipelineProgress } from '../../../core/models/pipeline.model';
 import { Course, Lesson, LessonType, Question, QuestionType, QuestionOption } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
 import { environment } from '../../../../environments/environment';
@@ -24,6 +26,7 @@ export class CourseDetailComponent implements OnInit {
   private readonly courseVideoService = inject(CourseVideoService);
   private readonly storageService     = inject(StorageService);
   private readonly confirmModal       = inject(ConfirmModalService);
+  private readonly pipeline           = inject(DocumentPipelineService);
 
   // ── Course ────────────────────────────────────────────────────
   readonly course         = signal<Course | null>(null);
@@ -69,6 +72,7 @@ export class CourseDetailComponent implements OnInit {
   readonly parsedDocHtml     = signal('');
   readonly docParseError     = signal<string | null>(null);
   readonly newDocContentKey  = signal('');
+  readonly pipelineState     = signal<PipelineProgress | null>(null);
 
   // audio type
   readonly uploadingAudio = signal(false);
@@ -92,8 +96,9 @@ export class CourseDetailComponent implements OnInit {
   readonly deletingLessonId  = signal<string | null>(null);
 
   // Inline lesson edit buffers
-  editLessonTitle   = '';
-  editLessonContent = '';
+  editLessonTitle       = '';
+  editLessonContent     = '';
+  editLessonDescription = '';
 
   // ── Questions (per lesson) ────────────────────────────────────
   /** Map of lessonId → Question[] */
@@ -301,45 +306,50 @@ export class CourseDetailComponent implements OnInit {
     this.parsedDocHtml.set('');
     this.docParseError.set(null);
     this.newDocContentKey.set('');
-    void this.parseDocFile(file);
+    this.pipelineState.set(null);
+    this.parseDocFile(file);
   }
 
-  private async parseDocFile(file: File): Promise<void> {
+  private parseDocFile(file: File): void {
     this.parsingDoc.set(true);
     this.docParseError.set(null);
-    try {
-      if (file.name.toLowerCase().endsWith('.pdf')) {
-        // Upload PDF to S3, render as embed
-        this.storageService.uploadFile(file, 'courses/documents').subscribe({
-          next: (r) => {
-            this.newDocContentKey.set(r.fileKey);
-            this.parsedDocHtml.set(
-              `<div class="lesson-pdf-embed"><embed src="${r.fileUrl}" type="application/pdf" width="100%" height="600px" /></div>`,
-            );
-            this.parsingDoc.set(false);
-          },
-          error: () => {
-            this.docParseError.set('PDF upload failed. Please try again.');
-            this.parsingDoc.set(false);
-          },
-        });
-        return;
-      }
-      // DOCX → HTML via mammoth
-      const arrayBuffer = await file.arrayBuffer();
-      const mammoth     = await import('mammoth');
-      const result      = await (mammoth as any).default.convertToHtml({ arrayBuffer });
-      const html: string = result?.value ?? '';
-      if (!html.trim()) {
-        this.docParseError.set('No content extracted. Is this a valid .docx file?');
-      } else {
-        this.parsedDocHtml.set(html);
-      }
-    } catch {
-      this.docParseError.set('Failed to parse document. Please try again.');
-    } finally {
-      this.parsingDoc.set(false);
+
+    if (file.name.toLowerCase().endsWith('.pdf')) {
+      // PDF → upload to S3 and embed
+      this.storageService.uploadFile(file, 'courses/documents').subscribe({
+        next: (r) => {
+          this.newDocContentKey.set(r.fileKey);
+          this.parsedDocHtml.set(
+            `<div class="lesson-pdf-embed"><embed src="${r.fileUrl}" type="application/pdf" width="100%" height="600px" /></div>`,
+          );
+          this.parsingDoc.set(false);
+        },
+        error: () => {
+          this.docParseError.set('PDF upload failed. Please try again.');
+          this.parsingDoc.set(false);
+        },
+      });
+      return;
     }
+
+    // DOCX → full pipeline: Mammoth → normalise → Bible refs → image upload → beautify
+    this.pipeline.process(file, 'courses/documents').subscribe({
+      next: (state) => {
+        this.pipelineState.set(state);
+        if (state.stage === 'complete') {
+          if (state.result) {
+            this.parsedDocHtml.set(state.result);
+          } else {
+            this.docParseError.set('No content extracted. Is this a valid .docx file?');
+          }
+          this.parsingDoc.set(false);
+        }
+        if (state.stage === 'error') {
+          this.docParseError.set(state.error ?? 'Failed to process document. Please try again.');
+          this.parsingDoc.set(false);
+        }
+      },
+    });
   }
 
   // ── Audio upload ──────────────────────────────────────────────
@@ -471,8 +481,9 @@ export class CourseDetailComponent implements OnInit {
   }
 
   startEditLesson(lesson: Lesson): void {
-    this.editLessonTitle   = lesson.title;
-    this.editLessonContent = lesson.content;
+    this.editLessonTitle       = lesson.title;
+    this.editLessonContent     = lesson.content;
+    this.editLessonDescription = lesson.description ?? '';
     this.editingLessonId.set(lesson._id);
     this.expandedLessonId.set(lesson._id);
   }
@@ -486,8 +497,9 @@ export class CourseDetailComponent implements OnInit {
     if (!c) return;
     this.savingLessonId.set(lesson._id);
     this.courseService.updateLesson(c._id, lesson._id, {
-      title:   this.editLessonTitle.trim(),
-      content: this.editLessonContent,
+      title:       this.editLessonTitle.trim(),
+      content:     this.editLessonContent,
+      description: this.editLessonDescription.trim() || undefined,
     }).subscribe({
       next: (updated) => {
         this.lessons.update((ls) => ls.map((l) => (l._id === updated._id ? updated : l)));

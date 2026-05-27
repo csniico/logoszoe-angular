@@ -1,16 +1,19 @@
-/* Sidebar — dark theme matches Flutter DarkTheme tokens:
-   scaffold #0B0B0C · surface #1C1C1E · border #444444
-   primary (active) #16A34A · text-muted #9CA3AF */
+/* Sidebar — Sacred Stillness dark panel
+   bg #0e1829 (primary-950 tinted) · surface #162035 · border #243354
+   active: primary blue · accent gold
+*/
 
-$bg:          #0B0B0C;
-$surface:     #1C1C1E;
-$border:      #2A2A2C;
-$text-dim:    #9CA3AF;
-$text-base:   #D1D5DB;
-$text-bright: #F9FAFB;
-$green:       #16A34A;
-$green-dim:   rgba(22, 163, 74, 0.14);
-$hover:       rgba(255, 255, 255, 0.05);
+$bg:          #0e1829;
+$surface:     #162035;
+$border:      #243354;
+$text-dim:    #7eaacc;
+$text-base:   #b3cce0;
+$text-bright: #eef3f8;
+$blue:        #5a82a8;
+$blue-dim:    rgba(90, 130, 168, 0.16);
+$blue-active: #7eaacc;
+$gold:        #c9a059;
+$hover:       rgba(90, 130, 168, 0.08);
 $ease:        0.2s ease;
 
 :host { display: block; height: 100%; }
@@ -66,7 +69,7 @@ $ease:        0.2s ease;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: $green;
+      color: $gold;
     }
   }
 
@@ -134,10 +137,10 @@ $ease:        0.2s ease;
   }
 
   &--active {
-    background: $green-dim;
-    color: #4ADE80; /* lighter green for contrast on dark */
+    background: $blue-dim;
+    color: $blue-active;
 
-    .nav-icon { color: #4ADE80; }
+    .nav-icon { color: $blue-active; }
   }
 }
 
@@ -163,7 +166,7 @@ $ease:        0.2s ease;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: $green;
+  background: $blue;
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;

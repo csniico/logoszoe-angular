@@ -17,7 +17,7 @@
         @if (cat.bannerUrl) {
           <img class="detail-thumb" [src]="cat.bannerUrl" [alt]="cat.name" />
         } @else {
-          <div class="detail-thumb detail-thumb--icon" [style.background]="cat.color || '#16A34A'">
+          <div class="detail-thumb detail-thumb--icon" [style.background]="cat.color || '#5A82A8'">
             {{ cat.icon || cat.name[0] }}
           </div>
         }
@@ -189,9 +189,9 @@
           } @else {
             <div class="color-picker-wrap">
               <!-- Large swatch — click to open native OS color palette -->
-              <div class="color-swatch-btn" [style.background]="draftString || '#16A34A'" (click)="colorInput.click()" title="Open color palette">
+              <div class="color-swatch-btn" [style.background]="draftString || '#5A82A8'" (click)="colorInput.click()" title="Open color palette">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="color-swatch-btn__icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                <input #colorInput type="color" class="color-input-native" [value]="draftString || '#16A34A'" (input)="setDraftString($any($event.target).value)" />
+                <input #colorInput type="color" class="color-input-native" [value]="draftString || '#5A82A8'" (input)="setDraftString($any($event.target).value)" />
               </div>
               <div class="color-hex-col">
                 <span class="color-hex-label">Hex value</span>

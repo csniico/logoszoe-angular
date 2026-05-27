@@ -55,6 +55,7 @@ export interface Lesson {
   content: string;
   contentKey?: string;
   durationSec?: number;
+  description?: string;
   completionsCount?: number;
 }
 

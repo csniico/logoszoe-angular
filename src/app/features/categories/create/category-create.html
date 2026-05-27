@@ -244,10 +244,10 @@
           <div class="form-field">
             <label class="form-label" for="cat-color">Color</label>
             <div class="color-pick-row">
-              <div class="color-swatch-btn" [style.background]="color || '#16A34A'" (click)="colorInput.click()">
-                <input #colorInput type="color" class="color-input-native" [value]="color || '#16A34A'" (input)="color = $any($event.target).value" />
+              <div class="color-swatch-btn" [style.background]="color || '#5A82A8'" (click)="colorInput.click()">
+                <input #colorInput type="color" class="color-input-native" [value]="color || '#5A82A8'" (input)="color = $any($event.target).value" />
               </div>
-              <input id="cat-color" type="text" class="form-input mono" placeholder="#16A34A" [value]="color" (input)="color = $any($event.target).value" maxlength="7" />
+              <input id="cat-color" type="text" class="form-input mono" placeholder="#5A82A8" [value]="color" (input)="color = $any($event.target).value" maxlength="7" />
             </div>
           </div>
 

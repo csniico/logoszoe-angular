@@ -1,39 +1,43 @@
 /* ─────────────────────────────────────────────────────────────
-   Logos Zoe Design System — matches the Flutter mobile theme
-   Light: scaffold #F2F2F7 · surface #FFFFFF · border #E5E5EA
-   Primary (green): #16A34A
-   Secondary (purple): #7C3AED
-   Tertiary (indigo): #4F46E5
-   Error: #EF4444 · Success: #4CAF50 · Warning: #FF9800
+   Logos Zoe — Sacred Stillness Design System
+   Primary (steel blue): #5A82A8
+   Gold (tertiary):      #C9A059
+   Ivory (bg):           #FDFBF5
+   Neutral:              #4A5568
    ───────────────────────────────────────────────────────────── */
 
-/* ── Google Sans (mirrors mobile font) ──────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+/* ── Fonts ────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
 /* ── CSS custom properties ──────────────────────────────────── */
 :root {
-  /* Brand */
-  --color-primary:        #16A34A;
-  --color-primary-light:  #F0FDF4;
-  --color-primary-border: #BBF7D0;
-  --color-primary-hover:  #15803D;
+  /* Brand — primary (steel blue) */
+  --color-primary:        #5A82A8;
+  --color-primary-light:  #eef3f8;
+  --color-primary-border: #abc9df;
+  --color-primary-hover:  #4a6e91;
 
-  --color-secondary:      #7C3AED;
-  --color-secondary-light:#F5F3FF;
+  /* Gold (tertiary accent) */
+  --color-gold:           #C9A059;
+  --color-gold-light:     #fdf6e8;
+  --color-gold-border:    #f0d08a;
+  --color-gold-hover:     #a87e3e;
 
-  --color-tertiary:       #4F46E5;
+  /* Secondary — muted blue-gray for role/admin badges */
+  --color-secondary:      #4a6e91;
+  --color-secondary-light:#eef3f8;
 
   /* Scaffold / layout */
-  --color-scaffold:       #F2F2F7;
+  --color-scaffold:       #fdfbf5;
   --color-surface:        #FFFFFF;
-  --color-border:         #E5E5EA;
-  --color-border-strong:  #D1D5DB;
+  --color-border:         #dde9f3;
+  --color-border-strong:  #b3cce0;
 
-  /* Text */
-  --color-text-primary:   #111827;
-  --color-text-secondary: #374151;
-  --color-text-muted:     #6B7280;
-  --color-text-faint:     #9CA3AF;
+  /* Text — using neutral palette */
+  --color-text-primary:   #1e3047;
+  --color-text-secondary: #3a5878;
+  --color-text-muted:     #4A5568;
+  --color-text-faint:     #7eaacc;
 
   /* State */
   --color-error:          #EF4444;
@@ -57,7 +61,7 @@
   --radius-xl:  18px;
 
   /* Shadow */
-  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-card: 0 1px 3px rgba(26,48,71,.07), 0 1px 2px rgba(26,48,71,.05);
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */
@@ -70,10 +74,15 @@ html {
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', 'GoogleSans', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   background: var(--color-scaffold);
   color: var(--color-text-primary);
   line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -89,8 +98,8 @@ a {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  /* green gradient matching the mobile splash / primary brand */
-  background: linear-gradient(145deg, #166534 0%, #16A34A 50%, #4ADE80 100%);
+  /* Sacred Stillness — deep navy → steel blue gradient */
+  background: linear-gradient(145deg, #111c2e 0%, #2c4460 40%, #5a82a8 100%);
 }
 
 .auth-card {
@@ -108,10 +117,11 @@ a {
 }
 
 .auth-title {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin-bottom: 0.35rem;
 }
 
@@ -160,9 +170,9 @@ a {
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   font-size: 0.95rem;
-  font-family: inherit;
+  font-family: 'Inter', inherit;
   color: var(--color-text-primary);
-  background: #F1F8F1; /* matches Flutter input fill */
+  background: var(--color-primary-light);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 
@@ -170,7 +180,7 @@ a {
 
   &:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(22,163,74,.15);
+    box-shadow: 0 0 0 3px rgba(90,130,168,.15);
     background: #fff;
   }
 
@@ -197,7 +207,7 @@ a {
   border: none;
   border-radius: var(--radius-md);
   font-size: 0.9rem;
-  font-family: inherit;
+  font-family: 'Inter', inherit;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s, transform 0.1s;
@@ -207,7 +217,7 @@ a {
   &:active { transform: scale(0.98); }
   &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-  /* Primary — green */
+  /* Primary — steel blue */
   &--primary {
     background: var(--color-primary);
     color: #fff;
@@ -261,10 +271,11 @@ a {
 }
 
 .page-title {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
@@ -298,15 +309,15 @@ a {
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  font-family: inherit;
+  font-family: 'Inter', inherit;
   color: var(--color-text-primary);
   outline: none;
   min-width: 200px;
-  background: var(--color-scaffold);
+  background: var(--color-primary-light);
   transition: border-color 0.15s, background 0.15s;
 
   &::placeholder { color: var(--color-text-faint); }
-  &:focus { border-color: var(--color-primary); background: #fff; box-shadow: 0 0 0 3px rgba(22,163,74,.1); }
+  &:focus { border-color: var(--color-primary); background: #fff; box-shadow: 0 0 0 3px rgba(90,130,168,.1); }
 }
 
 .table-wrap { overflow-x: auto; }
@@ -316,30 +327,31 @@ a {
   border-collapse: collapse;
   font-size: 0.875rem;
 
-  thead tr { border-bottom: 1px solid var(--color-scaffold); }
+  thead tr { border-bottom: 1px solid var(--color-border); }
 
   th {
     padding: 0.75rem 1.25rem;
     text-align: left;
     font-size: 0.72rem;
     font-weight: 700;
+    font-family: 'Inter', inherit;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--color-text-muted);
     white-space: nowrap;
-    background: #FAFAFA;
+    background: var(--color-primary-light);
   }
 
   td {
     padding: 0.875rem 1.25rem;
     color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-scaffold);
+    border-bottom: 1px solid var(--color-border);
     vertical-align: middle;
   }
 
   tbody tr:last-child td { border-bottom: none; }
 
-  tbody tr:hover td { background: #FAFFFE; }
+  tbody tr:hover td { background: var(--color-primary-light); }
 }
 
 .col-actions { width: 96px; text-align: right !important; }
@@ -392,10 +404,11 @@ a {
   text-transform: capitalize;
   letter-spacing: 0.03em;
 
-  &--role    { background: var(--color-secondary-light); color: var(--color-secondary); border: 1px solid #DDD6FE; }
+  &--role    { background: var(--color-secondary-light); color: var(--color-secondary); border: 1px solid var(--color-primary-border); }
   &--active  { background: var(--color-primary-light);   color: var(--color-primary);   border: 1px solid var(--color-primary-border); }
   &--pending { background: var(--color-warning-light);   color: #C2410C;                border: 1px solid var(--color-warning-border); }
   &--neutral { background: var(--color-scaffold);        color: var(--color-text-muted); border: 1px solid var(--color-border); }
+  &--gold    { background: var(--color-gold-light);      color: var(--color-gold-hover); border: 1px solid var(--color-gold-border); }
 }
 
 /* ── Icon buttons ────────────────────────────────────────────── */
@@ -415,7 +428,7 @@ a {
 
   svg { width: 14px; height: 14px; }
 
-  &:hover { background: var(--color-scaffold); color: var(--color-text-primary); border-color: var(--color-border-strong); }
+  &:hover { background: var(--color-primary-light); color: var(--color-primary); border-color: var(--color-primary-border); }
 
   &--danger:hover { background: var(--color-error-light); color: var(--color-error); border-color: var(--color-error-border); }
 }
@@ -433,7 +446,7 @@ a {
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   font-size: 0.8rem;
-  font-family: inherit;
+  font-family: 'Inter', inherit;
   color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s;

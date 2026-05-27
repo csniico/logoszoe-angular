@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Courses</h1>
-      <p class="page-subtitle">Manage learning content</p>
+      <p class="page-subtitle">Manage your library of spiritual growth journeys</p>
     </div>
     <a routerLink="/courses/create" class="btn btn--primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
@@ -95,38 +95,40 @@
                   </svg>
                 </div>
               }
+              @if (course.lessonCount !== undefined && course.lessonCount > 0) {
+                <div class="course-card__badge">
+                  {{ course.lessonCount }} lesson{{ course.lessonCount === 1 ? '' : 's' }}
+                </div>
+              }
             </div>
 
             <div class="course-card__body">
               <h3 class="course-card__title">{{ course.title }}</h3>
               <p class="course-card__desc">{{ course.description }}</p>
 
-              <div class="course-card__stats">
-                @if (course.lessonCount !== undefined) {
-                  <span class="course-card__stat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              <div class="course-card__footer">
+                <span class="course-card__meta">
+                  @if (course.lessonCount !== undefined) {
                     {{ course.lessonCount }} lesson{{ course.lessonCount === 1 ? '' : 's' }}
-                  </span>
-                }
-                @if (formatDuration(course.totalDurationSec)) {
-                  <span class="course-card__stat-sep">·</span>
-                  <span class="course-card__stat">{{ formatDuration(course.totalDurationSec) }}</span>
-                }
-              </div>
-
-              <!-- Actions row -->
-              <div class="course-card__actions" (click)="$event.stopPropagation()">
-                <button
-                  class="icon-btn icon-btn--danger"
-                  type="button"
-                  title="Delete course"
-                  (click)="delete(course._id, course.title, $event)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                  </svg>
-                </button>
+                  }
+                  @if (formatDuration(course.totalDurationSec)) {
+                    · {{ formatDuration(course.totalDurationSec) }}
+                  }
+                </span>
+                <div class="course-card__actions" (click)="$event.stopPropagation()">
+                  <button class="btn btn--ghost btn--sm course-open-btn" type="button" (click)="goTo(course._id)">
+                    Open course
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  </button>
+                  <button class="icon-btn icon-btn--danger" type="button" title="Delete course" (click)="delete(course._id, course.title, $event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </article>

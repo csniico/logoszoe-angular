@@ -1,0 +1,159 @@
+<!-- ── Desktop sidebar-collapse toggle ── -->
+<button
+  class="tb-toggle tb-toggle--desktop"
+  (click)="sidebarToggle.emit()"
+  aria-label="Toggle sidebar"
+>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+
+<!-- ── Mobile hamburger / close toggle ── -->
+<button
+  class="tb-toggle tb-toggle--mobile"
+  (click)="mobileToggle.emit()"
+  [attr.aria-label]="mobileMenuOpen() ? 'Close menu' : 'Open menu'"
+  [attr.aria-expanded]="mobileMenuOpen()"
+>
+  @if (mobileMenuOpen()) {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <line x1="18" y1="6" x2="6"  y2="18"/>
+      <line x1="6"  y1="6" x2="18" y2="18"/>
+    </svg>
+  } @else {
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  }
+</button>
+
+<!-- ── Left spacer ── -->
+<div class="tb-spacer"></div>
+
+<!-- ── Search ── -->
+<div #searchWrap class="tb-search">
+
+  <!-- Input row -->
+  <div class="tb-search__row">
+    <!-- Magnifier icon -->
+    <svg class="tb-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+
+    <input
+      class="tb-search__input"
+      type="text"
+      placeholder="Search content…"
+      autocomplete="off"
+      [value]="query()"
+      (input)="onQueryInput($any($event.target).value)"
+      (keydown.escape)="clearSearch()"
+    />
+
+    <!-- Spinner -->
+    @if (searching()) {
+      <div class="tb-search__spinner" aria-hidden="true"></div>
+    }
+
+    <!-- Clear -->
+    @if (!searching() && query()) {
+      <button class="tb-search__clear" type="button" (click)="clearSearch()" aria-label="Clear search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6"  y2="18"/>
+          <line x1="6"  y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    }
+  </div>
+
+  <!-- Results dropdown -->
+  @if (showDrop()) {
+    <div class="tb-search__drop" role="listbox">
+
+      @if (results().length === 0) {
+        <p class="tb-drop__empty">No results for "{{ query() }}"</p>
+      } @else {
+        @for (group of results(); track group.scope) {
+          <div class="tb-drop__group">
+            <!-- Scope header -->
+            <div class="tb-drop__scope">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path [attr.d]="group.iconPath"/>
+              </svg>
+              {{ group.label }}
+              @if (group.total > group.items.length) {
+                <span class="tb-drop__scope-count">{{ group.total }}</span>
+              }
+            </div>
+
+            <!-- Items -->
+            @for (item of group.items; track item._id) {
+              <button class="tb-drop__item" type="button" (click)="navigateTo(group, item)">
+                {{ itemTitle(item) }}
+              </button>
+            }
+          </div>
+        }
+      }
+
+    </div>
+  }
+</div>
+
+<!-- ── Right spacer ── -->
+<div class="tb-spacer"></div>
+
+<!-- ── Profile ── -->
+<div #profileWrap class="tb-profile">
+
+  <button class="tb-profile__btn" type="button" (click)="profileOpen.update(v => !v)">
+    <div class="tb-avatar" aria-hidden="true">{{ adminInitial() }}</div>
+    <div class="tb-profile__meta">
+      <span class="tb-profile__name">{{ admin()?.name }}</span>
+      <span class="tb-profile__role">{{ admin()?.role }}</span>
+    </div>
+    <svg class="tb-profile__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"
+         [class.tb-profile__chevron--open]="profileOpen()">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+
+  @if (profileOpen()) {
+    <div class="tb-profile__drop">
+      <!-- Header -->
+      <div class="tb-pdrop__header">
+        <p class="tb-pdrop__name">{{ admin()?.name }}</p>
+        <p class="tb-pdrop__email">{{ admin()?.email }}</p>
+      </div>
+
+      <!-- View profile -->
+      <a
+        [routerLink]="'/profile'"
+        class="tb-pdrop__item"
+        (click)="profileOpen.set(false)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        View profile
+      </a>
+
+      <!-- Sign out -->
+      <button class="tb-pdrop__item tb-pdrop__item--danger" type="button" (click)="signOut()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign out
+      </button>
+    </div>
+  }
+
+</div>

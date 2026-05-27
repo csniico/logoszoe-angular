@@ -1,181 +1,179 @@
 <div class="page">
 
+  <!-- ── Header ── -->
   <div class="page-header">
-    <h1 class="page-title">Submissions</h1>
-    @if (!loadingSubmissions()) {
-      <span class="page-subtitle">{{ submissions().length }} result{{ submissions().length !== 1 ? 's' : '' }}</span>
-    }
+    <div>
+      <h1 class="page-title">Submissions</h1>
+      <p class="page-subtitle">Review learner responses and send feedback</p>
+    </div>
   </div>
 
-  <!-- ── Filter toolbar ── -->
-  <div class="toolbar">
-    <!-- Course selector -->
-    <div class="toolbar__field">
-      <label class="toolbar__label" for="filter-course">Course</label>
-      @if (loadingCourses()) {
-        <div class="toolbar__skeleton"></div>
-      } @else {
-        <select id="filter-course" class="toolbar__select"
-                [ngModel]="selectedCourseId()"
-                (ngModelChange)="onCourseChange($event)">
-          <option value="">All courses</option>
-          @for (c of courses(); track c._id) {
-            <option [value]="c._id">{{ c.title }}</option>
-          }
-        </select>
-      }
+  <!-- ── Toolbar ── -->
+  <div class="grid-toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-input"
+        type="search"
+        placeholder="Filter by learner name or email…"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        aria-label="Filter submissions"
+      />
     </div>
-
-    <!-- Lesson selector -->
-    <div class="toolbar__field">
-      <label class="toolbar__label" for="filter-lesson">Lesson</label>
-      <select id="filter-lesson" class="toolbar__select"
-              [ngModel]="selectedLessonId()"
-              (ngModelChange)="onLessonChange($event)"
-              [disabled]="!selectedCourseId() || loadingLessons()">
-        <option value="">All lessons</option>
-        @for (l of lessons(); track l._id) {
-          <option [value]="l._id">{{ l.order }}. {{ l.title }}</option>
-        }
-      </select>
-      @if (loadingLessons()) {
-        <span class="spinner spinner--sm" style="position:absolute;right:2.25rem;top:50%;transform:translateY(-50%)"></span>
-      }
-    </div>
-
-    <!-- Clear -->
-    @if (selectedCourseId()) {
-      <button class="toolbar__clear" type="button"
-              (click)="onCourseChange('')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        Clear filters
-      </button>
-    }
   </div>
 
-  <!-- ── Loading ── -->
-  @if (loadingSubmissions()) {
-    <div class="state-cell">
-      <span class="spinner"></span> Loading submissions…
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ error() }}
     </div>
   }
 
-  <!-- ── Empty ── -->
-  @if (!loadingSubmissions() && submissions().length === 0) {
-    <div class="state-cell">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="36" height="36" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      No submissions found.
-    </div>
-  }
+  @if (!error()) {
 
-  <!-- ── Table ── -->
-  @if (!loadingSubmissions() && submissions().length > 0) {
-    <div class="table-wrap">
-      <table class="sub-table">
-        <thead>
-          <tr>
-            <th class="col-num">#</th>
-            <th class="col-user">User</th>
-            <th class="col-course">Course</th>
-            <th class="col-lesson">Lesson</th>
-            <th class="col-score">Score</th>
-            <th class="col-date">Submitted</th>
-            <th class="col-expand"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (sub of submissions(); track sub._id; let si = $index) {
-            <!-- Main row -->
-            <tr class="sub-row" [class.sub-row--open]="expandedId() === sub._id"
-                (click)="toggleRow(sub._id)">
-              <td class="col-num">{{ si + 1 }}</td>
-              <td class="col-user">
-                <code class="user-id" [title]="sub.userId">{{ sub.userId | slice:0:12 }}…</code>
-              </td>
-              <td class="col-course">{{ courseNameFor(sub.courseId) }}</td>
-              <td class="col-lesson">
-                @if (lessonMap()[sub.lessonId]) {
-                  {{ lessonMap()[sub.lessonId].title }}
-                } @else {
-                  <code class="dim-id">{{ sub.lessonId | slice:0:8 }}…</code>
-                }
-              </td>
-              <td class="col-score">
-                @if (score(sub); as s) {
-                  <span class="score-chip"
-                        [class.score-chip--full]="s.correct === s.total"
-                        [class.score-chip--partial]="s.correct > 0 && s.correct < s.total"
-                        [class.score-chip--zero]="s.correct === 0">
-                    {{ s.correct }}/{{ s.total }}
-                  </span>
-                } @else {
-                  <span class="dim-id">—</span>
-                }
-              </td>
-              <td class="col-date">{{ sub.createdAt | date:'MMM d · h:mm a' }}</td>
-              <td class="col-expand">
-                <svg class="expand-chevron" [class.expand-chevron--open]="expandedId() === sub._id"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </td>
+    <!-- ── Loading skeleton ── -->
+    @if (loading()) {
+      <div class="table-wrap">
+        <table class="sub-table">
+          <thead>
+            <tr>
+              <th class="col-learner">Learner</th>
+              <th class="col-course">Course</th>
+              <th class="col-lesson">Lesson</th>
+              <th class="col-date">Submitted</th>
+              <th class="col-remarks">Remarks</th>
+              <th class="col-unread">Unread</th>
+              <th class="col-action"></th>
             </tr>
+          </thead>
+          <tbody>
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr class="sub-row" aria-hidden="true">
+                <td><div class="skeleton-line skeleton-line--wide"></div></td>
+                <td><div class="skeleton-line"></div></td>
+                <td><div class="skeleton-line"></div></td>
+                <td><div class="skeleton-line skeleton-line--narrow"></div></td>
+                <td><div class="skeleton-line skeleton-line--narrow"></div></td>
+                <td><div class="skeleton-line skeleton-line--narrow"></div></td>
+                <td></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
 
-            <!-- Expanded detail row -->
-            @if (expandedId() === sub._id) {
-              <tr class="sub-detail-row">
+    <!-- ── Table ── -->
+    @if (!loading()) {
+      <div class="table-wrap">
+        <table class="sub-table">
+          <thead>
+            <tr>
+              <th class="col-learner">Learner</th>
+              <th class="col-course">Course</th>
+              <th class="col-lesson">Lesson</th>
+              <th class="col-date">Submitted</th>
+              <th class="col-remarks">Remarks</th>
+              <th class="col-unread">Unread replies</th>
+              <th class="col-action"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (displayed().length === 0) {
+              <tr>
                 <td colspan="7">
-                  <div class="sub-detail">
-
-                    <!-- User ID (full) -->
-                    <div class="sub-detail__meta">
-                      <span class="sub-detail__label">User ID</span>
-                      <code class="sub-detail__code">{{ sub.userId }}</code>
-                    </div>
-
-                    <!-- Responses -->
-                    <div class="response-list">
-                      @for (resp of sub.responses; track resp.questionId; let ri = $index) {
-                        <div class="response-item">
-                          <!-- Q -->
-                          <div class="response-item__q">
-                            <span class="response-item__num">Q{{ ri + 1 }}</span>
-                            <span class="response-item__text">{{ resp.questionText }}</span>
-                            <span class="response-item__type"
-                                  [class.response-item__type--mc]="resp.questionType === 'multiple_choice'">
-                              {{ resp.questionType === 'multiple_choice' ? 'MC' : 'Text' }}
-                            </span>
-                          </div>
-                          <!-- A -->
-                          <div class="response-item__a">
-                            @if (resp.isCorrect === true) {
-                              <span class="verdict verdict--correct">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="13" height="13" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                Correct
-                              </span>
-                            } @else if (resp.isCorrect === false) {
-                              <span class="verdict verdict--wrong">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="13" height="13" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                Wrong
-                              </span>
-                            }
-                            <span class="response-answer">{{ resp.userResponse }}</span>
-                            @if (resp.isCorrect === false && resp.correctOption) {
-                              <span class="correct-hint">Correct: <strong>{{ resp.correctOption }}</strong></span>
-                            }
-                          </div>
-                        </div>
-                      }
-                    </div>
-
+                  <div class="state-cell">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="36" height="36" aria-hidden="true">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    No submissions found.
                   </div>
                 </td>
               </tr>
             }
+
+            @for (item of displayed(); track item._id) {
+              <tr class="sub-row" role="button" tabindex="0"
+                  [attr.aria-label]="'View submission from ' + item.learnerName"
+                  (click)="openDetail(item._id)"
+                  (keydown.enter)="openDetail(item._id)"
+                  (keydown.space)="openDetail(item._id)">
+
+                <td class="col-learner">
+                  <div class="learner-cell">
+                    <span class="learner-name">{{ item.learnerName }}</span>
+                    <span class="learner-email">{{ item.learnerEmail }}</span>
+                  </div>
+                </td>
+
+                <td class="col-course">{{ item.courseTitle }}</td>
+
+                <td class="col-lesson">{{ item.lessonTitle }}</td>
+
+                <td class="col-date">{{ item.createdAt | date:'MMM d, y' }}</td>
+
+                <td class="col-remarks">
+                  <span class="count-chip">{{ item.remarkCount }}</span>
+                </td>
+
+                <td class="col-unread">
+                  @if (item.unreadReplies > 0) {
+                    <span class="unread-badge">{{ item.unreadReplies }}</span>
+                  } @else {
+                    <span class="dim-dash">—</span>
+                  }
+                </td>
+
+                <td class="col-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="row-chevron" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Pagination ── -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button class="page-btn" type="button"
+                  [disabled]="page() <= 1"
+                  (click)="goToPage(page() - 1)"
+                  aria-label="Previous page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+
+          @for (p of pageNumbers(); track p) {
+            <button class="page-btn" type="button"
+                    [class.page-btn--active]="p === page()"
+                    (click)="goToPage(p)"
+                    [attr.aria-current]="p === page() ? 'page' : null">
+              {{ p }}
+            </button>
           }
-        </tbody>
-      </table>
-    </div>
+
+          <button class="page-btn" type="button"
+                  [disabled]="page() >= totalPages()"
+                  (click)="goToPage(page() + 1)"
+                  aria-label="Next page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+      }
+    }
   }
 
 </div>

@@ -2,12 +2,13 @@ import { Component, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
+import { TopbarComponent } from '../topbar/topbar';
 import { ConfirmModalComponent } from '../../shared/confirm-modal/confirm-modal';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, ConfirmModalComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, ConfirmModalComponent],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })

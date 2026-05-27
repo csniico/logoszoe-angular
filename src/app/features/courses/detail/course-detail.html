@@ -258,6 +258,10 @@
                         <input class="form-input form-input--sm" type="text" [(ngModel)]="editLessonTitle" placeholder="Lesson title" />
                       </div>
                       <div class="form-field">
+                        <label class="form-label">Description <span class="form-label-hint">(shown in course outline)</span></label>
+                        <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="editLessonDescription" placeholder="Brief summary of what this lesson covers…" maxlength="500"></textarea>
+                      </div>
+                      <div class="form-field">
                         <label class="form-label">Content</label>
                         <textarea class="form-textarea form-textarea--sm" rows="3" [(ngModel)]="editLessonContent" placeholder="Content…"></textarea>
                       </div>
@@ -270,6 +274,11 @@
                     </div>
 
                   } @else {
+                    <!-- Description -->
+                    @if (lesson.description) {
+                      <p class="lesson-accordion__description">{{ lesson.description }}</p>
+                    }
+
                     <!-- ── Compact meta strip ── -->
                     <div class="lesson-meta-strip">
                       <span class="lesson-meta-chip lesson-meta-chip--type"
@@ -543,7 +552,16 @@
 
               @if (parsingDoc()) {
                 <div class="lesson-parsing-status">
-                  <span class="spinner spinner--sm"></span> Parsing document…
+                  <div class="lesson-parsing-status__row">
+                    <span class="spinner spinner--sm"></span>
+                    <span>{{ pipelineState()?.message ?? 'Processing document…' }}</span>
+                  </div>
+                  @if ((pipelineState()?.progress ?? 0) > 0) {
+                    <div class="pipeline-progress-bar">
+                      <div class="pipeline-progress-bar__fill"
+                           [style.width.%]="pipelineState()!.progress"></div>
+                    </div>
+                  }
                 </div>
               }
               @if (docParseError()) {

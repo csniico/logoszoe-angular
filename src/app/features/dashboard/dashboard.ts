@@ -1,12 +1,15 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgApexchartsModule } from 'ng-apexcharts';
 import { AnalyticsService } from '../../core/services/analytics.service';
-import { AnalyticsOverview, UserGrowthPoint } from '../../core/models/analytics.model';
+import { AnalyticsOverview } from '../../core/models/analytics.model';
+
+type ChartSeries = { name: string; data: number[] }[];
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -27,7 +30,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Total content pieces across all types
+  // ── Aggregate stats ────────────────────────────────────────────────────────
+
   readonly totalContent = computed(() => {
     const c = this.data()?.content;
     if (!c) return 0;
@@ -35,47 +39,128 @@ export class DashboardComponent implements OnInit {
            c.courses  + c.courseVideos + c.posts   + c.prayers;
   });
 
-  // Max hits value for the active top-content list (for bar scaling)
-  readonly maxHits = computed(() => {
-    const d = this.data();
-    if (!d) return 1;
-    const tab = this.activeTab();
-    const list = tab === 'articles'    ? d.topArticles    :
-                 tab === 'devotionals' ? d.topDevotionals : d.topPodcasts;
-    return Math.max(1, ...list.map((i) => i.hits));
+  // ── Content breakdown chips — Sacred Stillness palette ────────────────────
+
+  readonly contentItems = computed(() => {
+    const c = this.data()?.content;
+    if (!c) return [];
+    return [
+      { label: 'Articles',      count: c.articles,     color: '#5A82A8' },
+      { label: 'Devotionals',   count: c.devotionals,  color: '#C9A059' },
+      { label: 'Podcasts',      count: c.podcasts,     color: '#3a5878' },
+      { label: 'Videos',        count: c.videos,       color: '#d4b07a' },
+      { label: 'Courses',       count: c.courses,      color: '#2c4460' },
+      { label: 'Course Videos', count: c.courseVideos, color: '#8aa8c4' },
+      { label: 'Posts',         count: c.posts,        color: '#a08040' },
+      { label: 'Prayers',       count: c.prayers,      color: '#7a9ab8' },
+    ];
   });
 
-  // Max engagement score for top posts bar scaling
-  readonly maxPostScore = computed(() => {
-    const d = this.data();
-    if (!d) return 1;
-    return Math.max(1, ...d.topPosts.map((p) => p.likeCount + p.shareCount));
-  });
+  // ── 30-day user growth series ──────────────────────────────────────────────
 
-  // Fill a 30-day calendar from the sparse userGrowth array
-  readonly growthSeries = computed<{ date: string; count: number }[]>(() => {
+  private readonly growthPoints = computed<{ date: string; count: number }[]>(() => {
     const d = this.data();
     if (!d) return [];
     const map = new Map(d.userGrowth.map((p) => [p._id, p.count]));
-    const series: { date: string; count: number }[] = [];
+    const result: { date: string; count: number }[] = [];
     for (let i = 29; i >= 0; i--) {
       const dt = new Date();
       dt.setDate(dt.getDate() - i);
       const key = dt.toISOString().slice(0, 10);
-      series.push({ date: key, count: map.get(key) ?? 0 });
+      result.push({ date: key, count: map.get(key) ?? 0 });
     }
-    return series;
+    return result;
   });
 
-  readonly maxGrowth = computed(() =>
-    Math.max(1, ...this.growthSeries().map((s) => s.count)),
-  );
+  // ── Growth chart bindings ──────────────────────────────────────────────────
 
-  barPct(val: number, max: number): string {
-    return `${Math.round((val / max) * 100)}%`;
-  }
+  readonly growthChartSeries = computed<ChartSeries>(() => [
+    { name: 'New Users', data: this.growthPoints().map(s => s.count) },
+  ]);
 
-  formatDate(iso: string): string {
+  readonly growthChartXAxis = computed(() => ({
+    categories: this.growthPoints().map(s => this.fmtDate(s.date)),
+    labels: {
+      rotate: -45,
+      style: { fontSize: '10px', colors: '#9ca3af', fontFamily: 'Inter,sans-serif' },
+    },
+    axisBorder: { show: false },
+    axisTicks:  { show: false },
+  }));
+
+  // Static chart config — height is fixed for growth chart
+  readonly growthChartConfig = {
+    type: 'bar' as const,
+    height: 195,
+    toolbar: { show: false },
+    fontFamily: 'Inter, sans-serif',
+  };
+
+  readonly growthChartColors     = ['#5A82A8'];
+  readonly growthChartDataLabels = { enabled: false };
+  readonly growthChartPlotOpts   = { bar: { columnWidth: '68%', borderRadius: 2 } };
+  readonly growthChartGrid       = { borderColor: '#f3f4f6', strokeDashArray: 3 };
+  readonly growthChartYAxis      = {
+    labels: { style: { fontSize: '11px', colors: '#9ca3af', fontFamily: 'Inter,sans-serif' } },
+  };
+  readonly growthChartTooltip    = {
+    y: { formatter: (v: number) => `${v} new user${v !== 1 ? 's' : ''}` },
+  };
+
+  // ── Top content chart bindings (reactive to tab) ───────────────────────────
+
+  private readonly topItems = computed(() => {
+    const d = this.data();
+    const tab = this.activeTab();
+    if (!d) return [];
+    const list = tab === 'articles'    ? d.topArticles
+               : tab === 'devotionals' ? d.topDevotionals
+               : d.topPodcasts;
+    // Reverse so the highest-ranked item appears at the top of a horizontal chart
+    return [...list].reverse();
+  });
+
+  readonly topContentHasData = computed(() => this.topItems().length > 0);
+
+  readonly topContentSeries = computed<ChartSeries>(() => [{
+    name: this.activeTab() === 'podcasts' ? 'Plays' : 'Views',
+    data: this.topItems().map(i => i.hits),
+  }]);
+
+  readonly topContentXAxis = computed(() => ({
+    categories: this.topItems().map(i =>
+      this.activeTab() === 'devotionals'
+        ? this.truncate(this.devotionalLabel(i as any), 30)
+        : this.truncate((i as any).title ?? '', 30),
+    ),
+    labels: {
+      style: { fontSize: '11px', colors: '#6b7280', fontFamily: 'Inter,sans-serif' },
+      maxWidth: 175,
+    },
+    axisBorder: { show: false },
+    axisTicks:  { show: false },
+  }));
+
+  // Height adjusts with the number of items in the active tab
+  readonly topContentChartConfig = computed(() => ({
+    type: 'bar' as const,
+    height: Math.max(220, this.topItems().length * 44 + 56),
+    toolbar: { show: false },
+    fontFamily: 'Inter, sans-serif',
+  }));
+
+  readonly topContentColors     = ['#5A82A8'];
+  readonly topContentDataLabels = { enabled: false };
+  readonly topContentPlotOpts   = { bar: { horizontal: true, barHeight: '55%', borderRadius: 3 } };
+  readonly topContentGrid       = { borderColor: '#f3f4f6', strokeDashArray: 3 };
+  readonly topContentTooltip    = computed(() => ({
+    y: { formatter: (v: number) =>
+      `${v} ${this.activeTab() === 'podcasts' ? 'play' : 'view'}${v !== 1 ? 's' : ''}` },
+  }));
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  fmtDate(iso: string): string {
     return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
 
@@ -86,19 +171,4 @@ export class DashboardComponent implements OnInit {
   devotionalLabel(d: { day: number; month: number; year: number; title: string }): string {
     return `${d.day}/${d.month}/${d.year} — ${d.title}`;
   }
-
-  readonly contentItems = computed(() => {
-    const c = this.data()?.content;
-    if (!c) return [];
-    return [
-      { label: 'Articles',      count: c.articles,     color: '#6366f1' },
-      { label: 'Devotionals',   count: c.devotionals,  color: '#0ea5e9' },
-      { label: 'Podcasts',      count: c.podcasts,     color: '#f59e0b' },
-      { label: 'Videos',        count: c.videos,       color: '#ec4899' },
-      { label: 'Courses',       count: c.courses,      color: '#10b981' },
-      { label: 'Course Videos', count: c.courseVideos, color: '#8b5cf6' },
-      { label: 'Posts',         count: c.posts,        color: '#14b8a6' },
-      { label: 'Prayers',       count: c.prayers,      color: '#f97316' },
-    ];
-  });
 }

@@ -145,7 +145,7 @@
         >
 
           <!-- Hero: banner image or colour block -->
-          <div class="cat-card__hero" [style.background]="cat.bannerUrl ? 'none' : (cat.color || '#16A34A')">
+          <div class="cat-card__hero" [style.background]="cat.bannerUrl ? 'none' : (cat.color || '#5A82A8')">
             @if (cat.bannerUrl) {
               <img class="cat-card__hero-img" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
             } @else {
@@ -214,7 +214,7 @@
                 @if (cat.bannerUrl) {
                   <img class="cat-table__thumb" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
                 } @else {
-                  <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#16A34A'">
+                  <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#5A82A8'">
                     <span>{{ cat.icon || cat.name[0] }}</span>
                   </div>
                 }
@@ -292,7 +292,7 @@
                       @if (cat.bannerUrl) {
                         <img class="cat-table__thumb" [src]="cat.bannerUrl" [alt]="cat.name" loading="lazy" />
                       } @else {
-                        <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#16A34A'">
+                        <div class="cat-table__thumb cat-table__thumb--swatch" [style.background]="cat.color || '#5A82A8'">
                           <span>{{ cat.icon || cat.name[0] }}</span>
                         </div>
                       }

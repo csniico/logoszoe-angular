@@ -88,7 +88,7 @@
     <!-- ══ Row 3: Top content + Top posts ══ -->
     <div class="two-col">
 
-      <!-- Top content -->
+      <!-- Top content — horizontal bar chart, switches with tabs -->
       <div class="analytics-card">
         <div class="analytics-card__header">
           <h2 class="analytics-card__title">Top content by views</h2>
@@ -99,64 +99,25 @@
           </div>
         </div>
 
-        <div class="top-list">
-          @if (activeTab() === 'articles') {
-            @for (item of data()!.topArticles; track item._id; let i = $index) {
-              <div class="top-item">
-                <span class="top-item__rank">{{ i + 1 }}</span>
-                <div class="top-item__info">
-                  <span class="top-item__name">{{ item.title }}</span>
-                  <div class="top-item__bar-wrap">
-                    <div class="top-item__bar" [style.width]="barPct(item.hits, maxHits())"></div>
-                  </div>
-                </div>
-                <span class="top-item__count">{{ item.hits | number }}</span>
-              </div>
-            }
-            @if (data()!.topArticles.length === 0) {
-              <p class="top-empty">No views recorded yet.</p>
-            }
-          }
-
-          @if (activeTab() === 'devotionals') {
-            @for (item of data()!.topDevotionals; track item._id; let i = $index) {
-              <div class="top-item">
-                <span class="top-item__rank">{{ i + 1 }}</span>
-                <div class="top-item__info">
-                  <span class="top-item__name">{{ devotionalLabel(item) }}</span>
-                  <div class="top-item__bar-wrap">
-                    <div class="top-item__bar" [style.width]="barPct(item.hits, maxHits())"></div>
-                  </div>
-                </div>
-                <span class="top-item__count">{{ item.hits | number }}</span>
-              </div>
-            }
-            @if (data()!.topDevotionals.length === 0) {
-              <p class="top-empty">No views recorded yet.</p>
-            }
-          }
-
-          @if (activeTab() === 'podcasts') {
-            @for (item of data()!.topPodcasts; track item._id; let i = $index) {
-              <div class="top-item">
-                <span class="top-item__rank">{{ i + 1 }}</span>
-                <div class="top-item__info">
-                  <span class="top-item__name">{{ item.title }}</span>
-                  <div class="top-item__bar-wrap">
-                    <div class="top-item__bar top-item__bar--podcast" [style.width]="barPct(item.hits, maxHits())"></div>
-                  </div>
-                </div>
-                <span class="top-item__count">{{ item.hits | number }}</span>
-              </div>
-            }
-            @if (data()!.topPodcasts.length === 0) {
-              <p class="top-empty">No plays recorded yet.</p>
-            }
-          }
-        </div>
+        @if (topContentHasData()) {
+          <div class="chart-wrap">
+            <apx-chart
+              [series]="topContentSeries()"
+              [chart]="topContentChartConfig()"
+              [plotOptions]="topContentPlotOpts"
+              [xaxis]="topContentXAxis()"
+              [colors]="topContentColors"
+              [dataLabels]="topContentDataLabels"
+              [grid]="topContentGrid"
+              [tooltip]="topContentTooltip()"
+            ></apx-chart>
+          </div>
+        } @else {
+          <p class="top-empty">No views recorded yet.</p>
+        }
       </div>
 
-      <!-- Top posts -->
+      <!-- Top posts — engagement chips list -->
       <div class="analytics-card">
         <div class="analytics-card__header">
           <h2 class="analytics-card__title">Top posts by engagement</h2>
@@ -181,10 +142,6 @@
                     {{ post.replyCount }}
                   </span>
                 </div>
-                <div class="top-item__bar-wrap">
-                  <div class="top-item__bar top-item__bar--post"
-                       [style.width]="barPct(post.likeCount + post.shareCount, maxPostScore())"></div>
-                </div>
               </div>
             </div>
           }
@@ -202,22 +159,18 @@
         <h2 class="analytics-card__title">New users — last 30 days</h2>
         <span class="growth-total-badge">{{ data()!.users.newThisMonth | number }} total</span>
       </div>
-
-      <div class="growth-chart">
-        @for (point of growthSeries(); track point.date) {
-          <div class="growth-col" [title]="formatDate(point.date) + ': ' + point.count + ' new users'">
-            <span class="growth-col__count" [class.growth-col__count--zero]="point.count === 0">
-              @if (point.count > 0) { {{ point.count }} }
-            </span>
-            <div class="growth-col__bar-wrap">
-              <div class="growth-col__bar"
-                   [style.height]="barPct(point.count, maxGrowth())"></div>
-            </div>
-            <span class="growth-col__label">
-              @if ($index % 5 === 0) { {{ formatDate(point.date) }} }
-            </span>
-          </div>
-        }
+      <div class="chart-wrap chart-wrap--growth">
+        <apx-chart
+          [series]="growthChartSeries()"
+          [chart]="growthChartConfig"
+          [plotOptions]="growthChartPlotOpts"
+          [xaxis]="growthChartXAxis()"
+          [yaxis]="growthChartYAxis"
+          [colors]="growthChartColors"
+          [dataLabels]="growthChartDataLabels"
+          [grid]="growthChartGrid"
+          [tooltip]="growthChartTooltip"
+        ></apx-chart>
       </div>
     </div>
 

@@ -1,7 +1,6 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
 
 export interface NavItem {
   label: string;
@@ -22,12 +21,8 @@ export interface NavGroup {
   styleUrl: './sidebar.scss',
 })
 export class SidebarComponent {
-  private readonly authService = inject(AuthService);
-
-  readonly collapsed = input<boolean>(false);
+  readonly collapsed   = input<boolean>(false);
   readonly closeMobile = output<void>();
-
-  readonly currentAdmin = this.authService.currentAdmin;
 
   readonly navGroups: NavGroup[] = [
     {
@@ -129,11 +124,6 @@ export class SidebarComponent {
           icon: 'M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM6 16h.01M10 16h.01',
         },
         {
-          label: 'Profile',
-          path: '/profile',
-          icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
-        },
-        {
           label: 'Audit Logs',
           path: '/audit-logs',
           icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4',
@@ -141,10 +131,6 @@ export class SidebarComponent {
       ],
     },
   ];
-
-  signOut(): void {
-    this.authService.signOut();
-  }
 
   onNavClick(): void {
     this.closeMobile.emit();

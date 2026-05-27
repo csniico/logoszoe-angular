@@ -141,7 +141,7 @@
 .course-cover-placeholder {
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  background: linear-gradient(135deg, #2c4460 0%, #3a5878 100%);
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
@@ -312,7 +312,7 @@
 
   &--open {
     border-color: var(--color-primary-border);
-    box-shadow: 0 2px 12px rgba(22, 163, 74, 0.08);
+    box-shadow: 0 2px 12px rgba(90, 130, 168, 0.08);
   }
 
   &--editing {
@@ -379,15 +379,15 @@
 }
 
 .lesson-duration-badge {
-  background: #f0fdf4;
+  background: var(--color-primary-light);
   color: var(--color-primary);
   border: 1px solid var(--color-primary-border);
 }
 
 .lesson-completions-badge {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
+  border: 1px solid var(--color-primary-border);
 }
 
 // ── Lesson detail grid ─────────────────────────────────────────────────────────
@@ -424,7 +424,7 @@
     align-items: center;
     gap: 0.3rem;
     font-weight: 600;
-    color: #2563eb;
+    color: var(--color-primary);
   }
 }
 
@@ -526,15 +526,15 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
+  border: 1px solid var(--color-primary-border);
   flex-shrink: 0;
 
   &--video {
-    background: #ede9fe;
-    color: #7c3aed;
-    border-color: #c4b5fd;
+    background: #d5e4ef;
+    color: #2c4460;
+    border-color: #7eaacc;
   }
 }
 
@@ -679,21 +679,21 @@
 
   &--type {
     text-transform: capitalize;
-    background: rgba(99, 102, 241, 0.08);
-    color: #a5b4fc;
-    border-color: rgba(99, 102, 241, 0.2);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary-border);
   }
 
   &--video {
-    background: rgba(234, 179, 8, 0.08);
-    color: #fbbf24;
-    border-color: rgba(234, 179, 8, 0.2);
+    background: #d5e4ef;
+    color: #2c4460;
+    border-color: #7eaacc;
   }
 
   &--completions {
-    background: rgba(34, 197, 94, 0.08);
-    color: #4ade80;
-    border-color: rgba(34, 197, 94, 0.2);
+    background: var(--color-primary-light);
+    color: var(--color-primary-hover);
+    border-color: var(--color-primary-border);
   }
 }
 
@@ -815,8 +815,8 @@
   color: var(--color-text-primary);
   font-weight: 600;
   padding: 0.25rem 0.5rem;
-  background: rgba(99, 102, 241, 0.06);
-  border-left: 2px solid rgba(99, 102, 241, 0.4);
+  background: rgba(90, 130, 168, 0.06);
+  border-left: 2px solid rgba(90, 130, 168, 0.4);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -942,9 +942,9 @@
   align-self: flex-start;
 
   &--mc {
-    background: rgba(99, 102, 241, 0.1);
-    color: #818cf8;
-    border-color: rgba(99, 102, 241, 0.25);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary-border);
   }
 }
 
@@ -969,12 +969,12 @@
   strong { color: var(--color-text-primary); }
 
   &--correct {
-    background: rgba(34, 197, 94, 0.08);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: #4ade80;
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-border);
+    color: var(--color-primary);
 
-    strong { color: #4ade80; }
-    svg { stroke: #4ade80; }
+    strong { color: var(--color-primary); }
+    svg { stroke: var(--color-primary); }
   }
 }
 
@@ -1113,10 +1113,10 @@
 
   svg { width: 16px; height: 16px; }
 
-  &--doc   { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-  &--video { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
-  &--audio { background: rgba(234, 88, 12, 0.12);  color: #ea580c; }
-  &--link  { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
+  &--doc   { background: var(--color-primary-light); color: var(--color-primary); }
+  &--video { background: #d5e4ef;                    color: #2c4460; }
+  &--audio { background: var(--color-gold-light);    color: var(--color-gold); }
+  &--link  { background: var(--color-scaffold);      color: var(--color-text-muted); }
 }
 
 .add-lesson-menu__text {
@@ -1167,43 +1167,43 @@
   svg { width: 12px; height: 12px; flex-shrink: 0; }
 
   &--document {
-    background: rgba(59, 130, 246, 0.12);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary-border);
   }
   &--video {
-    background: rgba(124, 58, 237, 0.12);
-    color: #7c3aed;
-    border: 1px solid rgba(124, 58, 237, 0.25);
+    background: #d5e4ef;
+    color: #2c4460;
+    border: 1px solid #7eaacc;
   }
   &--audio {
-    background: rgba(234, 88, 12, 0.12);
-    color: #ea580c;
-    border: 1px solid rgba(234, 88, 12, 0.25);
+    background: var(--color-gold-light);
+    color: var(--color-gold);
+    border: 1px solid var(--color-gold-border);
   }
   &--link {
-    background: rgba(20, 184, 166, 0.12);
-    color: #14b8a6;
-    border: 1px solid rgba(20, 184, 166, 0.25);
+    background: var(--color-scaffold);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
   }
 }
 
 // ── Lesson item type badge — new colour modifiers ──────────────────────────────
 .lesson-item__type {
   &--document {
-    background: #dbeafe;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
+    background: var(--color-primary-light);
+    color: var(--color-primary-hover);
+    border-color: var(--color-primary-border);
   }
   &--audio {
-    background: #ffedd5;
-    color: #c2410c;
-    border-color: #fed7aa;
+    background: var(--color-gold-light);
+    color: var(--color-gold-hover);
+    border-color: var(--color-gold-border);
   }
   &--link {
-    background: #ccfbf1;
-    color: #0f766e;
-    border-color: #99f6e4;
+    background: var(--color-scaffold);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
   }
   // --video already defined above
 }
@@ -1211,21 +1211,21 @@
 // ── Lesson meta chip — new type modifiers ─────────────────────────────────────
 .lesson-meta-chip {
   &--document {
-    background: rgba(59, 130, 246, 0.08);
-    color: #60a5fa;
-    border-color: rgba(59, 130, 246, 0.2);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary-border);
     text-transform: capitalize;
   }
   &--audio {
-    background: rgba(234, 88, 12, 0.08);
-    color: #fb923c;
-    border-color: rgba(234, 88, 12, 0.2);
+    background: var(--color-gold-light);
+    color: var(--color-gold-hover);
+    border-color: var(--color-gold-border);
     text-transform: capitalize;
   }
   &--link {
-    background: rgba(20, 184, 166, 0.08);
-    color: #2dd4bf;
-    border-color: rgba(20, 184, 166, 0.2);
+    background: var(--color-scaffold);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
     text-transform: capitalize;
   }
 }
@@ -1258,14 +1258,14 @@
   }
 
   &--audio {
-    border-color: rgba(234, 88, 12, 0.35);
+    border-color: rgba(201, 160, 89, 0.35);
 
     &:hover {
-      border-color: #ea580c;
-      background: rgba(234, 88, 12, 0.05);
+      border-color: var(--color-gold);
+      background: rgba(201, 160, 89, 0.05);
     }
 
-    svg { color: #ea580c; }
+    svg { color: var(--color-gold); }
   }
 }
 
@@ -1302,13 +1302,33 @@
 // ── Parse / upload status ──────────────────────────────────────────────────────
 .lesson-parsing-status {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
   font-size: 0.85rem;
   color: var(--color-text-muted);
   padding: 0.25rem 0;
 
   svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.pipeline-progress-bar {
+  height: 3px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+  }
 }
 
 // ── Document HTML preview ─────────────────────────────────────────────────────
@@ -1351,7 +1371,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  color: #ea580c;
+  color: var(--color-gold);
   font-weight: 500;
 
   svg { width: 16px; height: 16px; flex-shrink: 0; }
@@ -1360,7 +1380,7 @@
 .lesson-audio-player {
   width: 100%;
   border-radius: var(--radius-sm);
-  accent-color: #ea580c;
+  accent-color: var(--color-gold);
 }
 
 // ── Preview mode bar ───────────────────────────────────────────────────────────
@@ -1370,8 +1390,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.625rem 1rem;
-  background: rgba(124, 58, 237, 0.07);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: rgba(90, 130, 168, 0.07);
+  border: 1px solid rgba(90, 130, 168, 0.2);
   border-radius: var(--radius-md);
   margin-bottom: 2rem;
 }
@@ -1382,7 +1402,7 @@
   gap: 0.5rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #7c3aed;
+  color: var(--color-primary);
 
   svg { flex-shrink: 0; }
 }
@@ -1430,9 +1450,9 @@
 
   &--open {
     border-color: var(--color-primary-border);
-    box-shadow: 0 2px 10px rgba(22, 163, 74, 0.07);
+    box-shadow: 0 2px 10px rgba(90, 130, 168, 0.07);
   }
-  &--done { border-color: rgba(34, 197, 94, 0.35); }
+  &--done { border-color: rgba(90, 130, 168, 0.35); }
 }
 
 .user-lesson-item__header {
@@ -1465,8 +1485,8 @@
   flex-shrink: 0;
 
   .user-lesson-item--done & {
-    background: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(90, 130, 168, 0.12);
+    border-color: rgba(90, 130, 168, 0.35);
     color: var(--color-primary);
   }
 }
@@ -1609,8 +1629,8 @@
   }
 
   &--done .sidebar-lesson-item__num {
-    background: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(90, 130, 168, 0.12);
+    border-color: rgba(90, 130, 168, 0.35);
     color: var(--color-primary);
   }
 }
@@ -1721,7 +1741,7 @@
 
 .user-lesson-detail__audio {
   width: 100%;
-  accent-color: #ea580c;
+  accent-color: var(--color-gold);
 }
 
 .user-lesson-detail__link-wrap {
@@ -1864,9 +1884,9 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1.125rem;
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--color-primary-light);
   color: var(--color-primary);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid var(--color-primary-border);
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
