@@ -27,30 +27,98 @@
         <ul class="nav-list">
           @for (item of group.items; track item.path) {
             <li>
-              <a
-                class="nav-link"
-                [routerLink]="item.path"
-                routerLinkActive="nav-link--active"
-                (click)="onNavClick()"
-                [title]="collapsed() ? item.label : ''"
-                [attr.aria-label]="collapsed() ? item.label : null"
-              >
-                <svg
-                  class="nav-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
+
+              @if (item.expandable && item.sectionKey) {
+                <!-- ── Expandable section ─────────────────────── -->
+                <button
+                  class="nav-link nav-link--expandable"
+                  [class.nav-link--active]="isSectionExpanded(item.sectionKey)"
+                  (click)="toggleSection(item.sectionKey)"
+                  [title]="collapsed() ? item.label : ''"
+                  [attr.aria-label]="item.label"
+                  [attr.aria-expanded]="isSectionExpanded(item.sectionKey)"
                 >
-                  <path [attr.d]="item.icon"/>
-                </svg>
-                @if (!collapsed()) {
-                  <span class="nav-label">{{ item.label }}</span>
+                  <svg
+                    class="nav-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path [attr.d]="item.icon"/>
+                  </svg>
+                  @if (!collapsed()) {
+                    <span class="nav-label">{{ item.label }}</span>
+                    <svg
+                      class="expand-chevron"
+                      [class.expand-chevron--open]="isSectionExpanded(item.sectionKey)"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                  }
+                </button>
+
+                <!-- Sub-items (hidden when collapsed) -->
+                @if (!collapsed() && isSectionExpanded(item.sectionKey)) {
+                  <ul class="sub-nav-list">
+                    @for (sub of getSubItems(item.sectionKey); track sub.label) {
+                      <li>
+                        <a
+                          class="sub-nav-link"
+                          [class.sub-nav-link--active]="isSubItemActive(sub)"
+                          [routerLink]="sub.path"
+                          [queryParams]="sub.queryParams"
+                          (click)="onNavClick()"
+                        >
+                          <span
+                            class="category-dot"
+                            [style.background]="sub.color ?? '#5a82a8'"
+                          ></span>
+                          {{ sub.label }}
+                        </a>
+                      </li>
+                    }
+                  </ul>
                 }
-              </a>
+
+              } @else {
+                <!-- ── Regular nav link ───────────────────────── -->
+                <a
+                  class="nav-link"
+                  [routerLink]="item.path"
+                  routerLinkActive="nav-link--active"
+                  (click)="onNavClick()"
+                  [title]="collapsed() ? item.label : ''"
+                  [attr.aria-label]="collapsed() ? item.label : null"
+                >
+                  <svg
+                    class="nav-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path [attr.d]="item.icon"/>
+                  </svg>
+                  @if (!collapsed()) {
+                    <span class="nav-label">{{ item.label }}</span>
+                  }
+                </a>
+              }
+
             </li>
           }
         </ul>

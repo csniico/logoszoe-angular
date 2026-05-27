@@ -150,6 +150,73 @@ $ease:        0.2s ease;
   flex-shrink: 0;
 }
 
+/* ── Expandable nav sections ────────────────────────── */
+.nav-link--expandable {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  // Override justify-content so chevron sits at the far right
+  justify-content: flex-start;
+
+  .nav-label { flex: 1; text-align: left; }
+
+  .expand-chevron {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: $text-dim;
+    transition: transform $ease;
+
+    &--open { transform: rotate(180deg); }
+  }
+}
+
+.sub-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 4px 2.25rem;
+  padding-left: 0.625rem;
+  border-left: 1px solid $border;
+}
+
+.sub-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.625rem;
+  border-radius: 6px;
+  color: $text-dim;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background $ease, color $ease;
+
+  &:hover {
+    background: $hover;
+    color: $text-base;
+    text-decoration: none;
+  }
+
+  &--active {
+    color: $blue-active;
+    background: $blue-dim;
+
+    .category-dot { box-shadow: 0 0 0 2px rgba(126, 170, 204, 0.25); }
+  }
+}
+
+.category-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* ── Footer ─────────────────────────────────────────── */
 .user-cell {
   display: flex;

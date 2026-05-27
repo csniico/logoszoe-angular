@@ -1,11 +1,24 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { CategoryService } from '../../core/services/category.service';
+import { VideoService } from '../../core/services/video.service';
+import { PODCAST_CATEGORIES } from '../../core/models/podcast.model';
+
+export interface SubNavItem {
+  label: string;
+  path: string;
+  queryParams?: Record<string, string>;
+  color?: string;
+}
 
 export interface NavItem {
   label: string;
   path: string;
   icon: string;
+  expandable?: boolean;
+  sectionKey?: string;
 }
 
 export interface NavGroup {
@@ -20,19 +33,36 @@ export interface NavGroup {
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
+  private readonly categoryService = inject(CategoryService);
+  private readonly videoService    = inject(VideoService);
+  private readonly router          = inject(Router);
+
   readonly collapsed   = input<boolean>(false);
   readonly closeMobile = output<void>();
+
+  // Sub-items for expandable sections
+  articleSubItems = signal<SubNavItem[]>([]);
+  podcastSubItems = signal<SubNavItem[]>(
+    PODCAST_CATEGORIES.map(c => ({
+      label: c.label,
+      path: '/podcasts',
+      queryParams: { category: c.value },
+    })),
+  );
+  videoSubItems = signal<SubNavItem[]>([]);
+
+  // Which sections are currently expanded
+  expandedSections = signal<Set<string>>(new Set<string>());
+
+  // Reactive current URL for sub-item active detection
+  currentUrl = signal<string>('');
 
   readonly navGroups: NavGroup[] = [
     {
       label: 'Analytics',
       items: [
-        {
-          label: 'Dashboard',
-          path: '/dashboard',
-          icon: 'M18 20V10M12 20V4M6 20v-6',
-        },
+        { label: 'Dashboard', path: '/dashboard', icon: 'M18 20V10M12 20V4M6 20v-6' },
       ],
     },
     {
@@ -52,6 +82,8 @@ export class SidebarComponent {
           label: 'Articles',
           path: '/articles',
           icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8L14 2zM14 2v6h6M16 13H8M16 17H8M10 9H8',
+          expandable: true,
+          sectionKey: 'articles',
         },
         {
           label: 'Devotionals',
@@ -67,6 +99,8 @@ export class SidebarComponent {
           label: 'Podcasts',
           path: '/podcasts',
           icon: 'M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8',
+          expandable: true,
+          sectionKey: 'podcasts',
         },
         {
           label: 'Categories',
@@ -117,6 +151,8 @@ export class SidebarComponent {
           label: 'Videos',
           path: '/videos',
           icon: 'M15 10l4.553-2.277A1 1 0 0 1 21 8.68v6.64a1 1 0 0 1-1.447.898L15 14v-4zM3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z',
+          expandable: true,
+          sectionKey: 'videos',
         },
         {
           label: 'Storage',
@@ -131,6 +167,99 @@ export class SidebarComponent {
       ],
     },
   ];
+
+  ngOnInit(): void {
+    // Load article categories from API
+    this.categoryService.getAll().subscribe(({ categories }) => {
+      this.articleSubItems.set(
+        categories.map(c => ({
+          label: c.name,
+          path: '/articles',
+          queryParams: { category: c.slug },
+          color: c.color,
+        })),
+      );
+    });
+
+    // Load unique video categories from API
+    this.videoService.getAll().subscribe(videos => {
+      const seen = new Set<string>();
+      const items: SubNavItem[] = [];
+      for (const v of videos) {
+        if (v.category && !seen.has(v.category)) {
+          seen.add(v.category);
+          items.push({
+            label: v.category,
+            path: '/videos',
+            queryParams: { category: v.category },
+          });
+        }
+      }
+      this.videoSubItems.set(items);
+    });
+
+    // Seed current URL and auto-expand matching section
+    this.currentUrl.set(this.router.url);
+    this.autoExpandForUrl(this.router.url);
+
+    // Keep URL signal up-to-date and auto-expand on navigation
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe(e => {
+        const url = (e as NavigationEnd).urlAfterRedirects;
+        this.currentUrl.set(url);
+        this.autoExpandForUrl(url);
+      });
+  }
+
+  // Returns the sub-item list for a given section key
+  getSubItems(sectionKey: string): SubNavItem[] {
+    switch (sectionKey) {
+      case 'articles': return this.articleSubItems();
+      case 'podcasts': return this.podcastSubItems();
+      case 'videos':   return this.videoSubItems();
+      default:         return [];
+    }
+  }
+
+  // Toggle expand/collapse of a section
+  toggleSection(key: string): void {
+    this.expandedSections.update(set => {
+      const next = new Set(set);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  isSectionExpanded(key: string): boolean {
+    return this.expandedSections().has(key);
+  }
+
+  // Check whether a sub-item is the active route (path + query param match)
+  isSubItemActive(sub: SubNavItem): boolean {
+    const url = this.currentUrl();
+    const [pathname, search] = url.split('?');
+    if (pathname !== sub.path) return false;
+    if (!sub.queryParams) return true;
+    const params = new URLSearchParams(search ?? '');
+    return Object.entries(sub.queryParams).every(([k, v]) => params.get(k) === v);
+  }
+
+  private autoExpandForUrl(url: string): void {
+    const map: [string, string][] = [
+      ['articles', '/articles'],
+      ['podcasts', '/podcasts'],
+      ['videos',   '/videos'],
+    ];
+    this.expandedSections.update(set => {
+      const next = new Set(set);
+      for (const [key, prefix] of map) {
+        if (url.startsWith(prefix)) next.add(key);
+      }
+      return next;
+    });
+  }
 
   onNavClick(): void {
     this.closeMobile.emit();
