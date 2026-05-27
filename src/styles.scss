@@ -91,15 +91,182 @@ a {
   &:hover { text-decoration: underline; }
 }
 
-/* ── Auth layout ────────────────────────────────────────────── */
+/* ── Admin login page ───────────────────────────────────────── */
+/* Matches the Next.js public-app sign-in design language:
+   plain gray-50 background, clean white card, icon-based inputs  */
+
+.login-page {
+  min-height: 100vh;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &__img {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+  }
+}
+
+.login-topbar__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.login-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 384px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  padding: 2rem;
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 2rem;
+  }
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+
+.login-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.lf-group { display: flex; flex-direction: column; gap: 0.375rem; }
+
+.lf-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.lf-input-wrap {
+  position: relative;
+}
+
+.lf-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: #9ca3af;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.lf-input {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.875rem 0.625rem 2.375rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #111827;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder { color: #9ca3af; }
+
+  &:focus {
+    border-color: #6b7280;
+    box-shadow: 0 0 0 3px rgba(107,114,128,.1);
+  }
+
+  &--error {
+    border-color: #f87171;
+    &:focus { box-shadow: 0 0 0 3px rgba(248,113,113,.15); }
+  }
+}
+
+.lf-error {
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
+.lf-submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: #111827;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) { background: #1f2937; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* ── Auth layout (register / verify pages) ──────────────────── */
 .auth-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  /* Sacred Stillness — deep navy → steel blue gradient */
-  background: linear-gradient(145deg, #111c2e 0%, #2c4460 40%, #5a82a8 100%);
+  background: #f9fafb;
 }
 
 .auth-card {
