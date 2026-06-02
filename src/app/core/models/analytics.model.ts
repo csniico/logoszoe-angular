@@ -45,7 +45,6 @@ export interface AnalyticsOverview {
   };
   engagement: {
     lessonCompletions: number;
-    quizSubmissions: number;
   };
   topArticles: TopContent[];
   topDevotionals: TopDevotional[];

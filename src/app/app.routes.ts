@@ -155,18 +155,6 @@ export const routes: Routes = [
           ),
       },
 
-      /* Content — Submissions */
-      {
-        path: 'submissions',
-        loadComponent: () =>
-          import('./features/submissions/submissions').then((m) => m.SubmissionsComponent),
-      },
-      {
-        path: 'submissions/:id',
-        loadComponent: () =>
-          import('./features/submissions/detail/submission-detail').then((m) => m.SubmissionDetailComponent),
-      },
-
       /* Community */
       {
         path: 'community',

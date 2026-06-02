@@ -4,8 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
 import { StorageService } from '../../../core/services/storage.service';
-
-export type CourseWizardStep = 1 | 2;
+import {
+  CourseModule,
+  COURSE_MODULES,
+} from '../../../core/models/course.model';
 
 @Component({
   selector: 'app-course-create',
@@ -19,19 +21,15 @@ export class CourseCreateComponent {
   private readonly storageService = inject(StorageService);
   private readonly router         = inject(Router);
 
-  // ── Wizard step ────────────────────────────────────────────────
-  readonly currentStep = signal<CourseWizardStep>(1);
+  // ── Meta ──────────────────────────────────────────────────────────────────
+  readonly moduleOptions = COURSE_MODULES;
 
-  readonly steps = [
-    { id: 1 as CourseWizardStep, label: 'Details' },
-    { id: 2 as CourseWizardStep, label: 'Review' },
-  ];
+  // ── Form fields ───────────────────────────────────────────────────────────
+  title: string       = '';
+  module: CourseModule = 'foundation';
+  description: string = '';
 
-  // ── Step 1 fields ──────────────────────────────────────────────
-  title       = '';
-  description = '';
-
-  // ── Image upload ───────────────────────────────────────────────
+  // ── Cover image ───────────────────────────────────────────────────────────
   readonly uploadingImage   = signal(false);
   readonly imageUploadError = signal<string | null>(null);
   readonly imagePreviewUrl  = signal<string | null>(null);
@@ -39,38 +37,16 @@ export class CourseCreateComponent {
   imageKey = '';
   pendingImageFile: File | null = null;
 
-  // ── Save state ─────────────────────────────────────────────────
+  // ── Save state ────────────────────────────────────────────────────────────
   readonly saving    = signal(false);
   readonly saveError = signal<string | null>(null);
 
-  // ── Validation ─────────────────────────────────────────────────
-  // Plain method (not a signal computed) so Angular's change detection
-  // re-evaluates it on every cycle when [(ngModel)] triggers a check.
-  step1Valid(): boolean {
-    return this.title.trim().length > 0 && this.description.trim().length > 0;
+  // ── Validation ────────────────────────────────────────────────────────────
+  get formValid(): boolean {
+    return this.title.trim().length > 0;
   }
 
-  // ── Navigation ─────────────────────────────────────────────────
-  canGoNext(): boolean {
-    return this.currentStep() === 1 ? this.step1Valid() : true;
-  }
-
-  next(): void {
-    if (!this.canGoNext()) return;
-    const s = this.currentStep();
-    if (s < 2) this.currentStep.set((s + 1) as CourseWizardStep);
-  }
-
-  back(): void {
-    const s = this.currentStep();
-    if (s > 1) this.currentStep.set((s - 1) as CourseWizardStep);
-  }
-
-  goToStep(step: CourseWizardStep): void {
-    if (step < this.currentStep()) this.currentStep.set(step);
-  }
-
-  // ── Image upload ───────────────────────────────────────────────
+  // ── Cover image ───────────────────────────────────────────────────────────
   onImageFileChange(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -106,17 +82,18 @@ export class CourseCreateComponent {
     this.pendingImageFile = null;
   }
 
-  // ── Final save ─────────────────────────────────────────────────
+  // ── Final save ────────────────────────────────────────────────────────────
   save(): void {
-    if (!this.step1Valid()) { this.currentStep.set(1); return; }
+    if (!this.formValid) return;
     this.saving.set(true);
     this.saveError.set(null);
 
     this.courseService.create({
       title:       this.title.trim(),
-      description: this.description.trim(),
-      imageUrl:    this.imageUrl || undefined,
-      imageKey:    this.imageKey || undefined,
+      module:      this.module,
+      imageUrl:    this.imageUrl    || undefined,
+      imageKey:    this.imageKey    || undefined,
+      description: this.description.trim() || undefined,
     }).subscribe({
       next: (course) => {
         this.saving.set(false);

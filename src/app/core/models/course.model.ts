@@ -1,50 +1,56 @@
-export type LessonType = 'text' | 'document' | 'video' | 'audio' | 'link';
-export type QuestionType = 'multiple_choice' | 'text_input';
+// ── Enums (mirror backend) ─────────────────────────────────────────────────────
 
-export interface QuestionOption {
-  label: string;
-  value: string;
-}
+export type CourseModule = 'foundation' | 'intermediate' | 'advanced';
 
-export interface Question {
-  _id: string;
-  courseId: string;
-  lessonId: string;
+export const COURSE_MODULES: { value: CourseModule; label: string }[] = [
+  { value: 'foundation',   label: 'Foundation'   },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced',     label: 'Advanced'     },
+];
+
+export type LessonContentType = 'text' | 'video' | 'audio';
+
+export const LESSON_CONTENT_TYPES: { value: LessonContentType; label: string }[] = [
+  { value: 'text',  label: 'Text'  },
+  { value: 'video', label: 'Video' },
+  { value: 'audio', label: 'Audio' },
+];
+
+// ── Embedded question ──────────────────────────────────────────────────────────
+
+export interface EmbeddedQuestion {
   text: string;
-  type: QuestionType;
-  options: QuestionOption[];
-  correctOption?: string;
-  order: number;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
-export interface SubmissionResponse {
-  questionId: string;
-  userResponse: string;
+// ── Extracted DOCX content (lesson-level) ─────────────────────────────────────
+
+export interface ExtractedLessonContent {
+  title: string;
+  backgroundText: string;
+  studyQuestions: EmbeddedQuestion[];
+  reflectionQuestions: EmbeddedQuestion[];
+  prayer: string;
+  furtherStudy: string;
 }
 
-export interface Submission {
+// ── Course ────────────────────────────────────────────────────────────────────
+
+export interface Course {
   _id: string;
-  courseId: string;
-  lessonId: string;
-  userId: string;
-  responses: SubmissionResponse[];
+  title: string;
+  module: CourseModule;
+  imageUrl?: string;
+  imageKey?: string;
+  description?: string;
+  lessonCount?: number;
+  totalDurationSec?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface EnrichedResponse extends SubmissionResponse {
-  questionText: string;
-  questionType: QuestionType;
-  correctOption?: string;
-  /** true/false for multiple_choice; null for text_input */
-  isCorrect: boolean | null;
-}
+// ── Lesson ────────────────────────────────────────────────────────────────────
 
-export interface EnrichedSubmission extends Omit<Submission, 'responses'> {
-  responses: EnrichedResponse[];
-}
+export type LessonType = 'text' | 'video' | 'audio';
 
 export interface Lesson {
   _id: string;
@@ -57,22 +63,16 @@ export interface Lesson {
   durationSec?: number;
   description?: string;
   completionsCount?: number;
+  studyQuestions?: EmbeddedQuestion[];
+  reflectionQuestions?: EmbeddedQuestion[];
+  prayer?: string;
+  furtherStudy?: string;
 }
+
+// ── Course progress ───────────────────────────────────────────────────────────
 
 export interface CourseProgress {
   totalLessons: number;
   lessonsCompleted: number;
   completedLessonIds: string[];
-}
-
-export interface Course {
-  _id: string;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  imageKey?: string;
-  lessonCount?: number;
-  totalDurationSec?: number;
-  createdAt?: string;
-  updatedAt?: string;
 }

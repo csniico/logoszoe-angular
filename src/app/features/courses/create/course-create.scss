@@ -362,6 +362,339 @@
   &-val { color: var(--color-text-primary); }
 }
 
+// ── Form row (side by side) ────────────────────────────────────────────────────
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+.form-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  background: var(--color-scaffold);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+}
+
+// ── Module pills ───────────────────────────────────────────────────────────────
+.module-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.module-pill {
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-scaffold);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:not(&--active):hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+
+    &:hover { background: var(--color-primary-dark, color-mix(in srgb, var(--color-primary) 85%, black)); }
+  }
+}
+
+// ── Type hint ──────────────────────────────────────────────────────────────────
+.type-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-primary-light, #eff6ff);
+  border: 1px solid var(--color-primary-border, #bfdbfe);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+
+  svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--color-primary); }
+  strong { color: var(--color-text-primary); }
+}
+
+// ── Section divider ────────────────────────────────────────────────────────────
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+}
+
+// ── DOCX import card ───────────────────────────────────────────────────────────
+.docx-import-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-scaffold);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg { width: 20px; height: 20px; color: var(--color-text-muted); }
+  }
+
+  &__body { flex: 1; min-width: 0; }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 0.125rem;
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  &__btn {
+    flex-shrink: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+
+    svg { width: 14px; height: 14px; flex-shrink: 0; }
+  }
+}
+
+// ── Extract success banner ─────────────────────────────────────────────────────
+.extract-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #16a34a;
+
+  svg { width: 16px; height: 16px; flex-shrink: 0; }
+}
+
+// ── Tall textarea ──────────────────────────────────────────────────────────────
+.form-textarea--tall { min-height: 240px; }
+.form-textarea--question { min-height: unset; resize: vertical; }
+
+// ── Question list ──────────────────────────────────────────────────────────────
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.question-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+
+  &__num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    min-width: 1.25rem;
+    text-align: right;
+    margin-top: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  &__remove {
+    background: none;
+    border: none;
+    padding: 0.375rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+
+    svg { width: 14px; height: 14px; display: block; }
+
+    &:hover { color: var(--color-error); background: #fef2f2; }
+    &:disabled { opacity: 0.3; cursor: default; }
+  }
+}
+
+.add-question-btn {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  svg { width: 14px; height: 14px; flex-shrink: 0; }
+}
+
+// ── Media done ─────────────────────────────────────────────────────────────────
+.media-done {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background: var(--color-scaffold);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-light, #eff6ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg { width: 18px; height: 18px; color: var(--color-primary); }
+  }
+
+  &__info { flex: 1; min-width: 0; }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__ok {
+    font-size: 0.8rem;
+    color: #16a34a;
+  }
+}
+
+// ── Review grid ────────────────────────────────────────────────────────────────
+.review-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.review-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: none; }
+  &:nth-child(even) { background: var(--color-scaffold); }
+
+  &--block {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+.review-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 110px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.review-val {
+  color: var(--color-text-primary);
+  &--muted { color: var(--color-text-muted); }
+}
+
+.review-badge {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-light, #eff6ff);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+
+  &--type {
+    background: #f3f4f6;
+    color: var(--color-text-secondary);
+  }
+}
+
+.review-text-preview {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-height: 120px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  white-space: pre-wrap;
+}
+
 // ── Step nav ───────────────────────────────────────────────────────────────────
 .step-nav {
   border-top: 1px solid var(--color-border);

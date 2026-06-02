@@ -86,11 +86,14 @@
         }
       </div>
 
-      <!-- Description card -->
+      <!-- Course meta card -->
       <div class="info-card info-card--grow">
-        <div class="info-card__label">Description</div>
+        <div class="info-card__label">Course info</div>
+        <div class="course-meta-badges">
+          <span class="course-badge course-badge--module">{{ moduleLabel(course()!.module) }}</span>
+        </div>
         @if (editingField() === 'description') {
-          <textarea class="form-textarea" rows="5" [(ngModel)]="editDescription" maxlength="2000"></textarea>
+          <textarea class="form-textarea" rows="4" [(ngModel)]="editDescription" maxlength="2000" placeholder="Optional description…"></textarea>
           <div class="inline-edit-actions">
             <button class="btn btn--primary btn--sm" type="button" [disabled]="saving()" (click)="saveField('description')">
               @if (saving()) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
@@ -99,8 +102,12 @@
           </div>
           @if (saveError()) { <p class="field-error">{{ saveError() }}</p> }
         } @else {
-          <p class="info-card__text">{{ course()!.description || '—' }}</p>
-          <button class="link-btn" type="button" (click)="startEditField('description')">Edit description</button>
+          @if (course()!.description) {
+            <p class="info-card__text">{{ course()!.description }}</p>
+          }
+          <button class="link-btn" type="button" (click)="startEditField('description')">
+            {{ course()!.description ? 'Edit description' : 'Add description' }}
+          </button>
         }
       </div>
     </div>
@@ -125,11 +132,11 @@
             @if (addLessonMenuOpen()) {
               <div class="add-lesson-backdrop" (click)="addLessonMenuOpen.set(false)"></div>
               <div class="add-lesson-menu" role="menu">
-                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('document')">
+                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('text')">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                   <span class="add-lesson-menu__text">
-                    <span class="add-lesson-menu__label">Document / PDF</span>
-                    <span class="add-lesson-menu__hint">Word or PDF → HTML</span>
+                    <span class="add-lesson-menu__label">Text</span>
+                    <span class="add-lesson-menu__hint">Written background content</span>
                   </span>
                 </button>
                 <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('video')">
@@ -144,13 +151,6 @@
                   <span class="add-lesson-menu__text">
                     <span class="add-lesson-menu__label">Audio</span>
                     <span class="add-lesson-menu__hint">MP3, WAV, M4A…</span>
-                  </span>
-                </button>
-                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('link')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  <span class="add-lesson-menu__text">
-                    <span class="add-lesson-menu__label">External link</span>
-                    <span class="add-lesson-menu__hint">Link to external page</span>
                   </span>
                 </button>
               </div>
@@ -198,10 +198,9 @@
 
                 <!-- Type badge -->
                 <span class="lesson-item__type"
-                  [class.lesson-item__type--document]="lesson.type === 'document'"
+                  [class.lesson-item__type--text]="lesson.type === 'text'"
                   [class.lesson-item__type--video]="lesson.type === 'video'"
-                  [class.lesson-item__type--audio]="lesson.type === 'audio'"
-                  [class.lesson-item__type--link]="lesson.type === 'link'">
+                  [class.lesson-item__type--audio]="lesson.type === 'audio'">
                   {{ lesson.type }}
                 </span>
 
@@ -253,6 +252,28 @@
                   @if (editingLessonId() === lesson._id) {
                     <!-- Edit form -->
                     <div class="lesson-edit-form">
+
+                      <!-- DOCX re-import -->
+                      <div class="form-field">
+                        <label class="form-label">Import from .docx <span class="optional-tag">optional — overwrites study fields</span></label>
+                        <label class="lesson-file-drop lesson-file-drop--docx" for="edit-lesson-docx-input-{{ lesson._id }}">
+                          @if (extractingEditLesson()) {
+                            <span class="spinner spinner--sm"></span>
+                            <span>Extracting…</span>
+                          } @else if (extractEditLessonSuccess()) {
+                            <span style="color: var(--success-600)">✓ Extracted successfully</span>
+                          } @else {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span>Click to upload a .docx</span>
+                          }
+                        </label>
+                        <input [id]="'edit-lesson-docx-input-' + lesson._id" type="file" accept=".docx" class="file-input-hidden"
+                               (change)="onEditLessonDocxFileChange($event, lesson.type)" />
+                        @if (extractEditLessonError()) {
+                          <p class="field-error">{{ extractEditLessonError() }}</p>
+                        }
+                      </div>
+
                       <div class="form-field">
                         <label class="form-label">Title</label>
                         <input class="form-input form-input--sm" type="text" [(ngModel)]="editLessonTitle" placeholder="Lesson title" />
@@ -261,10 +282,127 @@
                         <label class="form-label">Description <span class="form-label-hint">(shown in course outline)</span></label>
                         <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="editLessonDescription" placeholder="Brief summary of what this lesson covers…" maxlength="500"></textarea>
                       </div>
+                      <!-- ── Content — type-specific ── -->
+                      @if (lesson.type === 'text') {
+                        <div class="form-field">
+                          <label class="form-label">Content</label>
+                          <textarea class="form-textarea form-textarea--sm" rows="6" [(ngModel)]="editLessonContent" placeholder="Lesson text content…"></textarea>
+                        </div>
+                      }
+
+                      @if (lesson.type === 'video') {
+                        <div class="form-field">
+                          <label class="form-label">Replace video <span class="optional-tag">optional</span></label>
+                          @if (videos().length > 0) {
+                            <select class="form-input" [ngModel]="editSelectedVideoId()" (ngModelChange)="editSelectedVideoId.set($event)">
+                              <option [value]="null">— Keep current video —</option>
+                              @for (v of videos(); track v._id) {
+                                <option [value]="v._id">{{ v.title }}</option>
+                              }
+                            </select>
+                          } @else {
+                            <p class="form-hint-text">No course videos available.</p>
+                          }
+                          @if (editSelectedVideo()) {
+                            <div class="video-pick-preview">
+                              @if (editSelectedVideo()!.thumbnailUrl) {
+                                <img [src]="editSelectedVideo()!.thumbnailUrl" [alt]="editSelectedVideo()!.title" />
+                              }
+                              <span>{{ editSelectedVideo()!.title }}</span>
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      @if (lesson.type === 'audio') {
+                        <div class="form-field">
+                          <label class="form-label">Replace audio <span class="optional-tag">optional</span></label>
+                          @if (!editNewAudioUrl) {
+                            <label class="lesson-file-drop lesson-file-drop--audio" for="edit-audio-input-{{ lesson._id }}">
+                              @if (uploadingEditAudio()) {
+                                <span class="spinner"></span>
+                                <span>Uploading…</span>
+                              } @else {
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                                <span>Click to upload a replacement audio file</span>
+                                <span class="lesson-file-drop__hint">MP3, WAV, M4A, OGG — leave blank to keep current</span>
+                              }
+                            </label>
+                          } @else {
+                            <div class="lesson-audio-done">
+                              <audio controls class="lesson-audio-player"><source [src]="editNewAudioUrl" /></audio>
+                              <label class="link-btn" for="edit-audio-input-{{ lesson._id }}">Replace again</label>
+                            </div>
+                          }
+                          <input [id]="'edit-audio-input-' + lesson._id" type="file" accept="audio/*" class="file-input-hidden"
+                                 [disabled]="uploadingEditAudio()" (change)="onEditAudioFileChange($event)" />
+                          @if (editAudioUploadError()) {
+                            <p class="field-error">{{ editAudioUploadError() }}</p>
+                          }
+                        </div>
+                      }
+
+                      <!-- ── Study sections ── -->
+                      <div class="section-divider-sm">Study sections</div>
+
+                      <!-- Study questions -->
                       <div class="form-field">
-                        <label class="form-label">Content</label>
-                        <textarea class="form-textarea form-textarea--sm" rows="3" [(ngModel)]="editLessonContent" placeholder="Content…"></textarea>
+                        <label class="form-label">Study questions <span class="optional-tag">optional</span></label>
+                        <div class="question-list-sm">
+                          @for (q of editLessonStudyQuestions; track trackByIdx($index, q); let i = $index) {
+                            <div class="question-row-sm">
+                              <span class="question-row-sm__num">{{ i + 1 }}</span>
+                              <textarea class="form-textarea form-textarea--sm question-textarea-sm" rows="2"
+                                        placeholder="Enter question…" [(ngModel)]="editLessonStudyQuestions[i].text"></textarea>
+                              <button class="question-remove-btn" type="button" (click)="removeEditStudyQuestion(i)"
+                                      [disabled]="editLessonStudyQuestions.length === 1 && !editLessonStudyQuestions[0].text" title="Remove">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                        <button class="btn btn--ghost btn--sm add-q-btn" type="button" (click)="addEditStudyQuestion()">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add question
+                        </button>
                       </div>
+
+                      <!-- Reflection questions -->
+                      <div class="form-field">
+                        <label class="form-label">Reflection questions <span class="optional-tag">optional</span></label>
+                        <div class="question-list-sm">
+                          @for (q of editLessonReflectionQuestions; track trackByIdx($index, q); let i = $index) {
+                            <div class="question-row-sm">
+                              <span class="question-row-sm__num">{{ i + 1 }}</span>
+                              <textarea class="form-textarea form-textarea--sm question-textarea-sm" rows="2"
+                                        placeholder="Enter question…" [(ngModel)]="editLessonReflectionQuestions[i].text"></textarea>
+                              <button class="question-remove-btn" type="button" (click)="removeEditReflectionQuestion(i)"
+                                      [disabled]="editLessonReflectionQuestions.length === 1 && !editLessonReflectionQuestions[0].text" title="Remove">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                        <button class="btn btn--ghost btn--sm add-q-btn" type="button" (click)="addEditReflectionQuestion()">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add question
+                        </button>
+                      </div>
+
+                      <!-- Prayer -->
+                      <div class="form-field">
+                        <label class="form-label">Prayer <span class="optional-tag">optional</span></label>
+                        <textarea class="form-textarea form-textarea--sm" rows="3"
+                                  placeholder="Closing prayer text…" [(ngModel)]="editLessonPrayer"></textarea>
+                      </div>
+
+                      <!-- Further study -->
+                      <div class="form-field">
+                        <label class="form-label">Further study <span class="optional-tag">optional</span></label>
+                        <textarea class="form-textarea form-textarea--sm" rows="3"
+                                  placeholder="Additional resources, scripture references…" [(ngModel)]="editLessonFurtherStudy"></textarea>
+                      </div>
+
                       <div class="inline-edit-actions">
                         <button class="btn btn--primary btn--sm" type="button" [disabled]="savingLessonId() === lesson._id" (click)="saveLessonEdit(lesson)">
                           @if (savingLessonId() === lesson._id) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
@@ -282,10 +420,9 @@
                     <!-- ── Compact meta strip ── -->
                     <div class="lesson-meta-strip">
                       <span class="lesson-meta-chip lesson-meta-chip--type"
-                            [class.lesson-meta-chip--document]="lesson.type === 'document'"
+                            [class.lesson-meta-chip--text]="lesson.type === 'text'"
                             [class.lesson-meta-chip--video]="lesson.type === 'video'"
-                            [class.lesson-meta-chip--audio]="lesson.type === 'audio'"
-                            [class.lesson-meta-chip--link]="lesson.type === 'link'">
+                            [class.lesson-meta-chip--audio]="lesson.type === 'audio'">
                         {{ lesson.type }}
                       </span>
                       <span class="lesson-meta-chip">Order {{ lesson.order }}</span>
@@ -300,187 +437,6 @@
                         {{ lesson.completionsCount ?? 0 }} completion{{ (lesson.completionsCount ?? 0) !== 1 ? 's' : '' }}
                       </span>
                     </div>
-
-                    <!-- ── Questions subsection ── -->
-                    <div class="questions-section">
-                      <div class="questions-header">
-                        <h4 class="questions-title">
-                          Quiz questions
-                          @if (questionsFor(lesson._id).length > 0) {
-                            <span class="questions-count">{{ questionsFor(lesson._id).length }}</span>
-                          }
-                        </h4>
-                        @if (addingQuestionFor() !== lesson._id) {
-                          <button class="btn btn--ghost btn--sm" type="button" (click)="openAddQuestion(lesson._id)">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Add question
-                          </button>
-                        }
-                      </div>
-
-                      <!-- Loading questions -->
-                      @if (loadingQuestionsFor() === lesson._id) {
-                        <div class="questions-loading">
-                          <span class="spinner spinner--sm"></span> Loading…
-                        </div>
-                      }
-
-                      <!-- Question list -->
-                      @for (q of questionsFor(lesson._id); track q._id; let qi = $index) {
-                        <div class="question-card" [class.question-card--editing]="editingQuestionId() === q._id">
-
-                          @if (editingQuestionId() === q._id) {
-                            <!-- Edit form -->
-                            <div class="question-edit-form">
-                              <div class="form-field">
-                                <label class="form-label">Question text</label>
-                                <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="editQuestionText"></textarea>
-                              </div>
-                              <div class="form-field">
-                                <label class="form-label">Type</label>
-                                <div class="type-toggle type-toggle--sm">
-                                  <button class="type-toggle__btn" [class.type-toggle__btn--active]="editQuestionType === 'multiple_choice'"
-                                          type="button" (click)="editQuestionType = 'multiple_choice'">Multiple choice</button>
-                                  <button class="type-toggle__btn" [class.type-toggle__btn--active]="editQuestionType === 'text_input'"
-                                          type="button" (click)="editQuestionType = 'text_input'">Text input</button>
-                                </div>
-                              </div>
-                              @if (editQuestionType === 'multiple_choice') {
-                                <div class="form-field">
-                                  <label class="form-label">Options</label>
-                                  @for (opt of editQuestionOptions; track opt.label; let oi = $index) {
-                                    <div class="option-row">
-                                      <span class="option-label-chip">{{ opt.label }}</span>
-                                      <input class="form-input form-input--sm" type="text" [(ngModel)]="editQuestionOptions[oi].value" placeholder="Option text" />
-                                    </div>
-                                  }
-                                </div>
-                                <div class="form-field">
-                                  <label class="form-label">Correct option (value)</label>
-                                  <select class="form-input form-input--sm" [(ngModel)]="editQuestionCorrect">
-                                    <option value="">— Select correct —</option>
-                                    @for (opt of editQuestionOptions; track opt.label) {
-                                      @if (opt.value.trim()) {
-                                        <option [value]="opt.value">{{ opt.label }}: {{ opt.value }}</option>
-                                      }
-                                    }
-                                  </select>
-                                </div>
-                              }
-                              <div class="inline-edit-actions">
-                                <button class="btn btn--primary btn--sm" type="button"
-                                        [disabled]="savingQuestionId() === q._id"
-                                        (click)="saveQuestionEdit(lesson._id, q)">
-                                  @if (savingQuestionId() === q._id) { <span class="spinner spinner--sm"></span> Saving… } @else { Save }
-                                </button>
-                                <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditQuestion()">Cancel</button>
-                              </div>
-                            </div>
-
-                          } @else {
-                            <!-- Question display -->
-                            <div class="question-row">
-                              <span class="question-index">Q{{ qi + 1 }}</span>
-                              <div class="question-body">
-                                <p class="question-text">{{ q.text }}</p>
-                                <span class="question-type-badge" [class.question-type-badge--mc]="q.type === 'multiple_choice'">
-                                  {{ q.type === 'multiple_choice' ? 'MC' : 'Text' }}
-                                </span>
-                                @if (q.type === 'multiple_choice' && q.options.length) {
-                                  <div class="question-options">
-                                    @for (opt of q.options; track opt.label) {
-                                      <span class="question-option" [class.question-option--correct]="opt.value === q.correctOption">
-                                        <strong>{{ opt.label }}.</strong> {{ opt.value }}
-                                        @if (opt.value === q.correctOption) {
-                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                        }
-                                      </span>
-                                    }
-                                  </div>
-                                }
-                              </div>
-                              <div class="question-actions">
-                                <button class="icon-btn" type="button" title="Edit question" (click)="startEditQuestion(q)">
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="icon-btn icon-btn--danger" type="button" title="Delete question"
-                                        [disabled]="deletingQuestionId() === q._id"
-                                        (click)="deleteQuestion(lesson._id, q)">
-                                  @if (deletingQuestionId() === q._id) {
-                                    <span class="spinner spinner--sm"></span>
-                                  } @else {
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                                  }
-                                </button>
-                              </div>
-                            </div>
-                          }
-
-                        </div><!-- /question-card -->
-                      }
-
-                      @if (questionsFor(lesson._id).length === 0 && loadingQuestionsFor() !== lesson._id && addingQuestionFor() !== lesson._id) {
-                        <p class="questions-empty">No questions yet.</p>
-                      }
-
-                      <!-- ── Add question form ── -->
-                      @if (addingQuestionFor() === lesson._id) {
-                        <div class="add-question-panel">
-                          <h5 class="add-question-panel__title">New question</h5>
-
-                          <div class="form-field">
-                            <label class="form-label">Question text <span class="required-star">*</span></label>
-                            <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="newQuestionText" placeholder="e.g. What is the capital of France?"></textarea>
-                          </div>
-
-                          <div class="form-field">
-                            <label class="form-label">Type</label>
-                            <div class="type-toggle type-toggle--sm">
-                              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newQuestionType === 'multiple_choice'"
-                                      type="button" (click)="newQuestionType = 'multiple_choice'">Multiple choice</button>
-                              <button class="type-toggle__btn" [class.type-toggle__btn--active]="newQuestionType === 'text_input'"
-                                      type="button" (click)="newQuestionType = 'text_input'">Text input</button>
-                            </div>
-                          </div>
-
-                          @if (newQuestionType === 'multiple_choice') {
-                            <div class="form-field">
-                              <label class="form-label">Options (A–D)</label>
-                              @for (opt of newQuestionOptions; track opt.label; let oi = $index) {
-                                <div class="option-row">
-                                  <span class="option-label-chip">{{ opt.label }}</span>
-                                  <input class="form-input form-input--sm" type="text" [(ngModel)]="newQuestionOptions[oi].value" placeholder="Option text" />
-                                </div>
-                              }
-                            </div>
-                            <div class="form-field">
-                              <label class="form-label">Correct option (value)</label>
-                              <select class="form-input form-input--sm" [(ngModel)]="newQuestionCorrect">
-                                <option value="">— Select correct —</option>
-                                @for (opt of newQuestionOptions; track opt.label) {
-                                  @if (opt.value.trim()) {
-                                    <option [value]="opt.value">{{ opt.label }}: {{ opt.value }}</option>
-                                  }
-                                }
-                              </select>
-                            </div>
-                          }
-
-                          @if (addQuestionError()) {
-                            <p class="field-error">{{ addQuestionError() }}</p>
-                          }
-
-                          <div class="inline-edit-actions">
-                            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddQuestion()">Cancel</button>
-                            <button class="btn btn--primary btn--sm" type="button"
-                                    [disabled]="addingQuestion() || !newQuestionText.trim()"
-                                    (click)="submitNewQuestion(lesson._id)">
-                              @if (addingQuestion()) { <span class="spinner spinner--sm"></span> Adding… } @else { Add question }
-                            </button>
-                          </div>
-                        </div>
-                      }
-                    </div><!-- /questions-section -->
 
                   }
                 </div>
@@ -500,9 +456,9 @@
             <span class="lesson-add-panel__type-badge
               lesson-item__type--{{ newLessonType() }}">
               @switch (newLessonType()) {
-                @case ('document') {
+                @case ('text') {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Document / PDF
+                  Text
                 }
                 @case ('video') {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
@@ -511,10 +467,6 @@
                 @case ('audio') {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                   Audio
-                }
-                @case ('link') {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  External link
                 }
               }
             </span>
@@ -528,54 +480,43 @@
                    placeholder="Lesson title" maxlength="200" />
           </div>
 
-          <!-- ── Document ── -->
-          @if (newLessonType() === 'document') {
-            <div class="form-field">
-              <label class="form-label">File <span class="required-star">*</span></label>
-              <p class="form-hint-text">Upload a .docx or .pdf file. It will be converted to HTML automatically.</p>
-
-              @if (!newLessonDocFile()) {
-                <label class="lesson-file-drop" for="doc-file-input">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                  <span>Click to choose a document</span>
-                  <span class="lesson-file-drop__hint">.docx or .pdf</span>
-                </label>
+          <!-- ── DOCX import card ── -->
+          <div class="docx-import-card">
+            <div class="docx-import-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="docx-import-card__body">
+              <p class="docx-import-card__title">Import from Word document</p>
+              <p class="docx-import-card__desc">Extracts title, background text, study questions, reflection questions, prayer, and further study.</p>
+            </div>
+            <label class="btn btn--outline btn--sm docx-import-card__btn" [class.btn--loading]="extractingLesson()">
+              @if (extractingLesson()) {
+                <span class="spinner spinner--sm"></span> Extracting…
               } @else {
-                <div class="lesson-file-chosen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  <span class="lesson-file-chosen__name">{{ newLessonDocFile()!.name }}</span>
-                  <label class="link-btn" for="doc-file-input">Change</label>
-                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import .docx
               }
-              <input id="doc-file-input" type="file" accept=".docx,.pdf" class="file-input-hidden"
-                     (change)="onDocFileChange($event)" />
+              <input type="file" accept=".docx" class="file-input-hidden" [disabled]="extractingLesson()" (change)="onLessonDocxFileChange($event)" />
+            </label>
+          </div>
 
-              @if (parsingDoc()) {
-                <div class="lesson-parsing-status">
-                  <div class="lesson-parsing-status__row">
-                    <span class="spinner spinner--sm"></span>
-                    <span>{{ pipelineState()?.message ?? 'Processing document…' }}</span>
-                  </div>
-                  @if ((pipelineState()?.progress ?? 0) > 0) {
-                    <div class="pipeline-progress-bar">
-                      <div class="pipeline-progress-bar__fill"
-                           [style.width.%]="pipelineState()!.progress"></div>
-                    </div>
-                  }
-                </div>
-              }
-              @if (docParseError()) {
-                <p class="field-error">{{ docParseError() }}</p>
-              }
-              @if (parsedDocHtml() && !parsingDoc()) {
-                <div class="lesson-doc-preview">
-                  <div class="lesson-doc-preview__label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    Content parsed — {{ parsedDocHtml().length.toLocaleString() }} characters
-                  </div>
-                  <div class="lesson-doc-preview__html" [innerHTML]="parsedDocHtml()"></div>
-                </div>
-              }
+          @if (extractLessonSuccess()) {
+            <div class="extract-success-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Document imported — review and edit the fields below.
+            </div>
+          }
+          @if (extractLessonError()) {
+            <p class="field-error">{{ extractLessonError() }}</p>
+          }
+
+          <!-- ── Text content ── -->
+          @if (newLessonType() === 'text') {
+            <div class="form-field">
+              <label class="form-label" for="new-lesson-text-content">Content <span class="optional-tag">optional — or import from .docx above</span></label>
+              <textarea id="new-lesson-text-content" class="form-textarea form-textarea--sm" rows="6"
+                        placeholder="Lesson text content…"
+                        [(ngModel)]="newLessonTextContent"></textarea>
             </div>
           }
 
@@ -638,15 +579,66 @@
             </div>
           }
 
-          <!-- ── Link ── -->
-          @if (newLessonType() === 'link') {
-            <div class="form-field">
-              <label class="form-label" for="lesson-url">URL <span class="required-star">*</span></label>
-              <input id="lesson-url" class="form-input" type="url" [(ngModel)]="newLessonUrl"
-                     placeholder="https://example.com/resource" />
-              <span class="form-hint">The full URL of the external page or resource.</span>
+          <!-- ── Study sections ── -->
+          <div class="section-divider-sm">Study sections</div>
+
+          <!-- Study questions -->
+          <div class="form-field">
+            <label class="form-label">Study questions <span class="optional-tag">optional</span></label>
+            <div class="question-list-sm">
+              @for (q of newLessonStudyQuestions; track trackByIdx($index, q); let i = $index) {
+                <div class="question-row-sm">
+                  <span class="question-row-sm__num">{{ i + 1 }}</span>
+                  <textarea class="form-textarea form-textarea--sm question-textarea-sm" rows="2"
+                            placeholder="Enter question…" [(ngModel)]="newLessonStudyQuestions[i].text"></textarea>
+                  <button class="question-remove-btn" type="button" (click)="removeLessonStudyQuestion(i)"
+                          [disabled]="newLessonStudyQuestions.length === 1 && !newLessonStudyQuestions[0].text" title="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              }
             </div>
-          }
+            <button class="btn btn--ghost btn--sm add-q-btn" type="button" (click)="addLessonStudyQuestion()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add question
+            </button>
+          </div>
+
+          <!-- Reflection questions -->
+          <div class="form-field">
+            <label class="form-label">Reflection questions <span class="optional-tag">optional</span></label>
+            <div class="question-list-sm">
+              @for (q of newLessonReflectionQuestions; track trackByIdx($index, q); let i = $index) {
+                <div class="question-row-sm">
+                  <span class="question-row-sm__num">{{ i + 1 }}</span>
+                  <textarea class="form-textarea form-textarea--sm question-textarea-sm" rows="2"
+                            placeholder="Enter question…" [(ngModel)]="newLessonReflectionQuestions[i].text"></textarea>
+                  <button class="question-remove-btn" type="button" (click)="removeLessonReflectionQuestion(i)"
+                          [disabled]="newLessonReflectionQuestions.length === 1 && !newLessonReflectionQuestions[0].text" title="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+            <button class="btn btn--ghost btn--sm add-q-btn" type="button" (click)="addLessonReflectionQuestion()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add question
+            </button>
+          </div>
+
+          <!-- Prayer -->
+          <div class="form-field">
+            <label class="form-label" for="new-lesson-prayer">Prayer <span class="optional-tag">optional</span></label>
+            <textarea id="new-lesson-prayer" class="form-textarea form-textarea--sm" rows="3"
+                      placeholder="Closing prayer text…" [(ngModel)]="newLessonPrayer"></textarea>
+          </div>
+
+          <!-- Further study -->
+          <div class="form-field">
+            <label class="form-label" for="new-lesson-further">Further study <span class="optional-tag">optional</span></label>
+            <textarea id="new-lesson-further" class="form-textarea form-textarea--sm" rows="3"
+                      placeholder="Additional resources, scripture references…" [(ngModel)]="newLessonFurtherStudy"></textarea>
+          </div>
 
           @if (addLessonError()) {
             <p class="field-error">{{ addLessonError() }}</p>
@@ -655,7 +647,7 @@
           <div class="lesson-add-panel__actions">
             <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddLesson()">Cancel</button>
             <button class="btn btn--primary btn--sm" type="button"
-                    [disabled]="addingLesson() || !addLessonValid || uploadingAudio() || parsingDoc()"
+                    [disabled]="addingLesson() || !addLessonValid || uploadingAudio()"
                     (click)="addLesson()">
               @if (addingLesson()) { <span class="spinner spinner--sm"></span> Adding… } @else { Save lesson }
             </button>
@@ -712,10 +704,9 @@
                 @if (userExpandedLessonId() === lesson._id) {
                   <div class="user-lesson-item__body">
                     <span class="lesson-item__type"
-                          [class.lesson-item__type--document]="lesson.type === 'document'"
+                          [class.lesson-item__type--text]="lesson.type === 'text'"
                           [class.lesson-item__type--video]="lesson.type === 'video'"
-                          [class.lesson-item__type--audio]="lesson.type === 'audio'"
-                          [class.lesson-item__type--link]="lesson.type === 'link'">
+                          [class.lesson-item__type--audio]="lesson.type === 'audio'">
                       {{ lesson.type }}
                     </span>
                     <button class="btn btn--primary btn--sm" type="button" (click)="openLessonDetail(lesson)">
@@ -748,10 +739,9 @@
 
             <div class="user-lesson-detail__header">
               <span class="lesson-item__type"
-                    [class.lesson-item__type--document]="openLesson()!.type === 'document'"
+                    [class.lesson-item__type--text]="openLesson()!.type === 'text'"
                     [class.lesson-item__type--video]="openLesson()!.type === 'video'"
-                    [class.lesson-item__type--audio]="openLesson()!.type === 'audio'"
-                    [class.lesson-item__type--link]="openLesson()!.type === 'link'">
+                    [class.lesson-item__type--audio]="openLesson()!.type === 'audio'">
                 {{ openLesson()!.type }}
               </span>
               <h2 class="user-lesson-detail__title">{{ openLesson()!.title }}</h2>
@@ -760,8 +750,14 @@
             <div class="user-lesson-detail__content">
               @switch (openLesson()!.type) {
 
-                @case ('document') {
-                  <div class="user-lesson-detail__doc" [innerHTML]="openLesson()!.content"></div>
+                @case ('text') {
+                  <div class="user-lesson-detail__doc">
+                    @if (openLesson()!.content) {
+                      <p style="white-space: pre-wrap;">{{ openLesson()!.content }}</p>
+                    } @else {
+                      <p class="form-hint-text">No content for this lesson.</p>
+                    }
+                  </div>
                 }
 
                 @case ('video') {
@@ -780,68 +776,49 @@
                   </audio>
                 }
 
-                @case ('link') {
-                  <div class="user-lesson-detail__link-wrap">
-                    <p class="form-hint-text">This lesson links to an external resource.</p>
-                    <a class="btn btn--primary" [href]="openLesson()!.content" target="_blank" rel="noopener noreferrer">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Open resource
-                    </a>
-                  </div>
-                }
-
               }
             </div>
 
-            <!-- ── Quiz questions ── -->
-            @if (loadingQuestionsFor() === openLesson()!._id || questionsFor(openLesson()!._id).length > 0) {
-              <div class="user-questions-section">
-                <h3 class="user-questions-title">
-                  Quiz
-                  @if (questionsFor(openLesson()!._id).length > 0) {
-                    <span class="questions-count">{{ questionsFor(openLesson()!._id).length }}</span>
-                  }
-                </h3>
+            <!-- ── Study guide sections ── -->
+            @if (openLesson()!.studyQuestions?.length || openLesson()!.reflectionQuestions?.length || openLesson()!.prayer || openLesson()!.furtherStudy) {
+              <div class="user-lesson-study-guide">
+                <h3 class="user-lesson-study-guide__heading">Study Guide</h3>
 
-                @if (loadingQuestionsFor() === openLesson()!._id) {
-                  <div class="questions-loading">
-                    <span class="spinner spinner--sm"></span> Loading questions…
+                @if (openLesson()!.studyQuestions?.length) {
+                  <div class="user-study-section">
+                    <h4 class="user-study-section__title">Study Questions</h4>
+                    <ol class="user-study-section__list">
+                      @for (q of openLesson()!.studyQuestions!; track $index) {
+                        <li>{{ q.text }}</li>
+                      }
+                    </ol>
                   </div>
                 }
 
-                <div class="user-question-list">
-                  @for (q of questionsFor(openLesson()!._id); track q._id; let qi = $index) {
-                    <div class="user-question-card">
-
-                      <div class="user-question-card__header">
-                        <span class="user-question-card__num">Q{{ qi + 1 }}</span>
-                        <p class="user-question-card__text">{{ q.text }}</p>
-                      </div>
-
-                      @if (q.type === 'multiple_choice' && q.options.length) {
-                        <div class="user-question-card__options">
-                          @for (opt of q.options; track opt.label) {
-                            <label class="user-question-option">
-                              <span class="user-question-option__radio">
-                                <input type="radio" [name]="'q-' + q._id" [value]="opt.value" style="display:none" />
-                                <span class="user-question-option__label">{{ opt.label }}</span>
-                              </span>
-                              <span class="user-question-option__value">{{ opt.value }}</span>
-                            </label>
-                          }
-                        </div>
+                @if (openLesson()!.reflectionQuestions?.length) {
+                  <div class="user-study-section">
+                    <h4 class="user-study-section__title">Reflection Questions</h4>
+                    <ol class="user-study-section__list">
+                      @for (q of openLesson()!.reflectionQuestions!; track $index) {
+                        <li>{{ q.text }}</li>
                       }
+                    </ol>
+                  </div>
+                }
 
-                      @if (q.type === 'text_input') {
-                        <div class="user-question-card__input">
-                          <textarea class="form-textarea form-textarea--sm" rows="2"
-                                    placeholder="Type your answer…"></textarea>
-                        </div>
-                      }
+                @if (openLesson()!.prayer) {
+                  <div class="user-study-section">
+                    <h4 class="user-study-section__title">Prayer</h4>
+                    <p class="user-study-section__prayer">{{ openLesson()!.prayer }}</p>
+                  </div>
+                }
 
-                    </div>
-                  }
-                </div>
+                @if (openLesson()!.furtherStudy) {
+                  <div class="user-study-section">
+                    <h4 class="user-study-section__title">Further Study</h4>
+                    <div class="user-study-section__html" [innerHTML]="openLesson()!.furtherStudy"></div>
+                  </div>
+                }
               </div>
             }
 

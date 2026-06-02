@@ -2,15 +2,21 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Course, Lesson, Question, Submission, EnrichedSubmission } from '../models/course.model';
+import {
+  Course,
+  Lesson,
+  ExtractedLessonContent,
+} from '../models/course.model';
 
 @Injectable({ providedIn: 'root' })
 export class CourseService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint — no guard on server. */
   private readonly base = `${environment.apiUrl}/courses`;
-  /** Admin write + submissions endpoint — AdminGuard on server. */
+  /** Admin write endpoint — AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/courses`;
+
+  // ── Courses ────────────────────────────────────────────────────────────────
 
   getAll(): Observable<Course[]> {
     return this.http.get<Course[]>(this.base);
@@ -32,6 +38,16 @@ export class CourseService {
     return this.http.delete<void>(`${this.adminBase}/${id}`);
   }
 
+  // ── DOCX extraction ────────────────────────────────────────────────────────
+
+  extractDocx(file: File): Observable<ExtractedLessonContent> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ExtractedLessonContent>(`${this.adminBase}/extract-docx`, form);
+  }
+
+  // ── Lessons ────────────────────────────────────────────────────────────────
+
   getLessons(courseId: string): Observable<Lesson[]> {
     return this.http.get<Lesson[]>(`${this.base}/${courseId}/lessons`);
   }
@@ -50,36 +66,5 @@ export class CourseService {
 
   reorderLessons(courseId: string, lessonIds: string[]): Observable<void> {
     return this.http.patch<void>(`${this.adminBase}/${courseId}/lessons/reorder`, { lessonIds });
-  }
-
-  // ── Questions ──────────────────────────────────────────────────────────
-
-  getQuestions(courseId: string, lessonId: string): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.base}/${courseId}/lessons/${lessonId}/questions`);
-  }
-
-  createQuestion(courseId: string, lessonId: string, data: Partial<Question>): Observable<Question> {
-    return this.http.post<Question>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions`, data);
-  }
-
-  updateQuestion(courseId: string, lessonId: string, questionId: string, patch: Partial<Question>): Observable<Question> {
-    return this.http.patch<Question>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions/${questionId}`, patch);
-  }
-
-  deleteQuestion(courseId: string, lessonId: string, questionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.adminBase}/${courseId}/lessons/${lessonId}/questions/${questionId}`);
-  }
-
-  // ── Submissions ────────────────────────────────────────────────────────
-
-  getSubmissions(courseId: string, lessonId: string): Observable<Submission[]> {
-    return this.http.get<Submission[]>(`${this.adminBase}/${courseId}/lessons/${lessonId}/submissions`);
-  }
-
-  getAllSubmissions(filters: { courseId?: string; lessonId?: string } = {}): Observable<EnrichedSubmission[]> {
-    const params: Record<string, string> = {};
-    if (filters.courseId) params['courseId'] = filters.courseId;
-    if (filters.lessonId) params['lessonId'] = filters.lessonId;
-    return this.http.get<EnrichedSubmission[]>(`${this.adminBase}/submissions`, { params });
   }
 }

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../core/services/course.service';
 import { ConfirmModalService } from '../../shared/confirm-modal/confirm-modal.service';
-import { Course } from '../../core/models/course.model';
+import { Course, COURSE_MODULES } from '../../core/models/course.model';
 
 type SortKey = 'date' | 'az' | 'za';
 
@@ -39,7 +39,7 @@ export class CoursesComponent implements OnInit {
     if (q) {
       list = list.filter((c) =>
         c.title.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q),
+        (c.description ?? '').toLowerCase().includes(q),
       );
     }
 
@@ -77,6 +77,12 @@ export class CoursesComponent implements OnInit {
     this.courseService.delete(id).subscribe({
       next: () => this.courses.update((list) => list.filter((c) => c._id !== id)),
     });
+  }
+
+  readonly moduleOptions = COURSE_MODULES;
+
+  moduleLabel(val: string): string {
+    return this.moduleOptions.find(m => m.value === val)?.label ?? val;
   }
 
   // ── Image error fallback ──────────────────────────────────────

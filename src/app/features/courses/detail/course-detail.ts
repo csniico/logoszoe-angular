@@ -8,7 +8,7 @@ import { CourseVideoService } from '../../../core/services/course-video.service'
 import { StorageService } from '../../../core/services/storage.service';
 import { DocumentPipelineService } from '../../../core/services/document-pipeline.service';
 import { PipelineProgress } from '../../../core/models/pipeline.model';
-import { Course, Lesson, LessonType, Question, QuestionType, QuestionOption } from '../../../core/models/course.model';
+import { Course, Lesson, LessonType, EmbeddedQuestion, COURSE_MODULES, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
 import { environment } from '../../../../environments/environment';
 
@@ -42,6 +42,14 @@ export class CourseDetailComponent implements OnInit {
   readonly saving         = signal(false);
   readonly saveError      = signal<string | null>(null);
 
+  // ── Meta helpers ──────────────────────────────────────────────────────────
+  readonly moduleOptions       = COURSE_MODULES;
+  readonly lessonTypeOptions   = LESSON_CONTENT_TYPES;
+
+  moduleLabel(val: string): string {
+    return this.moduleOptions.find(m => m.value === val)?.label ?? val;
+  }
+
   // Edit buffers
   editTitle       = '';
   editDescription = '';
@@ -61,27 +69,38 @@ export class CourseDetailComponent implements OnInit {
   // ── Add lesson form ───────────────────────────────────────────
   readonly showAddLesson    = signal(false);
   readonly addLessonMenuOpen = signal(false);
-  readonly newLessonType    = signal<LessonType>('document');
+  readonly newLessonType    = signal<LessonType>('text');
   readonly addingLesson     = signal(false);
   readonly addLessonError   = signal<string | null>(null);
   newLessonTitle = '';
 
-  // document type
+  // text content (for text-type lessons; becomes lesson.content on save)
+  newLessonTextContent = '';
+
+  // audio upload
+  readonly uploadingAudio = signal(false);
+  readonly newAudioUrl    = signal('');
+  readonly newAudioKey    = signal('');
+  newAudioDuration        = 0;
+
+  // study sections
+  newLessonStudyQuestions:      EmbeddedQuestion[] = [{ text: '' }];
+  newLessonReflectionQuestions: EmbeddedQuestion[] = [{ text: '' }];
+  newLessonPrayer       = '';
+  newLessonFurtherStudy = '';
+
+  // DOCX extraction for lesson
+  readonly extractingLesson  = signal(false);
+  readonly extractLessonError = signal<string | null>(null);
+  readonly extractLessonSuccess = signal(false);
+
+  // document parsing (for backwards compat with pipeline — kept for document type if needed)
   readonly newLessonDocFile  = signal<File | null>(null);
   readonly parsingDoc        = signal(false);
   readonly parsedDocHtml     = signal('');
   readonly docParseError     = signal<string | null>(null);
   readonly newDocContentKey  = signal('');
   readonly pipelineState     = signal<PipelineProgress | null>(null);
-
-  // audio type
-  readonly uploadingAudio = signal(false);
-  readonly newAudioUrl    = signal('');
-  readonly newAudioKey    = signal('');
-  newAudioDuration        = 0;
-
-  // link type
-  newLessonUrl = '';
 
   // Video picker for video lessons
   readonly videos          = signal<CourseVideo[]>([]);
@@ -95,46 +114,38 @@ export class CourseDetailComponent implements OnInit {
   readonly savingLessonId    = signal<string | null>(null);
   readonly deletingLessonId  = signal<string | null>(null);
 
-  // Inline lesson edit buffers
+  // Inline lesson edit buffers — basic
   editLessonTitle       = '';
-  editLessonContent     = '';
+  editLessonContent     = '';   // used for text type only
   editLessonDescription = '';
 
-  // ── Questions (per lesson) ────────────────────────────────────
-  /** Map of lessonId → Question[] */
-  readonly questionMap = signal<Record<string, Question[]>>({});
-  readonly loadingQuestionsFor = signal<string | null>(null);
+  // Edit buffers for video / audio content replacement
+  readonly editSelectedVideoId  = signal<string | null>(null);
+  readonly uploadingEditAudio   = signal(false);
+  readonly editAudioUploadError = signal<string | null>(null);
+  editNewAudioUrl = '';   // populated only when user replaces audio
+  editNewAudioKey = '';
+  editNewAudioDuration = 0;
 
-  /** lessonId that has the "add question" panel open */
-  readonly addingQuestionFor = signal<string | null>(null);
+  // Inline lesson edit buffers — study guide
+  editLessonStudyQuestions:      EmbeddedQuestion[] = [{ text: '' }];
+  editLessonReflectionQuestions: EmbeddedQuestion[] = [{ text: '' }];
+  editLessonPrayer       = '';
+  editLessonFurtherStudy = '';
 
-  /** lessonId + questionId being edited inline */
-  readonly editingQuestionId = signal<string | null>(null);
-  readonly savingQuestionId  = signal<string | null>(null);
-  readonly deletingQuestionId = signal<string | null>(null);
-
-  // New question form buffers
-  newQuestionText    = '';
-  newQuestionType: QuestionType = 'multiple_choice';
-  newQuestionOptions: QuestionOption[] = [
-    { label: 'A', value: '' },
-    { label: 'B', value: '' },
-    { label: 'C', value: '' },
-    { label: 'D', value: '' },
-  ];
-  newQuestionCorrect = '';
-  readonly addingQuestion = signal(false);
-  readonly addQuestionError = signal<string | null>(null);
-
-  // Edit question buffers
-  editQuestionText    = '';
-  editQuestionType: QuestionType = 'multiple_choice';
-  editQuestionOptions: QuestionOption[] = [];
-  editQuestionCorrect = '';
+  // DOCX re-extraction for edit form
+  readonly extractingEditLesson   = signal(false);
+  readonly extractEditLessonError = signal<string | null>(null);
+  readonly extractEditLessonSuccess = signal(false);
 
   // ── Computed ──────────────────────────────────────────────────
   readonly selectedVideo = computed<CourseVideo | null>(() => {
     const id = this.selectedVideoId();
+    return id ? (this.videos().find((v) => v._id === id) ?? null) : null;
+  });
+
+  readonly editSelectedVideo = computed<CourseVideo | null>(() => {
+    const id = this.editSelectedVideoId();
     return id ? (this.videos().find((v) => v._id === id) ?? null) : null;
   });
 
@@ -179,7 +190,6 @@ export class CourseDetailComponent implements OnInit {
 
   openLessonDetail(lesson: Lesson): void {
     this.openLesson.set(lesson);
-    this.loadQuestionsForLesson(lesson._id);
   }
 
   closeLessonDetail(): void {
@@ -198,8 +208,8 @@ export class CourseDetailComponent implements OnInit {
   startEditField(field: string): void {
     const c = this.course();
     if (!c) return;
-    if (field === 'title')       this.editTitle = c.title;
-    if (field === 'description') this.editDescription = c.description;
+    if (field === 'title')       this.editTitle       = c.title;
+    if (field === 'description') this.editDescription = c.description ?? '';
     this.editingField.set(field);
     this.saveError.set(null);
   }
@@ -280,7 +290,14 @@ export class CourseDetailComponent implements OnInit {
   openAddLesson(type: LessonType): void {
     this.newLessonType.set(type);
     this.newLessonTitle = '';
-    this.newLessonUrl   = '';
+    this.newLessonTextContent = '';
+    this.newLessonStudyQuestions      = [{ text: '' }];
+    this.newLessonReflectionQuestions = [{ text: '' }];
+    this.newLessonPrayer       = '';
+    this.newLessonFurtherStudy = '';
+    this.extractingLesson.set(false);
+    this.extractLessonError.set(null);
+    this.extractLessonSuccess.set(false);
     this.newLessonDocFile.set(null);
     this.parsedDocHtml.set('');
     this.docParseError.set(null);
@@ -380,13 +397,135 @@ export class CourseDetailComponent implements OnInit {
   get addLessonValid(): boolean {
     if (!this.newLessonTitle.trim()) return false;
     switch (this.newLessonType()) {
-      case 'document': return !!this.parsedDocHtml();
-      case 'video':    return !!this.selectedVideoId();
-      case 'audio':    return !!this.newAudioUrl() && !this.uploadingAudio();
-      case 'link':     return !!this.newLessonUrl.trim();
-      default:         return false;
+      case 'text':  return true;
+      case 'video': return !!this.selectedVideoId();
+      case 'audio': return !!this.newAudioUrl() && !this.uploadingAudio();
+      default:      return false;
     }
   }
+
+  // ── DOCX extraction for lesson ────────────────────────────────
+  onLessonDocxFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.extractingLesson.set(true);
+    this.extractLessonError.set(null);
+    this.extractLessonSuccess.set(false);
+
+    this.courseService.extractDocx(file).subscribe({
+      next: (result) => {
+        if (result.title && !this.newLessonTitle.trim()) this.newLessonTitle = result.title;
+        // Only set text content for text-type lessons — ignore background for video/audio
+        if (this.newLessonType() === 'text' && result.backgroundText) this.newLessonTextContent = result.backgroundText;
+        if (result.studyQuestions?.length)      this.newLessonStudyQuestions      = result.studyQuestions.map(q => ({ text: q.text }));
+        if (result.reflectionQuestions?.length) this.newLessonReflectionQuestions = result.reflectionQuestions.map(q => ({ text: q.text }));
+        if (result.prayer)      this.newLessonPrayer       = result.prayer;
+        if (result.furtherStudy) this.newLessonFurtherStudy = result.furtherStudy;
+        if (!this.newLessonStudyQuestions.length)      this.newLessonStudyQuestions      = [{ text: '' }];
+        if (!this.newLessonReflectionQuestions.length) this.newLessonReflectionQuestions = [{ text: '' }];
+        this.extractingLesson.set(false);
+        this.extractLessonSuccess.set(true);
+      },
+      error: () => {
+        this.extractLessonError.set('Failed to extract document. Make sure it is a valid .docx file.');
+        this.extractingLesson.set(false);
+      },
+    });
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  // ── Question list helpers (lesson form) ───────────────────────
+  addLessonStudyQuestion(): void {
+    this.newLessonStudyQuestions = [...this.newLessonStudyQuestions, { text: '' }];
+  }
+
+  removeLessonStudyQuestion(index: number): void {
+    this.newLessonStudyQuestions = this.newLessonStudyQuestions.filter((_, i) => i !== index);
+    if (!this.newLessonStudyQuestions.length) this.newLessonStudyQuestions = [{ text: '' }];
+  }
+
+  addLessonReflectionQuestion(): void {
+    this.newLessonReflectionQuestions = [...this.newLessonReflectionQuestions, { text: '' }];
+  }
+
+  removeLessonReflectionQuestion(index: number): void {
+    this.newLessonReflectionQuestions = this.newLessonReflectionQuestions.filter((_, i) => i !== index);
+    if (!this.newLessonReflectionQuestions.length) this.newLessonReflectionQuestions = [{ text: '' }];
+  }
+
+  // ── Edit lesson question list helpers ────────────────────────
+  addEditStudyQuestion(): void {
+    this.editLessonStudyQuestions = [...this.editLessonStudyQuestions, { text: '' }];
+  }
+
+  removeEditStudyQuestion(index: number): void {
+    this.editLessonStudyQuestions = this.editLessonStudyQuestions.filter((_, i) => i !== index);
+    if (!this.editLessonStudyQuestions.length) this.editLessonStudyQuestions = [{ text: '' }];
+  }
+
+  addEditReflectionQuestion(): void {
+    this.editLessonReflectionQuestions = [...this.editLessonReflectionQuestions, { text: '' }];
+  }
+
+  removeEditReflectionQuestion(index: number): void {
+    this.editLessonReflectionQuestions = this.editLessonReflectionQuestions.filter((_, i) => i !== index);
+    if (!this.editLessonReflectionQuestions.length) this.editLessonReflectionQuestions = [{ text: '' }];
+  }
+
+  // ── Audio replacement for edit form ──────────────────────────
+  onEditAudioFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingEditAudio.set(true);
+    this.editAudioUploadError.set(null);
+    this.storageService.uploadFile(file, 'courses/audio').subscribe({
+      next: (r) => {
+        this.editNewAudioUrl = r.fileUrl;
+        this.editNewAudioKey = r.fileKey;
+        this.uploadingEditAudio.set(false);
+        const audio = new Audio(r.fileUrl);
+        audio.addEventListener('loadedmetadata', () => {
+          this.editNewAudioDuration = Math.round(audio.duration) || 0;
+        });
+      },
+      error: () => {
+        this.editAudioUploadError.set('Audio upload failed. Please try again.');
+        this.uploadingEditAudio.set(false);
+      },
+    });
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  // ── DOCX re-extraction for edit form ─────────────────────────
+  onEditLessonDocxFileChange(event: Event, lessonType: string): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.extractingEditLesson.set(true);
+    this.extractEditLessonError.set(null);
+    this.extractEditLessonSuccess.set(false);
+
+    this.courseService.extractDocx(file).subscribe({
+      next: (result) => {
+        // Only populate text content for text-type lessons — never overwrite video ID or audio URL
+        if (lessonType === 'text' && result.backgroundText) this.editLessonContent = result.backgroundText;
+        if (result.studyQuestions?.length)      this.editLessonStudyQuestions      = result.studyQuestions.map(q => ({ text: q.text }));
+        if (result.reflectionQuestions?.length) this.editLessonReflectionQuestions = result.reflectionQuestions.map(q => ({ text: q.text }));
+        if (result.prayer)       this.editLessonPrayer       = result.prayer;
+        if (result.furtherStudy) this.editLessonFurtherStudy = result.furtherStudy;
+        if (!this.editLessonStudyQuestions.length)      this.editLessonStudyQuestions      = [{ text: '' }];
+        if (!this.editLessonReflectionQuestions.length) this.editLessonReflectionQuestions = [{ text: '' }];
+        this.extractingEditLesson.set(false);
+        this.extractEditLessonSuccess.set(true);
+      },
+      error: () => {
+        this.extractEditLessonError.set('Failed to extract document. Make sure it is a valid .docx file.');
+        this.extractingEditLesson.set(false);
+      },
+    });
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  trackByIdx(_: number, __: unknown): number { return _; }
 
   // ── Submit ────────────────────────────────────────────────────
   addLesson(): void {
@@ -400,9 +539,8 @@ export class CourseDetailComponent implements OnInit {
     let durationSec: number | undefined;
 
     switch (type) {
-      case 'document':
-        content    = this.parsedDocHtml();
-        contentKey = this.newDocContentKey() || undefined;
+      case 'text':
+        content = this.newLessonTextContent.trim();
         break;
       case 'video': {
         const cv   = this.selectedVideo()!;
@@ -415,10 +553,10 @@ export class CourseDetailComponent implements OnInit {
         contentKey = this.newAudioKey();
         durationSec = this.newAudioDuration || undefined;
         break;
-      case 'link':
-        content = this.newLessonUrl.trim();
-        break;
     }
+
+    const filledStudyQs      = this.newLessonStudyQuestions.filter(q => q.text.trim());
+    const filledReflectionQs = this.newLessonReflectionQuestions.filter(q => q.text.trim());
 
     this.addingLesson.set(true);
     this.addLessonError.set(null);
@@ -430,6 +568,10 @@ export class CourseDetailComponent implements OnInit {
       contentKey,
       durationSec,
       order: this.lessons().length + 1,
+      studyQuestions:      filledStudyQs.length      ? filledStudyQs      : undefined,
+      reflectionQuestions: filledReflectionQs.length ? filledReflectionQs : undefined,
+      prayer:       this.newLessonPrayer.trim()       || undefined,
+      furtherStudy: this.newLessonFurtherStudy.trim() || undefined,
     }).subscribe({
       next: (lesson) => {
         this.lessons.update((ls) => [...ls, lesson]);
@@ -472,18 +614,37 @@ export class CourseDetailComponent implements OnInit {
     this.expandedLessonId.set(wasOpen ? null : id);
     if (wasOpen) {
       this.editingLessonId.set(null);
-      this.addingQuestionFor.set(null);
-      this.editingQuestionId.set(null);
-    } else {
-      // Lazy-load questions when opening a lesson
-      this.loadQuestionsForLesson(id);
     }
   }
 
   startEditLesson(lesson: Lesson): void {
     this.editLessonTitle       = lesson.title;
-    this.editLessonContent     = lesson.content;
     this.editLessonDescription = lesson.description ?? '';
+
+    // Content — only editable for text lessons
+    this.editLessonContent = lesson.type === 'text' ? lesson.content : '';
+
+    // Video / audio content replacement (reset)
+    this.editSelectedVideoId.set(lesson.type === 'video' ? lesson.content : null);
+    this.editNewAudioUrl      = '';
+    this.editNewAudioKey      = '';
+    this.editNewAudioDuration = 0;
+    this.editAudioUploadError.set(null);
+
+    // Study guide fields
+    this.editLessonStudyQuestions      = lesson.studyQuestions?.length
+      ? lesson.studyQuestions.map(q => ({ text: q.text }))
+      : [{ text: '' }];
+    this.editLessonReflectionQuestions = lesson.reflectionQuestions?.length
+      ? lesson.reflectionQuestions.map(q => ({ text: q.text }))
+      : [{ text: '' }];
+    this.editLessonPrayer       = lesson.prayer       ?? '';
+    this.editLessonFurtherStudy = lesson.furtherStudy ?? '';
+
+    this.extractingEditLesson.set(false);
+    this.extractEditLessonError.set(null);
+    this.extractEditLessonSuccess.set(false);
+
     this.editingLessonId.set(lesson._id);
     this.expandedLessonId.set(lesson._id);
   }
@@ -496,10 +657,35 @@ export class CourseDetailComponent implements OnInit {
     const c = this.course();
     if (!c) return;
     this.savingLessonId.set(lesson._id);
+
+    const filledStudyQs      = this.editLessonStudyQuestions.filter(q => q.text.trim());
+    const filledReflectionQs = this.editLessonReflectionQuestions.filter(q => q.text.trim());
+
+    // Resolve content + contentKey per type
+    let updatedContent:    string | undefined;
+    let updatedContentKey: string | undefined;
+
+    if (lesson.type === 'text') {
+      updatedContent = this.editLessonContent || undefined;
+    } else if (lesson.type === 'video') {
+      const vid = this.editSelectedVideoId();
+      if (vid && vid !== lesson.content) updatedContent = vid;
+    } else if (lesson.type === 'audio') {
+      if (this.editNewAudioUrl) {
+        updatedContent    = this.editNewAudioUrl;
+        updatedContentKey = this.editNewAudioKey || undefined;
+      }
+    }
+
     this.courseService.updateLesson(c._id, lesson._id, {
       title:       this.editLessonTitle.trim(),
-      content:     this.editLessonContent,
+      ...(updatedContent    !== undefined && { content: updatedContent }),
+      ...(updatedContentKey !== undefined && { contentKey: updatedContentKey }),
       description: this.editLessonDescription.trim() || undefined,
+      studyQuestions:      filledStudyQs.length      ? filledStudyQs      : [],
+      reflectionQuestions: filledReflectionQs.length ? filledReflectionQs : [],
+      prayer:       this.editLessonPrayer.trim()       || undefined,
+      furtherStudy: this.editLessonFurtherStudy.trim() || undefined,
     }).subscribe({
       next: (updated) => {
         this.lessons.update((ls) => ls.map((l) => (l._id === updated._id ? updated : l)));
@@ -541,160 +727,6 @@ export class CourseDetailComponent implements OnInit {
     });
   }
 
-  // ── Questions ─────────────────────────────────────────────────
-  questionsFor(lessonId: string): Question[] {
-    return this.questionMap()[lessonId] ?? [];
-  }
-
-  private loadQuestionsForLesson(lessonId: string): void {
-    const c = this.course();
-    if (!c) return;
-    // Already loaded
-    if (this.questionMap()[lessonId] !== undefined) return;
-
-    this.loadingQuestionsFor.set(lessonId);
-    this.courseService.getQuestions(c._id, lessonId).subscribe({
-      next: (qs) => {
-        this.questionMap.update((m) => ({ ...m, [lessonId]: qs }));
-        this.loadingQuestionsFor.set(null);
-      },
-      error: () => {
-        this.questionMap.update((m) => ({ ...m, [lessonId]: [] }));
-        this.loadingQuestionsFor.set(null);
-      },
-    });
-  }
-
-  openAddQuestion(lessonId: string): void {
-    this.addingQuestionFor.set(lessonId);
-    this.resetNewQuestionForm();
-    this.addQuestionError.set(null);
-  }
-
-  cancelAddQuestion(): void {
-    this.addingQuestionFor.set(null);
-    this.resetNewQuestionForm();
-  }
-
-  private resetNewQuestionForm(): void {
-    this.newQuestionText    = '';
-    this.newQuestionType    = 'multiple_choice';
-    this.newQuestionOptions = [
-      { label: 'A', value: '' },
-      { label: 'B', value: '' },
-      { label: 'C', value: '' },
-      { label: 'D', value: '' },
-    ];
-    this.newQuestionCorrect = '';
-  }
-
-  submitNewQuestion(lessonId: string): void {
-    if (!this.newQuestionText.trim()) return;
-    const c = this.course();
-    if (!c) return;
-
-    this.addingQuestion.set(true);
-    this.addQuestionError.set(null);
-
-    const payload: Partial<Question> = {
-      text: this.newQuestionText.trim(),
-      type: this.newQuestionType,
-    };
-    if (this.newQuestionType === 'multiple_choice') {
-      payload.options       = this.newQuestionOptions.filter((o) => o.value.trim());
-      payload.correctOption = this.newQuestionCorrect;
-    }
-
-    this.courseService.createQuestion(c._id, lessonId, payload).subscribe({
-      next: (q) => {
-        this.questionMap.update((m) => ({
-          ...m,
-          [lessonId]: [...(m[lessonId] ?? []), q],
-        }));
-        this.addingQuestionFor.set(null);
-        this.addingQuestion.set(false);
-        this.resetNewQuestionForm();
-      },
-      error: () => {
-        this.addQuestionError.set('Failed to add question.');
-        this.addingQuestion.set(false);
-      },
-    });
-  }
-
-  startEditQuestion(question: Question): void {
-    this.editQuestionText    = question.text;
-    this.editQuestionType    = question.type;
-    this.editQuestionOptions = question.options?.length
-      ? question.options.map((o) => ({ ...o }))
-      : [{ label: 'A', value: '' }, { label: 'B', value: '' }, { label: 'C', value: '' }, { label: 'D', value: '' }];
-    this.editQuestionCorrect = question.correctOption ?? '';
-    this.editingQuestionId.set(question._id);
-  }
-
-  cancelEditQuestion(): void {
-    this.editingQuestionId.set(null);
-  }
-
-  saveQuestionEdit(lessonId: string, question: Question): void {
-    const c = this.course();
-    if (!c) return;
-    this.savingQuestionId.set(question._id);
-
-    const patch: Partial<Question> = {
-      text: this.editQuestionText.trim(),
-      type: this.editQuestionType,
-    };
-    if (this.editQuestionType === 'multiple_choice') {
-      patch.options       = this.editQuestionOptions.filter((o) => o.value.trim());
-      patch.correctOption = this.editQuestionCorrect;
-    } else {
-      patch.options       = [];
-      patch.correctOption = undefined;
-    }
-
-    this.courseService.updateQuestion(c._id, lessonId, question._id, patch).subscribe({
-      next: (updated) => {
-        this.questionMap.update((m) => ({
-          ...m,
-          [lessonId]: (m[lessonId] ?? []).map((q) => (q._id === updated._id ? updated : q)),
-        }));
-        this.editingQuestionId.set(null);
-        this.savingQuestionId.set(null);
-      },
-      error: () => {
-        alert('Failed to save question.');
-        this.savingQuestionId.set(null);
-      },
-    });
-  }
-
-  async deleteQuestion(lessonId: string, question: Question): Promise<void> {
-    const c = this.course();
-    if (!c) return;
-    const ok = await this.confirmModal.open({
-      intent: 'Delete question?',
-      description: `"${question.text}" will be permanently removed.`,
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    this.deletingQuestionId.set(question._id);
-    this.courseService.deleteQuestion(c._id, lessonId, question._id).subscribe({
-      next: () => {
-        this.questionMap.update((m) => ({
-          ...m,
-          [lessonId]: (m[lessonId] ?? []).filter((q) => q._id !== question._id),
-        }));
-        this.deletingQuestionId.set(null);
-      },
-      error: () => {
-        alert('Failed to delete question.');
-        this.deletingQuestionId.set(null);
-      },
-    });
-  }
-
   // ── Helpers ───────────────────────────────────────────────────
   videoForLesson(lesson: Lesson): CourseVideo | undefined {
     return this.videos().find((v) => v._id === lesson.content);
@@ -709,6 +741,4 @@ export class CourseDetailComponent implements OnInit {
     if (m > 0) return `${m}m ${s > 0 ? s + 's' : ''}`.trim();
     return `${s}s`;
   }
-
-  optionLabels = ['A', 'B', 'C', 'D'];
 }
