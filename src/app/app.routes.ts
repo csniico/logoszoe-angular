@@ -196,6 +196,13 @@ export const routes: Routes = [
           import('./features/shop/detail/product-detail').then((m) => m.ProductDetailComponent),
       },
 
+      /* Commerce — Donations */
+      {
+        path: 'donations',
+        loadComponent: () =>
+          import('./features/donations/donations').then((m) => m.DonationsComponent),
+      },
+
       /* System — Users */
       {
         path: 'users',

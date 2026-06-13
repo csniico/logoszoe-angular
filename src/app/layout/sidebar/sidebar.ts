@@ -137,6 +137,11 @@ export class SidebarComponent implements OnInit {
           path: '/shop',
           icon: 'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0',
         },
+        {
+          label: 'Donations',
+          path: '/donations',
+          icon: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z',
+        },
       ],
     },
     {

@@ -1,0 +1,134 @@
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Donations</h1>
+      <p class="page-subtitle">In-app giving logged from the mobile app</p>
+    </div>
+  </div>
+
+  <!-- ── Error ── -->
+  @if (error()) {
+    <div class="state-cell state-cell--error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  @if (!error()) {
+
+    <!-- ── Summary cards ── -->
+    @if (!loading()) {
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span class="summary-card__label">Total donations</span>
+          <span class="summary-card__value">{{ totalCount() }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-card__label">Partnerships</span>
+          <span class="summary-card__value">{{ partnershipCount() }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-card__label">One-time</span>
+          <span class="summary-card__value">{{ oneTimeCount() }}</span>
+        </div>
+        @for (t of totalsByCurrency(); track t.currency) {
+          <div class="summary-card summary-card--accent">
+            <span class="summary-card__label">Total ({{ t.currency }})</span>
+            <span class="summary-card__value">{{ formatCurrencyTotal(t) }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Toolbar ── -->
+    <div class="grid-toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="search-input"
+          type="search"
+          placeholder="Filter by donor name, email or product…"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          aria-label="Filter donations"
+        />
+      </div>
+
+      <div class="seg">
+        <button class="seg__btn" [class.seg__btn--active]="categoryFilter() === 'all'"
+                type="button" (click)="categoryFilter.set('all')">All</button>
+        <button class="seg__btn" [class.seg__btn--active]="categoryFilter() === 'partnership'"
+                type="button" (click)="categoryFilter.set('partnership')">Partnership</button>
+        <button class="seg__btn" [class.seg__btn--active]="categoryFilter() === 'oneTime'"
+                type="button" (click)="categoryFilter.set('oneTime')">One-time</button>
+      </div>
+    </div>
+
+    <!-- ── Loading ── -->
+    @if (loading()) {
+      <div class="state-cell">
+        <span class="spinner"></span> Loading donations…
+      </div>
+    }
+
+    <!-- ── Table ── -->
+    @if (!loading()) {
+      <div class="table-wrap">
+        <table class="don-table">
+          <thead>
+            <tr>
+              <th class="col-donor">Donor</th>
+              <th class="col-amount">Amount</th>
+              <th class="col-type">Type</th>
+              <th class="col-platform">Platform</th>
+              <th class="col-product">Product</th>
+              <th class="col-date">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (displayed().length === 0) {
+              <tr>
+                <td colspan="6">
+                  <div class="state-cell">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="36" height="36" aria-hidden="true">
+                      <path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+                    </svg>
+                    No donations found.
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (d of displayed(); track d._id) {
+              <tr class="don-row">
+                <td class="col-donor">
+                  <div class="donor-cell">
+                    <span class="donor-name">{{ d.donorName }}</span>
+                    <span class="donor-email">{{ d.donorEmail }}</span>
+                  </div>
+                </td>
+                <td class="col-amount">{{ formatAmount(d) }}</td>
+                <td class="col-type">
+                  <span class="type-chip"
+                        [class.type-chip--partnership]="d.category === 'partnership'">
+                    {{ categoryLabel(d.category) }}
+                  </span>
+                </td>
+                <td class="col-platform">
+                  <span class="platform-chip">{{ d.platform }}</span>
+                </td>
+                <td class="col-product">{{ d.productIdentifier }}</td>
+                <td class="col-date">{{ d.purchaseDate | date:'MMM d, y' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+</div>
