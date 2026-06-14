@@ -8,7 +8,7 @@
         @if (!loading()) {
           {{ totalItems() }} episode{{ totalItems() !== 1 ? 's' : '' }} total
           @if (searchQuery().trim()) {
-            — {{ displayed().length }} on this page match
+            - {{ displayed().length }} on this page match
           }
         } @else {
           Audio episodes

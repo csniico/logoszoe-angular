@@ -7,7 +7,7 @@ import { Post } from '../models/post.model';
 @Injectable({ providedIn: 'root' })
 export class PostService {
   private readonly http = inject(HttpClient);
-  /** Admin-only endpoint — AdminGuard on server. */
+  /** Admin-only endpoint - AdminGuard on server. */
   private readonly base = `${environment.apiUrl}/admin/posts`;
 
   getFeed(cursor?: string, limit?: number): Observable<Post[]> {

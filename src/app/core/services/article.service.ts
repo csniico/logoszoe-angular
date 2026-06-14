@@ -12,9 +12,9 @@ export interface ArticleDetailResponse {
 @Injectable({ providedIn: 'root' })
 export class ArticleService {
   private readonly http = inject(HttpClient);
-  /** Public read endpoint — no guard on server. */
+  /** Public read endpoint - no guard on server. */
   private readonly base = `${environment.apiUrl}/articles`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/articles`;
 
   getAll(): Observable<Article[]> {

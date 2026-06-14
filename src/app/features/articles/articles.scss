@@ -627,14 +627,14 @@
   }
 }
 
-// Table — selected row
+// Table - selected row
 .art-table__row--selected {
   background: var(--color-primary-light) !important;
 
   td { border-bottom-color: var(--color-primary-border); }
 }
 
-// Table — checkbox column
+// Table - checkbox column
 .art-table__th--check,
 .art-table__td--check {
   width: 36px;

@@ -94,7 +94,7 @@ export class CourseDetailComponent implements OnInit {
   readonly extractLessonError = signal<string | null>(null);
   readonly extractLessonSuccess = signal(false);
 
-  // document parsing (for backwards compat with pipeline — kept for document type if needed)
+  // document parsing (for backwards compat with pipeline - kept for document type if needed)
   readonly newLessonDocFile  = signal<File | null>(null);
   readonly parsingDoc        = signal(false);
   readonly parsedDocHtml     = signal('');
@@ -114,7 +114,7 @@ export class CourseDetailComponent implements OnInit {
   readonly savingLessonId    = signal<string | null>(null);
   readonly deletingLessonId  = signal<string | null>(null);
 
-  // Inline lesson edit buffers — basic
+  // Inline lesson edit buffers - basic
   editLessonTitle       = '';
   editLessonContent     = '';   // used for text type only
   editLessonDescription = '';
@@ -127,7 +127,7 @@ export class CourseDetailComponent implements OnInit {
   editNewAudioKey = '';
   editNewAudioDuration = 0;
 
-  // Inline lesson edit buffers — study guide
+  // Inline lesson edit buffers - study guide
   editLessonStudyQuestions:      EmbeddedQuestion[] = [{ text: '' }];
   editLessonReflectionQuestions: EmbeddedQuestion[] = [{ text: '' }];
   editLessonPrayer       = '';
@@ -415,7 +415,7 @@ export class CourseDetailComponent implements OnInit {
     this.courseService.extractDocx(file).subscribe({
       next: (result) => {
         if (result.title && !this.newLessonTitle.trim()) this.newLessonTitle = result.title;
-        // Only set text content for text-type lessons — ignore background for video/audio
+        // Only set text content for text-type lessons - ignore background for video/audio
         if (this.newLessonType() === 'text' && result.backgroundText) this.newLessonTextContent = result.backgroundText;
         if (result.studyQuestions?.length)      this.newLessonStudyQuestions      = result.studyQuestions.map(q => ({ text: q.text }));
         if (result.reflectionQuestions?.length) this.newLessonReflectionQuestions = result.reflectionQuestions.map(q => ({ text: q.text }));
@@ -506,7 +506,7 @@ export class CourseDetailComponent implements OnInit {
 
     this.courseService.extractDocx(file).subscribe({
       next: (result) => {
-        // Only populate text content for text-type lessons — never overwrite video ID or audio URL
+        // Only populate text content for text-type lessons - never overwrite video ID or audio URL
         if (lessonType === 'text' && result.backgroundText) this.editLessonContent = result.backgroundText;
         if (result.studyQuestions?.length)      this.editLessonStudyQuestions      = result.studyQuestions.map(q => ({ text: q.text }));
         if (result.reflectionQuestions?.length) this.editLessonReflectionQuestions = result.reflectionQuestions.map(q => ({ text: q.text }));
@@ -621,7 +621,7 @@ export class CourseDetailComponent implements OnInit {
     this.editLessonTitle       = lesson.title;
     this.editLessonDescription = lesson.description ?? '';
 
-    // Content — only editable for text lessons
+    // Content - only editable for text lessons
     this.editLessonContent = lesson.type === 'text' ? lesson.content : '';
 
     // Video / audio content replacement (reset)

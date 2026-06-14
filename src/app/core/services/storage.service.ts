@@ -13,7 +13,7 @@ export interface PresignedUrlResponse {
 @Injectable({ providedIn: 'root' })
 export class StorageService {
   private readonly http = inject(HttpClient);
-  /** Admin storage endpoint — AdminGuard on server. */
+  /** Admin storage endpoint - AdminGuard on server. */
   private readonly base = `${environment.apiUrl}/admin/storage`;
 
   getPresignedUrl(key: string, mimeType: string): Observable<PresignedUrlResponse> {
@@ -30,7 +30,7 @@ export class StorageService {
 
     return this.getPresignedUrl(key, file.type).pipe(
       switchMap((presigned) =>
-        // PUT directly to S3 — skip the auth interceptor by using a plain fetch
+        // PUT directly to S3 - skip the auth interceptor by using a plain fetch
         // (Authorization header would break the AWS presigned signature)
         new Observable<PresignedUrlResponse>((obs) => {
           fetch(presigned.uploadUrl, {

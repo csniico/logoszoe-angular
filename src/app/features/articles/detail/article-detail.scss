@@ -58,7 +58,7 @@
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
-/* Danger-outline button — Delete */
+/* Danger-outline button - Delete */
 .btn--danger-outline {
   color: #dc2626; border-color: #fca5a5; background: transparent;
   &:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
@@ -256,7 +256,7 @@
   }
 }
 
-/* ── Bible passages — view mode ── */
+/* ── Bible passages - view mode ── */
 .passage-view-list {
   display: flex; flex-direction: column; gap: 0.875rem;
   max-height: 350px; overflow-y: auto;

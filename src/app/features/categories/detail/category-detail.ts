@@ -236,7 +236,7 @@ export class CategoryDetailComponent implements OnInit {
   /** Convert any CSS color (named, rgb, hsl, hex-3) to a 6-digit #rrggbb hex. */
   private colorToHex(color: string): string {
     if (!color) return '#16A34A';
-    // Already a valid 6-digit hex — return as-is
+    // Already a valid 6-digit hex - return as-is
     if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
     // Expand 3-digit shorthand
     if (/^#[0-9a-fA-F]{3}$/.test(color)) {

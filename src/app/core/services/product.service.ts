@@ -9,7 +9,7 @@ export class ProductService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/shop/products`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/shop/products`;
 
   getAll(): Observable<Product[]> {

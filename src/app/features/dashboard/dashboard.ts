@@ -254,6 +254,6 @@ export class DashboardComponent implements OnInit {
   }
 
   devotionalLabel(d: { day: number; month: number; year: number; title: string }): string {
-    return `${d.day}/${d.month}/${d.year} — ${d.title}`;
+    return `${d.day}/${d.month}/${d.year} - ${d.title}`;
   }
 }

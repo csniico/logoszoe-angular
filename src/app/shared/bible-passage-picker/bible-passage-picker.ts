@@ -18,7 +18,7 @@ export class BiblePassagePickerComponent implements OnInit {
 
   @Input() passages: BiblePassageRef[] = [];
   @Output() passagesChange = new EventEmitter<BiblePassageRef[]>();
-  /** When true, hides Add / Remove controls — passages are display-only. */
+  /** When true, hides Add / Remove controls - passages are display-only. */
   @Input() readonly = false;
 
   /* ── Book list ── */

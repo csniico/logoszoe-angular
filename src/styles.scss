@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   Logos Zoe — Sacred Stillness Design System
+   Logos Zoe - Sacred Stillness Design System
    Primary (steel blue): #5A82A8
    Gold (tertiary):      #C9A059
    Ivory (bg):           #FDFBF5
@@ -11,7 +11,7 @@
 
 /* ── CSS custom properties ──────────────────────────────────── */
 :root {
-  /* Brand — primary (steel blue) */
+  /* Brand - primary (steel blue) */
   --color-primary:        #5A82A8;
   --color-primary-light:  #eef3f8;
   --color-primary-border: #abc9df;
@@ -23,7 +23,7 @@
   --color-gold-border:    #f0d08a;
   --color-gold-hover:     #a87e3e;
 
-  /* Secondary — muted blue-gray for role/admin badges */
+  /* Secondary - muted blue-gray for role/admin badges */
   --color-secondary:      #4a6e91;
   --color-secondary-light:#eef3f8;
 
@@ -33,7 +33,7 @@
   --color-border:         #dde9f3;
   --color-border-strong:  #b3cce0;
 
-  /* Text — using neutral palette */
+  /* Text - using neutral palette */
   --color-text-primary:   #1e3047;
   --color-text-secondary: #3a5878;
   --color-text-muted:     #4A5568;
@@ -384,7 +384,7 @@ a {
   &:active { transform: scale(0.98); }
   &:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-  /* Primary — steel blue */
+  /* Primary - steel blue */
   &--primary {
     background: var(--color-primary);
     color: #fff;

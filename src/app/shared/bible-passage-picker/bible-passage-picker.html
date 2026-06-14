@@ -29,7 +29,7 @@
     <p class="bpp__empty">No passages added yet.</p>
   }
 
-  <!-- Add passage button — hidden in readonly mode -->
+  <!-- Add passage button - hidden in readonly mode -->
   @if (!readonly && !pickerOpen()) {
     <button class="bpp__add-btn" type="button" (click)="openPicker()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -62,7 +62,7 @@
         <div class="bpp__field">
           <label class="bpp__label">Chapter</label>
           <select class="bpp__select" [disabled]="!selectedBook()" [ngModel]="selectedChapter()" (ngModelChange)="onChapterChange(+$event)">
-            <option [value]="null" disabled selected>—</option>
+            <option [value]="null" disabled selected>-</option>
             @for (ch of chapterList(); track ch) {
               <option [value]="ch">{{ ch }}</option>
             }
@@ -76,7 +76,7 @@
             <div class="bpp__loading">Loading…</div>
           } @else {
             <select class="bpp__select" [disabled]="!chapterVerses()" [ngModel]="startVerse()" (ngModelChange)="startVerse.set(+$event); endVerse.set(null)">
-              <option [value]="null" disabled selected>—</option>
+              <option [value]="null" disabled selected>-</option>
               @for (v of verseList(); track v) {
                 <option [value]="v">{{ v }}</option>
               }
@@ -88,7 +88,7 @@
         <div class="bpp__field">
           <label class="bpp__label">To verse <span class="bpp__optional">(optional)</span></label>
           <select class="bpp__select" [disabled]="!startVerse()" [ngModel]="endVerse()" (ngModelChange)="endVerse.set(+$event || null)">
-            <option [value]="null">— (single)</option>
+            <option [value]="null">- (single)</option>
             @for (v of verseList(); track v) {
               @if (v > (startVerse() ?? 0)) {
                 <option [value]="v">{{ v }}</option>

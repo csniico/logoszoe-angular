@@ -13,7 +13,7 @@ export class CategoryService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/categories`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/categories`;
 
   getAll(): Observable<CategoriesResponse> {

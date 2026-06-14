@@ -8,7 +8,7 @@
 
   <div class="create-header">
     <h1 class="page-title">New article</h1>
-    <p class="page-subtitle">Fill in the steps below — only the title is required.</p>
+    <p class="page-subtitle">Fill in the steps below - only the title is required.</p>
   </div>
 
   <!-- ── Step indicator ─────────────────────────────────────── -->
@@ -99,7 +99,7 @@
           <span class="step-num">2</span>
           <div>
             <h2 class="step-title">Cover image <span class="optional-tag">optional</span></h2>
-            <p class="step-desc">Upload a cover image — press "Upload" then continue.</p>
+            <p class="step-desc">Upload a cover image - press "Upload" then continue.</p>
           </div>
         </div>
 
@@ -122,7 +122,7 @@
               <label class="upload-drop" for="image-input">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 <span>Click to choose image</span>
-                <span class="upload-hint">JPG, PNG or WebP — shown as article cover</span>
+                <span class="upload-hint">JPG, PNG or WebP - shown as article cover</span>
               </label>
             }
             <input id="image-input" type="file" accept="image/*" class="file-input-hidden" (change)="onImageFileChange($event)" />
@@ -225,7 +225,7 @@
                   <div class="pipeline-success">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>
-                      Document processed — HTML ready
+                      Document processed - HTML ready
                       @if (biblePassages.length) {
                         <span class="pipeline-passage-badge">{{ biblePassages.length }} passage{{ biblePassages.length === 1 ? '' : 's' }} extracted</span>
                       }
@@ -278,7 +278,7 @@
         <div class="create-summary">
           <div class="create-summary__row">
             <span class="create-summary__row-label">Title</span>
-            <span class="create-summary__row-val">{{ title || '—' }}</span>
+            <span class="create-summary__row-val">{{ title || '-' }}</span>
           </div>
           <div class="create-summary__row">
             <span class="create-summary__row-label">Category</span>
@@ -286,7 +286,7 @@
           </div>
           <div class="create-summary__row">
             <span class="create-summary__row-label">Author</span>
-            <span class="create-summary__row-val">{{ author || '—' }}</span>
+            <span class="create-summary__row-val">{{ author || '-' }}</span>
           </div>
           <div class="create-summary__row">
             <span class="create-summary__row-label">Cover image</span>

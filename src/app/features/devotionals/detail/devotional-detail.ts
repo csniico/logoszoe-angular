@@ -164,7 +164,7 @@ export class DevotionalDetailComponent implements OnInit {
     const dev = this.devotional();
     if (!dev) return;
 
-    // Pipeline fields — detect + fetch Bible references before persisting
+    // Pipeline fields - detect + fetch Bible references before persisting
     if (PIPELINE_FIELDS.has(field)) {
       this.saveWithPipeline(field, dev._id);
       return;

@@ -9,9 +9,9 @@ export type CreateUserRole = 'user' | 'admin' | 'superadmin';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
-  /** User JWT endpoint — used only for reading the signed-in admin's own profile. */
+  /** User JWT endpoint - used only for reading the signed-in admin's own profile. */
   private readonly base = `${environment.apiUrl}/users`;
-  /** Admin endpoint — AdminGuard on server. */
+  /** Admin endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/users`;
 
   getAll(): Observable<User[]> {

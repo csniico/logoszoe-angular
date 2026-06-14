@@ -10,7 +10,7 @@ export class PodcastService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint (paginated). */
   private readonly base = `${environment.apiUrl}/podcasts`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/podcasts`;
 
   getAll(page = 1, limit = 25): Observable<PaginatedResponse<Podcast>> {

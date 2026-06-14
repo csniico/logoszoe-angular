@@ -49,7 +49,7 @@
         }
       </div>
     } @else {
-      <!-- No thumbnail yet — show upload placeholder -->
+      <!-- No thumbnail yet - show upload placeholder -->
       <div class="cover-banner cover-banner--empty">
         @if (uploadingBanner()) {
           <span class="cover-banner__spinner"></span>
@@ -182,7 +182,7 @@
           }
         </div>
         @if (editingField() !== 'author') {
-          <span class="field-value">{{ dev.author || '—' }}</span>
+          <span class="field-value">{{ dev.author || '-' }}</span>
         } @else {
           <input type="text" class="field-input" [value]="draftString" (input)="setDraftString($any($event.target).value)" placeholder="e.g. Pastor Noah Mensah" />
           <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'author' }"></ng-container>

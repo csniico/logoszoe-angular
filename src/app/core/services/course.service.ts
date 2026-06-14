@@ -11,9 +11,9 @@ import {
 @Injectable({ providedIn: 'root' })
 export class CourseService {
   private readonly http = inject(HttpClient);
-  /** Public read endpoint — no guard on server. */
+  /** Public read endpoint - no guard on server. */
   private readonly base = `${environment.apiUrl}/courses`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/courses`;
 
   // ── Courses ────────────────────────────────────────────────────────────────

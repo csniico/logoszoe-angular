@@ -8,7 +8,7 @@
         @if (!loading()) {
           {{ totalItems() }} devotional{{ totalItems() !== 1 ? 's' : '' }} total
           @if (searchQuery().trim()) {
-            — {{ displayed().length }} on this page match
+            - {{ displayed().length }} on this page match
           }
         } @else {
           Daily devotional content
@@ -144,7 +144,7 @@
           tabindex="0"
           (keydown.enter)="goToDevotional(d._id)"
         >
-          <!-- Cover — always present; image or placeholder -->
+          <!-- Cover - always present; image or placeholder -->
           <div class="dev-card__cover" [class.dev-card__cover--placeholder]="!d.fileUrl">
             @if (d.fileUrl) {
               <img [src]="d.fileUrl" [alt]="d.title" class="dev-card__cover-img" loading="lazy" />
@@ -154,7 +154,7 @@
               </svg>
             }
 
-            <!-- Published badge — top-right overlay -->
+            <!-- Published badge - top-right overlay -->
             <span class="dev-card__status" [class.dev-card__status--pub]="d.published" [class.dev-card__status--draft]="!d.published">
               @if (d.published) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -164,7 +164,7 @@
               }
             </span>
 
-            <!-- Date badge — bottom-left overlay -->
+            <!-- Date badge - bottom-left overlay -->
             <div class="dev-card__date">
               <span class="dev-card__date-day">{{ d.day }}</span>
               <span class="dev-card__date-month">{{ monthAbbr(d) }}</span>
@@ -228,7 +228,7 @@
               <td class="dev-table__td dev-table__td--title">
                 <span class="dev-table__title">{{ d.title }}</span>
               </td>
-              <td class="dev-table__td dev-table__td--muted">{{ d.author || '—' }}</td>
+              <td class="dev-table__td dev-table__td--muted">{{ d.author || '-' }}</td>
               <td class="dev-table__td">
                 <span class="pub-pill pub-pill--sm" [class.pub-pill--pub]="d.published" [class.pub-pill--draft]="!d.published">
                   @if (d.published) {
@@ -241,7 +241,7 @@
                 </span>
               </td>
               <td class="dev-table__td dev-table__td--scripture dev-table__td--muted">
-                {{ d.themeScripture ? stripHtml(d.themeScripture) : '—' }}
+                {{ d.themeScripture ? stripHtml(d.themeScripture) : '-' }}
               </td>
               <td class="dev-table__td dev-table__td--action">
                 <svg class="dev-table__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
@@ -290,7 +290,7 @@
             <div class="dev-grid">
               @for (d of backendResults(); track d._id) {
                 <article class="dev-card" (click)="goToDevotional(d._id)" role="button" tabindex="0" (keydown.enter)="goToDevotional(d._id)">
-                  <!-- Cover — image or placeholder -->
+                  <!-- Cover - image or placeholder -->
                   <div class="dev-card__cover" [class.dev-card__cover--placeholder]="!d.fileUrl">
                     @if (d.fileUrl) {
                       <img [src]="d.fileUrl" [alt]="d.title" class="dev-card__cover-img" loading="lazy" />
@@ -342,7 +342,7 @@
                         </div>
                       </td>
                       <td class="dev-table__td dev-table__td--title"><span class="dev-table__title">{{ d.title }}</span></td>
-                      <td class="dev-table__td dev-table__td--muted">{{ d.author || '—' }}</td>
+                      <td class="dev-table__td dev-table__td--muted">{{ d.author || '-' }}</td>
                       <td class="dev-table__td">
                         <span class="pub-pill pub-pill--sm" [class.pub-pill--pub]="d.published" [class.pub-pill--draft]="!d.published">
                           @if (d.published) { Published } @else { Draft }

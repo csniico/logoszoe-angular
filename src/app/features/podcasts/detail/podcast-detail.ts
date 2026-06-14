@@ -47,7 +47,7 @@ export class PodcastDetailComponent implements OnInit {
   // ── Computed helpers ──────────────────────────────────────────
   readonly catLabel = computed(() => {
     const p = this.podcast();
-    if (!p) return '—';
+    if (!p) return '-';
     return PODCAST_CATEGORIES.find((c) => c.value === p.category)?.label ?? p.category;
   });
 

@@ -190,7 +190,7 @@
             }
           </div>
           @if (editingField() !== 'author') {
-            <span class="field-value">{{ art.author || '—' }}</span>
+            <span class="field-value">{{ art.author || '-' }}</span>
           } @else {
             <input type="text" class="field-input" [value]="draftString" (input)="setDraftString($any($event.target).value)" />
             <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'author' }"></ng-container>

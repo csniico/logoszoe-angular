@@ -9,7 +9,7 @@ export class VideoService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/videos`;
-  /** Admin write endpoint — SuperAdminGuard on server. */
+  /** Admin write endpoint - SuperAdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/videos`;
 
   getAll(): Observable<Video[]> {

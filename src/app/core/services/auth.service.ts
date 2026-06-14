@@ -18,7 +18,7 @@ export class AuthService {
   readonly isLoggedIn   = computed(() => this._currentAdmin() !== null);
   readonly isSuperAdmin = computed(() => this._currentAdmin()?.role === 'superadmin');
 
-  /** Restore session from localStorage on app start — no network call needed. */
+  /** Restore session from localStorage on app start - no network call needed. */
   restoreSession(): void {
     const admin = this.tokenService.getAdminUser();
     if (admin && this.tokenService.hasToken()) {
@@ -47,7 +47,7 @@ export class AuthService {
 
   /**
    * Creates a user in the adminUsers collection (dashboard access).
-   * Calls POST /admin/auth/register — distinct from POST /admin/users
+   * Calls POST /admin/auth/register - distinct from POST /admin/users
    * which writes to the regular app users collection.
    */
   registerAdminUser(data: {

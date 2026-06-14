@@ -8,7 +8,7 @@ import { MigrationJob } from '../models/migration-job.model';
 @Injectable({ providedIn: 'root' })
 export class StorageCatalogService {
   private readonly http = inject(HttpClient);
-  /** Admin storage endpoint — AdminGuard / SuperAdminGuard on server. */
+  /** Admin storage endpoint - AdminGuard / SuperAdminGuard on server. */
   private readonly base = `${environment.apiUrl}/admin/storage`;
 
   listAssets(resourceType?: string): Observable<StorageAsset[]> {

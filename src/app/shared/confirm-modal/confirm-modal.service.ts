@@ -1,9 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 
 export interface ConfirmConfig {
-  /** Short action summary shown as the modal heading — e.g. "Delete 'Discipleship'?" */
+  /** Short action summary shown as the modal heading - e.g. "Delete 'Discipleship'?" */
   intent: string;
-  /** One or two sentences explaining what will happen — shown below the heading. */
+  /** One or two sentences explaining what will happen - shown below the heading. */
   description: string;
   /** Label for the confirm button. Defaults to "Continue". */
   confirmLabel?: string;

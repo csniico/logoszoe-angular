@@ -76,7 +76,7 @@ export class ArticleCreateComponent implements OnDestroy {
   constructor() {
     this.categoryService.getAll().subscribe({
       next: (res) => this.categories.set(res.categories),
-      error: () => { /* non-fatal — dropdown will be empty */ },
+      error: () => { /* non-fatal - dropdown will be empty */ },
     });
   }
 

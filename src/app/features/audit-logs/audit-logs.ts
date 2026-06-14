@@ -118,7 +118,7 @@ export class AuditLogsComponent implements OnInit {
   actor(log: AuditLog): string {
     if (log.adminId) return `admin:${log.adminId.slice(-6)}`;
     if (log.userId)  return `user:${log.userId.slice(-6)}`;
-    return '—';
+    return '-';
   }
 
   get hasActiveFilters(): boolean {

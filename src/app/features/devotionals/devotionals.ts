@@ -91,7 +91,7 @@ export class DevotionalsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadPage(1);
 
-    // Debounced backend search — fires when local results are empty
+    // Debounced backend search - fires when local results are empty
     this.searchQuery$.pipe(
       debounceTime(400),
       distinctUntilChanged(),

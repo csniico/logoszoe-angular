@@ -7,7 +7,7 @@ import { Prayer } from '../models/prayer.model';
 @Injectable({ providedIn: 'root' })
 export class PrayerService {
   private readonly http = inject(HttpClient);
-  /** Admin-only endpoint — AdminGuard on server. */
+  /** Admin-only endpoint - AdminGuard on server. */
   private readonly base = `${environment.apiUrl}/admin/prayers`;
 
   getAll(): Observable<Prayer[]> {

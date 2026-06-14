@@ -45,7 +45,7 @@ export class DonationsComponent implements OnInit {
     () => this.donations().filter((d) => d.category === 'oneTime').length,
   );
 
-  /** Totals by currency — donations can span currencies, so we don't sum across them. */
+  /** Totals by currency - donations can span currencies, so we don't sum across them. */
   readonly totalsByCurrency = computed<{ currency: string; amount: number }[]>(() => {
     const map = new Map<string, number>();
     for (const d of this.donations()) {
@@ -82,7 +82,7 @@ export class DonationsComponent implements OnInit {
 
   /** Amount is stored in the smallest currency unit (cents). */
   formatAmount(d: Donation): string {
-    if (d.amount == null) return '—';
+    if (d.amount == null) return '-';
     const cur = (d.currency || 'USD').toUpperCase();
     try {
       return new Intl.NumberFormat(undefined, {

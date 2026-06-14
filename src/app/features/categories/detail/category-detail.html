@@ -161,7 +161,7 @@
             }
           </div>
           @if (editingField() !== 'description') {
-            <p class="field-value prose">{{ cat.description || '—' }}</p>
+            <p class="field-value prose">{{ cat.description || '-' }}</p>
           } @else {
             <textarea class="field-textarea" rows="4" [value]="draftString" (input)="setDraftString($any($event.target).value)"></textarea>
             <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'description' }"></ng-container>
@@ -188,7 +188,7 @@
             } @else { <span class="field-empty">Not set</span> }
           } @else {
             <div class="color-picker-wrap">
-              <!-- Large swatch — click to open native OS color palette -->
+              <!-- Large swatch - click to open native OS color palette -->
               <div class="color-swatch-btn" [style.background]="draftString || '#5A82A8'" (click)="colorInput.click()" title="Open color palette">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="color-swatch-btn__icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
                 <input #colorInput type="color" class="color-input-native" [value]="draftString || '#5A82A8'" (input)="setDraftString($any($event.target).value)" />
@@ -217,7 +217,7 @@
             }
           </div>
           @if (editingField() !== 'article_title') {
-            <span class="field-value">{{ cat.article_title || '—' }}</span>
+            <span class="field-value">{{ cat.article_title || '-' }}</span>
           } @else {
             <input type="text" class="field-input" [value]="draftString" (input)="setDraftString($any($event.target).value)" />
             <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'article_title' }"></ng-container>
@@ -298,7 +298,7 @@
                       }
                     </div>
                   } @else {
-                    <!-- Legacy string format — display as plain text -->
+                    <!-- Legacy string format - display as plain text -->
                     <div class="passage-view-item passage-view-item--legacy">
                       <span class="passage-view-ref">{{ p }}</span>
                     </div>
@@ -310,7 +310,7 @@
             }
 
           } @else {
-            <!-- ── Bible passages — display-only (not editable on detail page) ── -->
+            <!-- ── Bible passages - display-only (not editable on detail page) ── -->
             <app-bible-passage-picker
               [passages]="draftPassages"
               [readonly]="true"
@@ -407,8 +407,8 @@
       }
     </div>
     @if (editingField() !== field) {
-      @if (mono) { <code class="slug">{{ value || '—' }}</code> }
-      @else      { <span class="field-value">{{ value || '—' }}</span> }
+      @if (mono) { <code class="slug">{{ value || '-' }}</code> }
+      @else      { <span class="field-value">{{ value || '-' }}</span> }
     } @else {
       <input type="text" class="field-input" [class.mono]="mono" [value]="draftString" (input)="setDraftString($any($event.target).value)" />
       <ng-container *ngTemplateOutlet="saveCancel; context: { field: field }"></ng-container>

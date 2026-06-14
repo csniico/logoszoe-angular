@@ -141,7 +141,7 @@ export class TopbarComponent implements OnDestroy {
   }
 
   itemTitle(item: SearchItem): string {
-    return item.title ?? item.name ?? '—';
+    return item.title ?? item.name ?? '-';
   }
 
   navigateTo(group: ScopeGroup, item: SearchItem): void {

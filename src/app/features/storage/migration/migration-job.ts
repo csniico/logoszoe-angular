@@ -87,7 +87,7 @@ export class MigrationJobComponent implements OnInit, OnDestroy {
   }
 
   formatDate(dateStr?: string): string {
-    if (!dateStr) return '—';
+    if (!dateStr) return '-';
     return new Date(dateStr).toLocaleString('en-GB', {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',

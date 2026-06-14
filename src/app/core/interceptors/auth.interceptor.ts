@@ -19,7 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (
 
   return next(authedReq).pipe(
     catchError((err: unknown) => {
-      // Admin tokens don't refresh — a 401 means the session expired → sign out
+      // Admin tokens don't refresh - a 401 means the session expired → sign out
       if (
         err instanceof HttpErrorResponse &&
         err.status === 401 &&

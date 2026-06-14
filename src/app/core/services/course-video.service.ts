@@ -9,7 +9,7 @@ export class CourseVideoService {
   private readonly http = inject(HttpClient);
   /** Public read endpoint. */
   private readonly base = `${environment.apiUrl}/course-videos`;
-  /** Admin write endpoint — AdminGuard on server. */
+  /** Admin write endpoint - AdminGuard on server. */
   private readonly adminBase = `${environment.apiUrl}/admin/course-videos`;
 
   getAll(): Observable<CourseVideo[]> {

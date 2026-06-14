@@ -44,7 +44,7 @@ export class MigrationListComponent implements OnInit {
   }
 
   formatDate(dateStr?: string): string {
-    if (!dateStr) return '—';
+    if (!dateStr) return '-';
     return new Date(dateStr).toLocaleString('en-GB', {
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
@@ -56,7 +56,7 @@ export class MigrationListComponent implements OnInit {
   }
 
   duration(job: MigrationJob): string {
-    if (!job.startedAt || !job.completedAt) return '—';
+    if (!job.startedAt || !job.completedAt) return '-';
     const secs = Math.round(
       (new Date(job.completedAt).getTime() - new Date(job.startedAt).getTime()) / 1000,
     );

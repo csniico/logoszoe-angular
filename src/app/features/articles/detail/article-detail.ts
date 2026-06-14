@@ -83,9 +83,9 @@ export class ArticleDetailComponent implements OnInit {
   // ── Computed helpers ──────────────────────────────────────────
   readonly catName = computed(() => {
     const a = this.article();
-    if (!a) return '—';
+    if (!a) return '-';
     const c = articleCat(a);
-    return c ? c.name : '—';
+    return c ? c.name : '-';
   });
 
   readonly catColor = computed(() => {
@@ -332,7 +332,7 @@ export class ArticleDetailComponent implements OnInit {
   catNameOf(art: Article): string {
     const c = articleCat(art);
     if (c) return c.name;
-    return this.categories().find((cat) => cat._id === (art.category as string))?.name ?? '—';
+    return this.categories().find((cat) => cat._id === (art.category as string))?.name ?? '-';
   }
 
   catColorOf(art: Article): string {
@@ -343,7 +343,7 @@ export class ArticleDetailComponent implements OnInit {
 
   selectedCatName = computed(() => {
     const id = this.draftString;
-    return this.categories().find((c) => c._id === id)?.name ?? '—';
+    return this.categories().find((c) => c._id === id)?.name ?? '-';
   });
 
   passageVerseNum(ref: string, index: number): number {

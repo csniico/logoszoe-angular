@@ -32,7 +32,7 @@ export const routes: Routes = [
     ],
   },
 
-  /* ── Admin shell — persistent sidebar layout ─────────── */
+  /* ── Admin shell - persistent sidebar layout ─────────── */
   {
     path: '',
     canActivate: [authGuard],
@@ -46,7 +46,7 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
 
-      /* Content — Courses */
+      /* Content - Courses */
       {
         path: 'courses',
         loadComponent: () =>
@@ -73,7 +73,7 @@ export const routes: Routes = [
           import('./features/course-videos/detail/course-video-detail').then((m) => m.CourseVideoDetailComponent),
       },
 
-      /* Content — Videos */
+      /* Content - Videos */
       {
         path: 'videos',
         loadComponent: () =>
@@ -85,7 +85,7 @@ export const routes: Routes = [
           import('./features/videos/create/video-create').then((m) => m.VideoCreateComponent),
       },
 
-      /* Content — Articles */
+      /* Content - Articles */
       {
         path: 'articles',
         loadComponent: () =>
@@ -106,7 +106,7 @@ export const routes: Routes = [
           ),
       },
 
-      /* Content — Devotionals */
+      /* Content - Devotionals */
       {
         path: 'devotionals',
         loadComponent: () =>
@@ -127,14 +127,14 @@ export const routes: Routes = [
           ),
       },
 
-      /* Content — Bible (read-only) */
+      /* Content - Bible (read-only) */
       {
         path: 'bible',
         loadComponent: () =>
           import('./features/bible/bible').then((m) => m.BibleComponent),
       },
 
-      /* Content — Podcasts */
+      /* Content - Podcasts */
       {
         path: 'podcasts',
         loadComponent: () =>
@@ -155,7 +155,7 @@ export const routes: Routes = [
           ),
       },
 
-      /* Content — Submissions */
+      /* Content - Submissions */
       {
         path: 'submissions',
         loadComponent: () =>
@@ -179,7 +179,7 @@ export const routes: Routes = [
           import('./features/prayer/prayer').then((m) => m.PrayerComponent),
       },
 
-      /* Commerce — Shop */
+      /* Commerce - Shop */
       {
         path: 'shop',
         loadComponent: () =>
@@ -196,14 +196,14 @@ export const routes: Routes = [
           import('./features/shop/detail/product-detail').then((m) => m.ProductDetailComponent),
       },
 
-      /* Commerce — Donations */
+      /* Commerce - Donations */
       {
         path: 'donations',
         loadComponent: () =>
           import('./features/donations/donations').then((m) => m.DonationsComponent),
       },
 
-      /* System — Users */
+      /* System - Users */
       {
         path: 'users',
         loadComponent: () =>

@@ -23,7 +23,7 @@ export interface Article {
   updatedAt?: string;
 }
 
-/** Narrow helper — returns the populated shape if present */
+/** Narrow helper - returns the populated shape if present */
 export function articleCat(article: Article): ArticleCategory | null {
   if (article.category && typeof article.category === 'object') {
     return article.category as ArticleCategory;

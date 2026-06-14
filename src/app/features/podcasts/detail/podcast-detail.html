@@ -169,7 +169,7 @@
             }
           </div>
           @if (editingField() !== 'description') {
-            <span class="field-value field-value--multi">{{ pod.description || '—' }}</span>
+            <span class="field-value field-value--multi">{{ pod.description || '-' }}</span>
           } @else {
             <textarea class="field-textarea" rows="4" [value]="draftString" (input)="setDraftString($any($event.target).value)"></textarea>
             <ng-container *ngTemplateOutlet="saveCancel; context: { field: 'description' }"></ng-container>

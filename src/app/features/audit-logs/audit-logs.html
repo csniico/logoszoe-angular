@@ -93,8 +93,8 @@
                 <td><span class="status-badge" [class]="statusClass(log.statusCode)">{{ log.statusCode }}</span></td>
                 <td class="col-num">{{ formatDuration(log.durationMs) }}</td>
                 <td class="col-actor" [title]="log.adminId || log.userId || ''">{{ actor(log) }}</td>
-                <td>{{ log.role || '—' }}</td>
-                <td class="col-ip">{{ log.ip || '—' }}</td>
+                <td>{{ log.role || '-' }}</td>
+                <td class="col-ip">{{ log.ip || '-' }}</td>
               </tr>
             }
           </tbody>

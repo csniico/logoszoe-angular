@@ -93,7 +93,7 @@
             </div>
             @if (saveError()) { <p class="field-error">{{ saveError() }}</p> }
           } @else {
-            <p class="sidebar-value">{{ video()!.description || '—' }}</p>
+            <p class="sidebar-value">{{ video()!.description || '-' }}</p>
           }
         </div>
 

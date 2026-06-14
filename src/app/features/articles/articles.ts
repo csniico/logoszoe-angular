@@ -245,7 +245,7 @@ export class ArticlesComponent implements OnInit, OnDestroy {
 
   catName(art: Article): string {
     const c = articleCat(art);
-    return c ? c.name : '—';
+    return c ? c.name : '-';
   }
 
   catColor(art: Article): string {

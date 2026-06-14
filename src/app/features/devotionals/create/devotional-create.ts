@@ -84,7 +84,7 @@ export class DevotionalCreateComponent implements OnDestroy {
   }
 
   get formattedDate(): string {
-    if (this.month < 1 || this.month > 12) return '—';
+    if (this.month < 1 || this.month > 12) return '-';
     return `${this.day} ${MONTH_NAMES[this.month - 1]} ${this.year}`;
   }
 

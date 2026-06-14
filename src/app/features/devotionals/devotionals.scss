@@ -213,7 +213,7 @@
     z-index: 1;
   }
 
-  // Placeholder — no image; show muted gradient + centred icon
+  // Placeholder - no image; show muted gradient + centred icon
   &--placeholder {
     display: flex;
     align-items: center;
@@ -266,7 +266,7 @@
 
 // ── Overlay badges (inside .dev-card__cover) ──────────────────────────────────
 
-// Published / Draft — top-right overlay
+// Published / Draft - top-right overlay
 .dev-card__status {
   position: absolute;
   top: 0.625rem;
@@ -291,7 +291,7 @@
   &--draft { background: rgba(0, 0, 0, 0.48);     color: rgba(255,255,255,0.88); }
 }
 
-// Date — bottom-left overlay
+// Date - bottom-left overlay
 .dev-card__date {
   position: absolute;
   bottom: 0.625rem;

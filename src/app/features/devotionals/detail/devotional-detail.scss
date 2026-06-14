@@ -61,7 +61,7 @@
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 
-/* Danger-outline button — Delete */
+/* Danger-outline button - Delete */
 .btn--danger-outline {
   color: #dc2626; border-color: #fca5a5; background: transparent;
   &:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
@@ -237,7 +237,7 @@
   /* Dim image while upload is in progress */
   &--uploading .cover-banner__img { opacity: 0.5; filter: blur(1px); }
 
-  /* Empty state — dashed placeholder */
+  /* Empty state - dashed placeholder */
   &--empty {
     height: 120px;
     display: flex;
