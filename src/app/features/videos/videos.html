@@ -126,15 +126,14 @@
             <article class="vid-card">
               <div class="vid-card__thumb">
                 <img [src]="thumbUrl(v.youtubeId)" [alt]="v.title" loading="lazy" />
-                <a
+                <button
+                  type="button"
                   class="vid-card__play-overlay"
-                  [href]="ytUrl(v.youtubeId)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  [title]="'Watch on YouTube: ' + v.title"
+                  (click)="play(v)"
+                  [title]="'Play: ' + v.title"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
-                </a>
+                </button>
               </div>
               <div class="vid-card__body">
                 <span class="vid-card__cat">{{ v.category }}</span>
@@ -206,18 +205,14 @@
                   <td class="vid-table__td vid-table__td--muted">{{ v.createdAt | date: 'mediumDate' }}</td>
                   <td class="vid-table__td vid-table__td--action">
                     <div class="row-actions">
-                      <a
+                      <button
                         class="icon-btn"
-                        [href]="ytUrl(v.youtubeId)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Open on YouTube"
+                        type="button"
+                        title="Play"
+                        (click)="play(v)"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                        </svg>
-                      </a>
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+                      </button>
                       <button
                         class="icon-btn icon-btn--danger"
                         type="button"
@@ -280,12 +275,9 @@
                     <td class="vid-table__td vid-table__td--muted">{{ v.createdAt | date: 'mediumDate' }}</td>
                     <td class="vid-table__td vid-table__td--action">
                       <div class="row-actions">
-                        <a class="icon-btn" [href]="ytUrl(v.youtubeId)" target="_blank" rel="noopener noreferrer" title="Open on YouTube">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                          </svg>
-                        </a>
+                        <button class="icon-btn" type="button" title="Play" (click)="play(v)">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+                        </button>
                         <button class="icon-btn icon-btn--danger" type="button" title="Delete video" (click)="delete(v._id, v.title, $event)">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6"/>
@@ -303,6 +295,28 @@
           <div class="state-cell">No results found for "{{ searchQuery() }}".</div>
         }
       }
+    </div>
+  }
+
+  <!-- ── Inline YouTube player (plays in-app, keeps YouTube controls) ── -->
+  @if (playingVideo(); as pv) {
+    <div class="yt-modal" (click)="closePlayer()">
+      <div class="yt-modal__inner" (click)="$event.stopPropagation()">
+        <div class="yt-modal__bar">
+          <span class="yt-modal__title">{{ pv.title }}</span>
+          <button class="yt-modal__close" type="button" (click)="closePlayer()" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="yt-modal__frame">
+          <iframe
+            [src]="embedUrl(pv.youtubeId)"
+            [title]="pv.title"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
     </div>
   }
 

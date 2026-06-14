@@ -10,12 +10,13 @@ import { DocumentPipelineService } from '../../../core/services/document-pipelin
 import { PipelineProgress } from '../../../core/models/pipeline.model';
 import { Course, Lesson, LessonType, EmbeddedQuestion, COURSE_MODULES, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
+import { CourseVideoPlayerComponent } from '../../../shared/course-video-player/course-video-player';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-course-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CourseVideoPlayerComponent],
   templateUrl: './course-detail.html',
   styleUrl: './course-detail.scss',
 })

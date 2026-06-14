@@ -1,0 +1,91 @@
+<div #wrap class="cvp" (mousemove)="reveal()" (mouseleave)="playing() && showControls.set(false)">
+  <video
+    #video
+    class="cvp__video"
+    [src]="src"
+    [poster]="poster || null"
+    playsinline
+    (click)="toggle()"
+    (play)="onPlay()"
+    (pause)="onPause()"
+    (timeupdate)="onTime()"
+    (loadedmetadata)="onMeta()"
+    (waiting)="onWaiting()"
+    (playing)="onPlayingEvt()"
+    (ended)="onEnded()"
+  ></video>
+
+  <!-- Buffering -->
+  @if (buffering() && playing()) {
+    <div class="cvp__spinner"><span class="spinner spinner--light"></span></div>
+  }
+
+  <!-- Center play -->
+  @if (!playing() && !buffering()) {
+    <button class="cvp__bigplay" type="button" (click)="toggle()" aria-label="Play">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+    </button>
+  }
+
+  <!-- Controls -->
+  <div class="cvp__controls" [class.cvp__controls--hidden]="showControls() === false && playing()">
+    <input
+      class="cvp__seek"
+      type="range"
+      min="0"
+      [max]="duration() || 0"
+      step="0.1"
+      [value]="current()"
+      (input)="seek($event)"
+      [style.background]="'linear-gradient(to right, var(--color-primary) ' + seekPct + '%, rgba(255,255,255,0.3) ' + seekPct + '%)'"
+      aria-label="Seek"
+    />
+
+    <div class="cvp__row">
+      <button class="cvp__btn" type="button" (click)="toggle()" [attr.aria-label]="playing() ? 'Pause' : 'Play'">
+        @if (playing()) {
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        }
+      </button>
+
+      <button class="cvp__btn" type="button" (click)="skip(-10)" aria-label="Back 10 seconds">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      </button>
+      <button class="cvp__btn" type="button" (click)="skip(10)" aria-label="Forward 10 seconds">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+
+      <span class="cvp__time">{{ fmt(current()) }} <span class="cvp__time-total">/ {{ fmt(duration()) }}</span></span>
+
+      <span class="cvp__spacer"></span>
+
+      <div class="cvp__vol">
+        <button class="cvp__btn" type="button" (click)="toggleMute()" [attr.aria-label]="muted() ? 'Unmute' : 'Mute'">
+          @if (muted() || volume() === 0) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          }
+        </button>
+        <input
+          class="cvp__volbar"
+          type="range" min="0" max="1" step="0.05"
+          [value]="muted() ? 0 : volume()"
+          (input)="changeVolume($event)"
+          [style.background]="'linear-gradient(to right, #fff ' + volPct + '%, rgba(255,255,255,0.3) ' + volPct + '%)'"
+          aria-label="Volume"
+        />
+      </div>
+
+      <button class="cvp__btn" type="button" (click)="toggleFullscreen()" aria-label="Fullscreen">
+        @if (fullscreen()) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        }
+      </button>
+    </div>
+  </div>
+</div>

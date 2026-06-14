@@ -762,9 +762,7 @@
 
                 @case ('video') {
                   @if (videoForLesson(openLesson()!)) {
-                    <video class="user-lesson-detail__video" controls [src]="videoForLesson(openLesson()!)!.videoUrl">
-                      Your browser does not support video playback.
-                    </video>
+                    <app-course-video-player [src]="videoForLesson(openLesson()!)!.videoUrl" />
                   } @else {
                     <p class="form-hint-text">Video not found in catalog.</p>
                   }

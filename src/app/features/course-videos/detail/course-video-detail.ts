@@ -5,11 +5,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CourseVideoService } from '../../../core/services/course-video.service';
 import { ConfirmModalService } from '../../../shared/confirm-modal/confirm-modal.service';
 import { CourseVideo } from '../../../core/models/course-video.model';
+import { CourseVideoPlayerComponent } from '../../../shared/course-video-player/course-video-player';
 
 @Component({
   selector: 'app-course-video-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CourseVideoPlayerComponent],
   templateUrl: './course-video-detail.html',
   styleUrl: './course-video-detail.scss',
 })

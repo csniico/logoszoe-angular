@@ -57,9 +57,7 @@
 
       <!-- Video player -->
       <div class="player-wrap">
-        <video class="video-player" [src]="video()!.videoUrl" controls preload="metadata" poster="">
-          Your browser does not support the video element.
-        </video>
+        <app-course-video-player [src]="video()!.videoUrl" />
       </div>
 
       <!-- Metadata sidebar -->

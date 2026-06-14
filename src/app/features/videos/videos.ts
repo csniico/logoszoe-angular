@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { VideoService } from '../../core/services/video.service';
 import { SearchService } from '../../core/services/search.service';
@@ -22,7 +23,11 @@ export class VideosComponent implements OnInit, OnDestroy {
   private readonly confirmModal  = inject(ConfirmModalService);
   private readonly searchService = inject(SearchService);
   private readonly router        = inject(Router);
+  private readonly sanitizer     = inject(DomSanitizer);
   private readonly destroy$      = new Subject<void>();
+
+  // ── Inline player ────────────────────────────────────────────
+  readonly playingVideo = signal<Video | null>(null);
 
   // ── Remote data ──────────────────────────────────────────────
   readonly videos  = signal<Video[]>([]);
@@ -156,6 +161,21 @@ export class VideosComponent implements OnInit, OnDestroy {
 
   ytUrl(youtubeId: string): string {
     return `https://www.youtube.com/watch?v=${youtubeId}`;
+  }
+
+  // ── Inline player ──
+  play(v: Video): void {
+    this.playingVideo.set(v);
+  }
+
+  closePlayer(): void {
+    this.playingVideo.set(null);
+  }
+
+  embedUrl(youtubeId: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`,
+    );
   }
 
   private ts(v: Video): number {
