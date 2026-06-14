@@ -27,6 +27,20 @@ export interface UserGrowthPoint {
   count: number;
 }
 
+export type TimeRange = '7d' | '2w' | '1m' | '3m' | '6m' | '1y';
+
+export interface TimeseriesPoint {
+  date: string; // ISO
+  value: number;
+}
+
+export interface AnalyticsTimeseries {
+  range: TimeRange;
+  unit: 'day' | 'week' | 'month';
+  revenue: TimeseriesPoint[];     // major currency units
+  engagement: TimeseriesPoint[];  // lesson completions
+}
+
 export interface AnalyticsOverview {
   users: {
     total: number;
