@@ -5,8 +5,8 @@ import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
 import { StorageService } from '../../../core/services/storage.service';
 import {
-  CourseModule,
-  COURSE_MODULES,
+  CourseLevel,
+  COURSE_LEVELS,
 } from '../../../core/models/course.model';
 
 @Component({
@@ -22,11 +22,11 @@ export class CourseCreateComponent {
   private readonly router         = inject(Router);
 
   // ── Meta ──────────────────────────────────────────────────────────────────
-  readonly moduleOptions = COURSE_MODULES;
+  readonly levelOptions = COURSE_LEVELS;
 
   // ── Form fields ───────────────────────────────────────────────────────────
   title: string       = '';
-  module: CourseModule = 'foundation';
+  level: CourseLevel = 'foundation';
   description: string = '';
 
   // ── Cover image ───────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export class CourseCreateComponent {
 
     this.courseService.create({
       title:       this.title.trim(),
-      module:      this.module,
+      level:       this.level,
       imageUrl:    this.imageUrl    || undefined,
       imageKey:    this.imageKey    || undefined,
       description: this.description.trim() || undefined,

@@ -8,7 +8,7 @@ import { CourseVideoService } from '../../../core/services/course-video.service'
 import { StorageService } from '../../../core/services/storage.service';
 import { DocumentPipelineService } from '../../../core/services/document-pipeline.service';
 import { PipelineProgress } from '../../../core/models/pipeline.model';
-import { Course, Lesson, LessonType, EmbeddedQuestion, COURSE_MODULES, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
+import { Course, CourseModule, Lesson, LessonType, EmbeddedQuestion, COURSE_LEVELS, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
 import { CourseVideoPlayerComponent } from '../../../shared/course-video-player/course-video-player';
 import { environment } from '../../../../environments/environment';
@@ -34,9 +34,20 @@ export class CourseDetailComponent implements OnInit {
   readonly loading        = signal(true);
   readonly error          = signal<string | null>(null);
 
+  // ── Modules ───────────────────────────────────────────────────
+  readonly modules        = signal<CourseModule[]>([]);
+  readonly loadingModules = signal(false);
+
   // ── Lessons ───────────────────────────────────────────────────
   readonly lessons        = signal<Lesson[]>([]);
   readonly loadingLessons = signal(false);
+
+  /** Lessons belonging to a module, ordered. */
+  lessonsForModule(moduleId: string): Lesson[] {
+    return this.lessons()
+      .filter((l) => l.moduleId === moduleId)
+      .sort((a, b) => a.order - b.order);
+  }
 
   // ── Editing course fields ─────────────────────────────────────
   readonly editingField   = signal<string | null>(null);
@@ -44,12 +55,28 @@ export class CourseDetailComponent implements OnInit {
   readonly saveError      = signal<string | null>(null);
 
   // ── Meta helpers ──────────────────────────────────────────────────────────
-  readonly moduleOptions       = COURSE_MODULES;
+  readonly levelOptions        = COURSE_LEVELS;
   readonly lessonTypeOptions   = LESSON_CONTENT_TYPES;
 
-  moduleLabel(val: string): string {
-    return this.moduleOptions.find(m => m.value === val)?.label ?? val;
+  levelLabel(val: string): string {
+    return this.levelOptions.find(m => m.value === val)?.label ?? val;
   }
+
+  // ── Module add / edit state ─────────────────────────────────────────────────
+  readonly showAddModule   = signal(false);
+  readonly addingModule    = signal(false);
+  readonly addModuleError  = signal<string | null>(null);
+  newModuleTitle           = '';
+  newModuleDescription     = '';
+
+  readonly editingModuleId = signal<string | null>(null);
+  readonly savingModuleId  = signal<string | null>(null);
+  readonly deletingModuleId = signal<string | null>(null);
+  editModuleTitle          = '';
+  editModuleDescription    = '';
+
+  /** When adding a lesson, the module it will be added to. */
+  readonly addLessonModuleId = signal<string | null>(null);
 
   // Edit buffers
   editTitle       = '';
@@ -70,6 +97,8 @@ export class CourseDetailComponent implements OnInit {
   // ── Add lesson form ───────────────────────────────────────────
   readonly showAddLesson    = signal(false);
   readonly addLessonMenuOpen = signal(false);
+  /** Which module's "Add lesson" dropdown menu is currently open (null = none). */
+  readonly addLessonMenuModuleId = signal<string | null>(null);
   readonly newLessonType    = signal<LessonType>('text');
   readonly addingLesson     = signal(false);
   readonly addLessonError   = signal<string | null>(null);
@@ -164,6 +193,12 @@ export class CourseDetailComponent implements OnInit {
     this.courseService.getById(id).subscribe({
       next: (c) => { this.course.set(c); this.loading.set(false); },
       error: () => { this.error.set('Failed to load course.'); this.loading.set(false); },
+    });
+
+    this.loadingModules.set(true);
+    this.courseService.getModules(id).subscribe({
+      next: (ms) => { this.modules.set(ms.sort((a, b) => a.order - b.order)); this.loadingModules.set(false); },
+      error: () => { this.loadingModules.set(false); },
     });
 
     this.loadingLessons.set(true);
@@ -285,10 +320,110 @@ export class CourseDetailComponent implements OnInit {
     });
   }
 
+  // ── Module management ─────────────────────────────────────────
+
+  openAddModule(): void {
+    this.newModuleTitle = `Module ${this.modules().length + 1}`;
+    this.newModuleDescription = '';
+    this.addModuleError.set(null);
+    this.showAddModule.set(true);
+  }
+
+  cancelAddModule(): void {
+    this.showAddModule.set(false);
+  }
+
+  addModule(): void {
+    const c = this.course();
+    if (!c || !this.newModuleTitle.trim()) return;
+    this.addingModule.set(true);
+    this.addModuleError.set(null);
+    this.courseService.createModule(c._id, {
+      title: this.newModuleTitle.trim(),
+      description: this.newModuleDescription.trim() || undefined,
+    }).subscribe({
+      next: (mod) => {
+        this.modules.update((ms) => [...ms, { ...mod, lessonCount: 0 }]);
+        this.showAddModule.set(false);
+        this.addingModule.set(false);
+      },
+      error: () => { this.addModuleError.set('Failed to add module.'); this.addingModule.set(false); },
+    });
+  }
+
+  startEditModule(mod: CourseModule): void {
+    this.editModuleTitle = mod.title;
+    this.editModuleDescription = mod.description ?? '';
+    this.editingModuleId.set(mod._id);
+  }
+
+  cancelEditModule(): void {
+    this.editingModuleId.set(null);
+  }
+
+  saveModuleEdit(mod: CourseModule): void {
+    const c = this.course();
+    if (!c || !this.editModuleTitle.trim()) return;
+    this.savingModuleId.set(mod._id);
+    this.courseService.updateModule(c._id, mod._id, {
+      title: this.editModuleTitle.trim(),
+      description: this.editModuleDescription.trim() || undefined,
+    }).subscribe({
+      next: (updated) => {
+        this.modules.update((ms) => ms.map((m) => (m._id === updated._id ? { ...updated, lessonCount: m.lessonCount } : m)));
+        this.editingModuleId.set(null);
+        this.savingModuleId.set(null);
+      },
+      error: () => { alert('Failed to save module.'); this.savingModuleId.set(null); },
+    });
+  }
+
+  async deleteModule(mod: CourseModule): Promise<void> {
+    const c = this.course();
+    if (!c) return;
+    const ok = await this.confirmModal.open({
+      intent: `Delete "${mod.title}"?`,
+      description: 'All lessons in this module will be removed. This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    this.deletingModuleId.set(mod._id);
+    this.courseService.deleteModule(c._id, mod._id).subscribe({
+      next: () => {
+        this.modules.update((ms) => ms.filter((m) => m._id !== mod._id));
+        this.lessons.update((ls) => ls.filter((l) => l.moduleId !== mod._id));
+        this.deletingModuleId.set(null);
+      },
+      error: () => { alert('Failed to delete module.'); this.deletingModuleId.set(null); },
+    });
+  }
+
+  moveModule(moduleId: string, direction: -1 | 1): void {
+    const c = this.course();
+    if (!c) return;
+    const ms = [...this.modules()];
+    const idx = ms.findIndex((m) => m._id === moduleId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= ms.length) return;
+    [ms[idx], ms[newIdx]] = [ms[newIdx], ms[idx]];
+    ms.forEach((m, i) => { ms[i] = { ...m, order: i + 1 }; });
+    this.modules.set(ms);
+    this.courseService.reorderModules(c._id, ms.map((m) => m._id)).subscribe({
+      error: () => {
+        this.courseService.getModules(c._id).subscribe({
+          next: (fresh) => this.modules.set(fresh.sort((a, b) => a.order - b.order)),
+        });
+      },
+    });
+  }
+
   // ── Lesson management ─────────────────────────────────────────
 
-  /** Open the type-specific add panel from the dropdown. */
-  openAddLesson(type: LessonType): void {
+  /** Open the type-specific add panel from the dropdown, scoped to a module. */
+  openAddLesson(type: LessonType, moduleId: string): void {
+    this.addLessonModuleId.set(moduleId);
     this.newLessonType.set(type);
     this.newLessonTitle = '';
     this.newLessonTextContent = '';
@@ -309,6 +444,7 @@ export class CourseDetailComponent implements OnInit {
     this.selectedVideoId.set(null);
     this.addLessonError.set(null);
     this.addLessonMenuOpen.set(false);
+    this.addLessonMenuModuleId.set(null);
     this.showAddLesson.set(true);
   }
 
@@ -531,9 +667,10 @@ export class CourseDetailComponent implements OnInit {
   // ── Submit ────────────────────────────────────────────────────
   addLesson(): void {
     if (!this.addLessonValid) return;
-    const c    = this.course();
-    const type = this.newLessonType();
-    if (!c) return;
+    const c        = this.course();
+    const type     = this.newLessonType();
+    const moduleId = this.addLessonModuleId();
+    if (!c || !moduleId) return;
 
     let content    = '';
     let contentKey: string | undefined;
@@ -562,13 +699,13 @@ export class CourseDetailComponent implements OnInit {
     this.addingLesson.set(true);
     this.addLessonError.set(null);
 
-    this.courseService.createLesson(c._id, {
+    this.courseService.createLesson(c._id, moduleId, {
       title: this.newLessonTitle.trim(),
       type,
       content,
       contentKey,
       durationSec,
-      order: this.lessons().length + 1,
+      order: this.lessonsForModule(moduleId).length + 1,
       studyQuestions:      filledStudyQs.length      ? filledStudyQs      : undefined,
       reflectionQuestions: filledReflectionQs.length ? filledReflectionQs : undefined,
       prayer:       this.newLessonPrayer.trim()       || undefined,
@@ -576,6 +713,7 @@ export class CourseDetailComponent implements OnInit {
     }).subscribe({
       next: (lesson) => {
         this.lessons.update((ls) => [...ls, lesson]);
+        this.modules.update((ms) => ms.map((m) => m._id === moduleId ? { ...m, lessonCount: (m.lessonCount ?? 0) + 1 } : m));
         this.showAddLesson.set(false);
         this.addingLesson.set(false);
       },
@@ -596,10 +734,14 @@ export class CourseDetailComponent implements OnInit {
       variant: 'danger',
     });
     if (!ok) return;
+    const moduleId = this.lessons().find((l) => l._id === lessonId)?.moduleId;
     this.deletingLessonId.set(lessonId);
     this.courseService.deleteLesson(c._id, lessonId).subscribe({
       next: () => {
         this.lessons.update((ls) => ls.filter((l) => l._id !== lessonId));
+        if (moduleId) {
+          this.modules.update((ms) => ms.map((m) => m._id === moduleId ? { ...m, lessonCount: Math.max(0, (m.lessonCount ?? 1) - 1) } : m));
+        }
         this.deletingLessonId.set(null);
       },
       error: () => {
@@ -700,25 +842,28 @@ export class CourseDetailComponent implements OnInit {
     });
   }
 
-  // ── Move lesson up / down ─────────────────────────────────────
-  moveLesson(lessonId: string, direction: -1 | 1): void {
+  // ── Move lesson up / down (within its module) ─────────────────
+  moveLesson(lessonId: string, moduleId: string, direction: -1 | 1): void {
     const c = this.course();
     if (!c) return;
 
-    const ls  = [...this.lessons()];
-    const idx = ls.findIndex((l) => l._id === lessonId);
+    // Reorder only within the lesson's module.
+    const group = this.lessonsForModule(moduleId);
+    const idx = group.findIndex((l) => l._id === lessonId);
     if (idx < 0) return;
     const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= ls.length) return;
+    if (newIdx < 0 || newIdx >= group.length) return;
 
-    // Swap
-    [ls[idx], ls[newIdx]] = [ls[newIdx], ls[idx]];
-    // Fix order values
-    ls.forEach((l, i) => { l = { ...l, order: i + 1 }; ls[i] = l; });
-    this.lessons.set(ls);
+    [group[idx], group[newIdx]] = [group[newIdx], group[idx]];
+    const reordered = group.map((l, i) => ({ ...l, order: i + 1 }));
 
-    const ids = ls.map((l) => l._id);
-    this.courseService.reorderLessons(c._id, ids).subscribe({
+    // Merge the reordered module group back into the full lesson list.
+    this.lessons.update((ls) =>
+      ls.map((l) => reordered.find((r) => r._id === l._id) ?? l),
+    );
+
+    const ids = reordered.map((l) => l._id);
+    this.courseService.reorderLessons(c._id, moduleId, ids).subscribe({
       error: () => {
         // Revert on error by reloading
         this.courseService.getLessons(c._id).subscribe({
