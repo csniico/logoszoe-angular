@@ -8,7 +8,7 @@ import { CourseVideoService } from '../../../core/services/course-video.service'
 import { StorageService } from '../../../core/services/storage.service';
 import { DocumentPipelineService } from '../../../core/services/document-pipeline.service';
 import { PipelineProgress } from '../../../core/models/pipeline.model';
-import { Course, CourseModule, Lesson, LessonType, EmbeddedQuestion, COURSE_LEVELS, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
+import { Course, CourseModule, CourseLevel, Lesson, LessonType, EmbeddedQuestion, COURSE_LEVELS, LESSON_CONTENT_TYPES } from '../../../core/models/course.model';
 import { CourseVideo } from '../../../core/models/course-video.model';
 import { CourseVideoPlayerComponent } from '../../../shared/course-video-player/course-video-player';
 import { environment } from '../../../../environments/environment';
@@ -77,6 +77,43 @@ export class CourseDetailComponent implements OnInit {
 
   /** When adding a lesson, the module it will be added to. */
   readonly addLessonModuleId = signal<string | null>(null);
+
+  /**
+   * Add-lesson flow driven from the header button:
+   * 'closed' → 'module' (pick which module) → 'type' (pick text/video/audio)
+   * → opens the add-lesson form.
+   */
+  readonly addLessonStage = signal<'closed' | 'module' | 'type'>('closed');
+
+  startAddLessonFlow(): void {
+    this.addLessonModuleId.set(null);
+    this.addLessonStage.set('module');
+  }
+
+  pickAddLessonModule(moduleId: string): void {
+    this.addLessonModuleId.set(moduleId);
+    this.expandedModuleIds.update((s) => new Set(s).add(moduleId));
+    this.addLessonStage.set('type');
+  }
+
+  cancelAddLessonFlow(): void {
+    this.addLessonStage.set('closed');
+  }
+
+  /** Which module accordions are expanded (collapsed by default, like the app). */
+  readonly expandedModuleIds = signal<Set<string>>(new Set<string>());
+
+  toggleModule(id: string): void {
+    this.expandedModuleIds.update((s) => {
+      const next = new Set(s);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   // Edit buffers
   editTitle       = '';
@@ -254,6 +291,17 @@ export class CourseDetailComponent implements OnInit {
     this.editingField.set(null);
   }
 
+  /** Update the course level inline (pills save immediately). */
+  setLevel(level: CourseLevel): void {
+    const c = this.course();
+    if (!c || c.level === level) return;
+    this.saveError.set(null);
+    this.courseService.update(c._id, { level }).subscribe({
+      next: (updated) => this.course.set(updated),
+      error: () => this.saveError.set('Failed to update level.'),
+    });
+  }
+
   saveField(field: string): void {
     const c = this.course();
     if (!c) return;
@@ -344,6 +392,8 @@ export class CourseDetailComponent implements OnInit {
     }).subscribe({
       next: (mod) => {
         this.modules.update((ms) => [...ms, { ...mod, lessonCount: 0 }]);
+        // Expand the freshly created module so lessons can be added right away.
+        this.expandedModuleIds.update((s) => new Set(s).add(mod._id));
         this.showAddModule.set(false);
         this.addingModule.set(false);
       },
@@ -445,6 +495,8 @@ export class CourseDetailComponent implements OnInit {
     this.addLessonError.set(null);
     this.addLessonMenuOpen.set(false);
     this.addLessonMenuModuleId.set(null);
+    this.addLessonStage.set('closed');
+    this.expandedModuleIds.update((s) => new Set(s).add(moduleId));
     this.showAddLesson.set(true);
   }
 
