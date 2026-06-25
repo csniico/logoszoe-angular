@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../core/services/course.service';
 import { ConfirmModalService } from '../../shared/confirm-modal/confirm-modal.service';
-import { Course, COURSE_MODULES } from '../../core/models/course.model';
+import { Course, COURSE_LEVELS } from '../../core/models/course.model';
 
 type SortKey = 'date' | 'az' | 'za';
 
@@ -79,10 +79,10 @@ export class CoursesComponent implements OnInit {
     });
   }
 
-  readonly moduleOptions = COURSE_MODULES;
+  readonly levelOptions = COURSE_LEVELS;
 
-  moduleLabel(val: string): string {
-    return this.moduleOptions.find(m => m.value === val)?.label ?? val;
+  levelLabel(val: string): string {
+    return this.levelOptions.find(m => m.value === val)?.label ?? val;
   }
 
   // ── Image error fallback ──────────────────────────────────────

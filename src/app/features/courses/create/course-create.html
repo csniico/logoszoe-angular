@@ -31,18 +31,18 @@
         />
       </div>
 
-      <!-- Module -->
+      <!-- Level -->
       <div class="form-field">
-        <label class="form-label">Module <span class="required-star">*</span></label>
+        <label class="form-label">Level <span class="required-star">*</span></label>
         <div class="module-pills">
-          @for (m of moduleOptions; track m.value) {
+          @for (lv of levelOptions; track lv.value) {
             <button
               type="button"
               class="module-pill"
-              [class.module-pill--active]="module === m.value"
-              (click)="module = m.value"
+              [class.module-pill--active]="level === lv.value"
+              (click)="level = lv.value"
             >
-              {{ m.label }}
+              {{ lv.label }}
             </button>
           }
         </div>

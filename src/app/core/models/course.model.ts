@@ -1,8 +1,9 @@
 // ── Enums (mirror backend) ─────────────────────────────────────────────────────
 
-export type CourseModule = 'foundation' | 'intermediate' | 'advanced';
+/** Difficulty level of a course (formerly `module`). */
+export type CourseLevel = 'foundation' | 'intermediate' | 'advanced';
 
-export const COURSE_MODULES: { value: CourseModule; label: string }[] = [
+export const COURSE_LEVELS: { value: CourseLevel; label: string }[] = [
   { value: 'foundation',   label: 'Foundation'   },
   { value: 'intermediate', label: 'Intermediate' },
   { value: 'advanced',     label: 'Advanced'     },
@@ -38,7 +39,7 @@ export interface ExtractedLessonContent {
 export interface Course {
   _id: string;
   title: string;
-  module: CourseModule;
+  level: CourseLevel;
   imageUrl?: string;
   imageKey?: string;
   description?: string;
@@ -48,6 +49,20 @@ export interface Course {
   updatedAt?: string;
 }
 
+// ── Module (bundle of lessons within a course) ──────────────────────────────────
+
+export interface CourseModule {
+  _id: string;
+  courseId: string;
+  title: string;
+  order: number;
+  description?: string;
+  imageUrl?: string;
+  imageKey?: string;
+  /** Convenience count returned by GET /courses/:id/modules. */
+  lessonCount?: number;
+}
+
 // ── Lesson ────────────────────────────────────────────────────────────────────
 
 export type LessonType = 'text' | 'video' | 'audio';
@@ -55,6 +70,8 @@ export type LessonType = 'text' | 'video' | 'audio';
 export interface Lesson {
   _id: string;
   courseId: string;
+  /** The module this lesson belongs to. */
+  moduleId?: string;
   order: number;
   title: string;
   type: LessonType;

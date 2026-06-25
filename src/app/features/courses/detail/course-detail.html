@@ -59,10 +59,10 @@
       </div>
     </div>
 
-    <!-- ── Course info section ── -->
-    <div class="info-grid">
+    <!-- ── Course info section (layered, full-width) ── -->
+    <div class="info-stack" style="display:flex; flex-direction:column; gap:16px">
 
-      <!-- Cover image card -->
+      <!-- 2. Cover image -->
       <div class="info-card">
         <div class="info-card__label">Cover image</div>
         @if (course()!.imageUrl && !coverImgError()) {
@@ -86,12 +86,9 @@
         }
       </div>
 
-      <!-- Course meta card -->
-      <div class="info-card info-card--grow">
-        <div class="info-card__label">Course info</div>
-        <div class="course-meta-badges">
-          <span class="course-badge course-badge--module">{{ moduleLabel(course()!.module) }}</span>
-        </div>
+      <!-- 3. Description -->
+      <div class="info-card">
+        <div class="info-card__label">Description</div>
         @if (editingField() === 'description') {
           <textarea class="form-textarea" rows="4" [(ngModel)]="editDescription" maxlength="2000" placeholder="Optional description…"></textarea>
           <div class="inline-edit-actions">
@@ -110,70 +107,194 @@
           </button>
         }
       </div>
+
+      <!-- 4. Level -->
+      <div class="info-card">
+        <div class="info-card__label">Level</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          @for (lv of levelOptions; track lv.value) {
+            <button
+              type="button"
+              [class]="course()!.level === lv.value ? 'btn btn--primary btn--sm' : 'btn btn--ghost btn--sm'"
+              (click)="setLevel(lv.value)"
+            >
+              {{ lv.label }}
+            </button>
+          }
+        </div>
+      </div>
     </div>
 
-    <!-- ── Lessons section ── -->
+    <!-- ── Modules & Lessons section ── -->
     <div class="lessons-section">
       <div class="lessons-header">
         <h2 class="lessons-title">
-          Lessons
-          <span class="lessons-count">{{ lessons().length }}</span>
+          Modules
+          <span class="lessons-count">{{ modules().length }}</span>
         </h2>
-        @if (showAddLesson()) {
-          <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddLesson()">Cancel</button>
-        } @else {
-          <div class="add-lesson-dropdown">
-            <button class="btn btn--primary btn--sm add-lesson-trigger" type="button"
-                    (click)="addLessonMenuOpen.set(!addLessonMenuOpen())">
+        <div style="display:flex; gap:8px; align-items:center">
+          <button class="btn btn--ghost btn--sm" type="button"
+                  [disabled]="showAddModule() || addLessonStage() !== 'closed' || showAddLesson()"
+                  (click)="startAddLessonFlow()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add lesson
+          </button>
+          @if (showAddModule()) {
+            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddModule()">Cancel</button>
+          } @else {
+            <button class="btn btn--primary btn--sm" type="button" (click)="openAddModule()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add lesson
-              <svg class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              Add module
             </button>
-            @if (addLessonMenuOpen()) {
-              <div class="add-lesson-backdrop" (click)="addLessonMenuOpen.set(false)"></div>
-              <div class="add-lesson-menu" role="menu">
-                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('text')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <span class="add-lesson-menu__text">
-                    <span class="add-lesson-menu__label">Text</span>
-                    <span class="add-lesson-menu__hint">Written background content</span>
-                  </span>
-                </button>
-                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('video')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                  <span class="add-lesson-menu__text">
-                    <span class="add-lesson-menu__label">Video</span>
-                    <span class="add-lesson-menu__hint">From course video catalog</span>
-                  </span>
-                </button>
-                <button class="add-lesson-menu__item" type="button" role="menuitem" (click)="openAddLesson('audio')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                  <span class="add-lesson-menu__text">
-                    <span class="add-lesson-menu__label">Audio</span>
-                    <span class="add-lesson-menu__hint">MP3, WAV, M4A…</span>
-                  </span>
-                </button>
-              </div>
-            }
-          </div>
-        }
+          }
+        </div>
       </div>
 
-      <!-- Loading lessons -->
-      @if (loadingLessons()) {
-        <div class="state-cell" style="padding:2rem">
-          <span class="spinner"></span> Loading lessons…
+      <!-- Add module form -->
+      @if (showAddModule()) {
+        <div class="lesson-add-panel">
+          <div class="form-field">
+            <label class="form-label">Title <span class="required-star">*</span></label>
+            <input class="form-input" type="text" [(ngModel)]="newModuleTitle" placeholder="e.g. Module 1: Getting Started" maxlength="200" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Description <span class="optional-tag">optional</span></label>
+            <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="newModuleDescription" placeholder="What this module covers…" maxlength="500"></textarea>
+          </div>
+          @if (addModuleError()) { <p class="field-error">{{ addModuleError() }}</p> }
+          <div class="lesson-add-panel__actions">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddModule()">Cancel</button>
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="addingModule() || !newModuleTitle.trim()" (click)="addModule()">
+              @if (addingModule()) { <span class="spinner spinner--sm"></span> Adding… } @else { Save module }
+            </button>
+          </div>
         </div>
       }
 
-      <!-- ── Lesson accordions ── -->
-      @if (!loadingLessons()) {
-        <div class="lesson-list">
-          @if (lessons().length === 0 && !showAddLesson()) {
-            <div class="lesson-empty">No lessons yet. Add one below.</div>
+      <!-- Add lesson flow: pick module → pick type -->
+      @if (addLessonStage() !== 'closed') {
+        <div class="lesson-add-panel">
+          @if (addLessonStage() === 'module') {
+            <div class="form-field">
+              <label class="form-label">Add a lesson to which module?</label>
+              @if (modules().length === 0) {
+                <p class="form-hint-text">There are no modules yet — add a module first.</p>
+              } @else {
+                <div class="module-picker">
+                  @for (m of modules(); track m._id; let i = $index) {
+                    <button class="btn btn--ghost module-picker__item" type="button" (click)="pickAddLessonModule(m._id)">
+                      <span>Module {{ i + 1 }}: {{ m.title }}</span>
+                      <span class="lessons-count">{{ lessonsForModule(m._id).length }} lesson{{ lessonsForModule(m._id).length !== 1 ? 's' : '' }}</span>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+            <div class="lesson-add-panel__actions">
+              <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddLessonFlow()">Cancel</button>
+            </div>
+          } @else {
+            <div class="form-field">
+              <label class="form-label">What type of lesson?</label>
+              <div style="display:flex; gap:8px; flex-wrap:wrap">
+                <button class="btn btn--ghost btn--sm" type="button" (click)="openAddLesson('text', addLessonModuleId()!)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Text
+                </button>
+                <button class="btn btn--ghost btn--sm" type="button" (click)="openAddLesson('video', addLessonModuleId()!)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  Video
+                </button>
+                <button class="btn btn--ghost btn--sm" type="button" (click)="openAddLesson('audio', addLessonModuleId()!)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                  Audio
+                </button>
+              </div>
+            </div>
+            <div class="lesson-add-panel__actions">
+              <button class="btn btn--ghost btn--sm" type="button" (click)="addLessonStage.set('module')">Back</button>
+              <button class="btn btn--ghost btn--sm" type="button" (click)="cancelAddLessonFlow()">Cancel</button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Loading -->
+      @if (loadingModules() || loadingLessons()) {
+        <div class="state-cell" style="padding:2rem">
+          <span class="spinner"></span> Loading…
+        </div>
+      }
+
+      <!-- ── Modules ── -->
+      @if (!loadingModules() && !loadingLessons()) {
+        @if (modules().length === 0 && !showAddModule()) {
+          <div class="lesson-empty">No modules yet. Add a module to start adding lessons.</div>
+        }
+
+        @for (module of modules(); track module._id; let mIdx = $index) {
+        <div class="module-block">
+
+          <!-- ── Module header ── -->
+          <div class="module-header">
+            @if (editingModuleId() === module._id) {
+              <div class="module-edit-form">
+                <input class="form-input form-input--sm" type="text" [(ngModel)]="editModuleTitle" placeholder="Module title" maxlength="200" />
+                <textarea class="form-textarea form-textarea--sm" rows="2" [(ngModel)]="editModuleDescription" placeholder="Description…" maxlength="500"></textarea>
+                <div class="inline-edit-actions">
+                  <button class="btn btn--primary btn--sm" type="button" [disabled]="savingModuleId() === module._id" (click)="saveModuleEdit(module)">
+                    @if (savingModuleId() === module._id) { <span class="spinner spinner--sm"></span> } @else { Save }
+                  </button>
+                  <button class="btn btn--ghost btn--sm" type="button" (click)="cancelEditModule()">Cancel</button>
+                </div>
+              </div>
+            } @else {
+              <div class="module-header__main" (click)="toggleModule(module._id)"
+                   style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer">
+                <div class="lesson-item__order">{{ mIdx + 1 }}</div>
+                <div class="module-header__title">
+                  <h3 class="module-title">{{ module.title }}</h3>
+                  <span class="lessons-count">{{ lessonsForModule(module._id).length }} lesson{{ lessonsForModule(module._id).length !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+              <div class="lesson-item__move">
+                <button class="arrow-btn" type="button" [disabled]="mIdx === 0" title="Move up" (click)="moveModule(module._id, -1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <button class="arrow-btn" type="button" [disabled]="mIdx === modules().length - 1" title="Move down" (click)="moveModule(module._id, 1)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+              <div class="lesson-item__actions">
+                <button class="icon-btn" type="button" title="Edit module" (click)="startEditModule(module)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="icon-btn icon-btn--danger" type="button" title="Delete module"
+                        [disabled]="deletingModuleId() === module._id" (click)="deleteModule(module)">
+                  @if (deletingModuleId() === module._id) {
+                    <span class="spinner spinner--sm"></span>
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  }
+                </button>
+              </div>
+              <button class="icon-btn module-chevron" type="button" title="Expand / collapse"
+                      (click)="toggleModule(module._id)"
+                      [style.transform]="expandedModuleIds().has(module._id) ? 'rotate(180deg)' : 'none'"
+                      style="transition: transform .2s ease">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            }
+          </div>
+
+          @if (module.description && editingModuleId() !== module._id && expandedModuleIds().has(module._id)) {
+            <p class="module-desc">{{ module.description }}</p>
           }
 
-          @for (lesson of lessons(); track lesson._id; let idx = $index) {
+          @if (expandedModuleIds().has(module._id)) {
+          <!-- ── Lesson accordions (within this module) ── -->
+          <div class="lesson-list">
+          @for (lesson of lessonsForModule(module._id); track lesson._id; let idx = $index) {
             <div class="lesson-accordion"
                  [class.lesson-accordion--open]="expandedLessonId() === lesson._id"
                  [class.lesson-accordion--editing]="editingLessonId() === lesson._id">
@@ -187,11 +308,11 @@
                 <!-- Move arrows -->
                 <div class="lesson-item__move" (click)="$event.stopPropagation()">
                   <button class="arrow-btn" type="button" [disabled]="idx === 0" title="Move up"
-                          (click)="moveLesson(lesson._id, -1)">
+                          (click)="moveLesson(lesson._id, module._id, -1)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
                   </button>
-                  <button class="arrow-btn" type="button" [disabled]="idx === lessons().length - 1" title="Move down"
-                          (click)="moveLesson(lesson._id, 1)">
+                  <button class="arrow-btn" type="button" [disabled]="idx === lessonsForModule(module._id).length - 1" title="Move down"
+                          (click)="moveLesson(lesson._id, module._id, 1)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                   </button>
                 </div>
@@ -205,7 +326,7 @@
                 </span>
 
                 <!-- Title -->
-                <div class="lesson-accordion__title">{{ lesson.title }}</div>
+                <div class="lesson-accordion__title">Lesson {{ idx + 1 }}: {{ lesson.title }}</div>
 
                 <!-- Duration badge -->
                 @if (lesson.durationSec) {
@@ -438,17 +559,100 @@
                       </span>
                     </div>
 
+                    <!-- ── Full lesson details (read-only) ── -->
+                    <div class="lesson-detail-view">
+
+                      <!-- Content -->
+                      @if (lesson.type === 'text') {
+                        @if (lesson.content) {
+                          <div class="lesson-detail-section">
+                            <div class="lesson-detail-section__title">Content</div>
+                            <div class="lesson-prose" [innerHTML]="lesson.content"></div>
+                          </div>
+                        }
+                      } @else if (lesson.type === 'video') {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Video</div>
+                          @if (videoForLesson(lesson); as v) {
+                            <div class="video-pick-preview">
+                              @if (v.thumbnailUrl) { <img [src]="v.thumbnailUrl" [alt]="v.title" /> }
+                              <span>{{ v.title }}</span>
+                            </div>
+                          } @else {
+                            <p class="form-hint-text">Video not found in the catalog.</p>
+                          }
+                        </div>
+                      } @else if (lesson.type === 'audio') {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Audio</div>
+                          <audio controls class="lesson-audio-player" style="width:100%">
+                            <source [src]="lesson.content" />
+                          </audio>
+                        </div>
+                      }
+
+                      <!-- Study questions -->
+                      @if (lesson.studyQuestions?.length) {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Study questions</div>
+                          <ol class="lesson-detail-qlist">
+                            @for (q of lesson.studyQuestions; track $index) {
+                              <li>{{ q.text }}</li>
+                            }
+                          </ol>
+                        </div>
+                      }
+
+                      <!-- Reflection questions -->
+                      @if (lesson.reflectionQuestions?.length) {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Reflection questions</div>
+                          <ol class="lesson-detail-qlist">
+                            @for (q of lesson.reflectionQuestions; track $index) {
+                              <li>{{ q.text }}</li>
+                            }
+                          </ol>
+                        </div>
+                      }
+
+                      <!-- Prayer -->
+                      @if (lesson.prayer) {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Prayer</div>
+                          <p class="lesson-detail-text">{{ lesson.prayer }}</p>
+                        </div>
+                      }
+
+                      <!-- Further study -->
+                      @if (lesson.furtherStudy) {
+                        <div class="lesson-detail-section">
+                          <div class="lesson-detail-section__title">Further study</div>
+                          <div class="lesson-prose" [innerHTML]="lesson.furtherStudy"></div>
+                        </div>
+                      }
+
+                      <!-- Jump to edit -->
+                      <div class="lesson-detail-actions">
+                        <button class="btn btn--ghost btn--sm" type="button" (click)="startEditLesson(lesson)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="btn-icon" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          Edit lesson
+                        </button>
+                      </div>
+                    </div>
+
                   }
                 </div>
               }
 
             </div><!-- /lesson-accordion -->
           }
-        </div>
-      }
+          @if (lessonsForModule(module._id).length === 0 && !(showAddLesson() && addLessonModuleId() === module._id)) {
+            <div class="lesson-empty">No lessons in this module yet.</div>
+          }
+          </div><!-- /lesson-list -->
 
-      <!-- ── Add lesson panel ── -->
-      @if (showAddLesson()) {
+          <!-- ── Add lesson panel (for this module) ── -->
+          @if (showAddLesson() && addLessonModuleId() === module._id) {
         <div class="lesson-add-panel">
 
           <!-- Panel header with type label -->
@@ -654,6 +858,11 @@
           </div>
 
         </div>
+          }<!-- /add lesson panel -->
+          }<!-- /module expanded -->
+
+        </div><!-- /module-block -->
+        }
       }
     </div>
     } <!-- /admin view -->
