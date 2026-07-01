@@ -32,7 +32,7 @@ export class CourseService {
   }
 
   update(id: string, patch: Partial<Course>): Observable<Course> {
-    return this.http.patch<Course>(`${this.adminBase}/${id}`, patch);
+    return this.http.patch<Course>(`${this.adminBase}/${id}`, pruneEmpty(patch));
   }
 
   delete(id: string): Observable<void> {
@@ -58,7 +58,7 @@ export class CourseService {
   }
 
   updateModule(courseId: string, moduleId: string, patch: Partial<CourseModule>): Observable<CourseModule> {
-    return this.http.patch<CourseModule>(`${this.adminBase}/${courseId}/modules/${moduleId}`, patch);
+    return this.http.patch<CourseModule>(`${this.adminBase}/${courseId}/modules/${moduleId}`, pruneEmpty(patch));
   }
 
   deleteModule(courseId: string, moduleId: string): Observable<void> {
@@ -84,7 +84,10 @@ export class CourseService {
   }
 
   updateLesson(courseId: string, lessonId: string, patch: Partial<Lesson>): Observable<Lesson> {
-    return this.http.patch<Lesson>(`${this.adminBase}/${courseId}/lessons/${lessonId}`, patch);
+    return this.http.patch<Lesson>(
+      `${this.adminBase}/${courseId}/lessons/${lessonId}`,
+      pruneEmpty(patch),
+    );
   }
 
   deleteLesson(courseId: string, lessonId: string): Observable<void> {
@@ -98,4 +101,17 @@ export class CourseService {
       { lessonIds },
     );
   }
+}
+
+/**
+ * Drop `null`/`undefined` values from a PATCH payload so a partial update never
+ * blanks a field the user didn't touch (e.g. an untouched `type` control
+ * sending `null`, which blows up server-side required validation).
+ */
+function pruneEmpty<T extends Record<string, unknown>>(patch: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (value !== null && value !== undefined) out[key as keyof T] = value as T[keyof T];
+  }
+  return out;
 }
