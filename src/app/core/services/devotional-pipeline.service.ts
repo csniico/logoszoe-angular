@@ -581,9 +581,13 @@ export class DevotionalPipelineService {
       this.run(file, (p) => subscriber.next(p))
         .then(() => subscriber.complete())
         .catch((err: unknown) => {
+          // Log the real error — this pipeline runs client-side, so there are
+          // no server logs, and the message must carry the detail to the UI.
+          console.error('[DevotionalPipeline] process failed:', err);
+          const detail = err instanceof Error ? err.message : String(err);
           subscriber.next({
             stage: 'error',
-            message: err instanceof Error ? err.message : 'Pipeline failed',
+            message: `Pipeline failed: ${detail}`,
           });
           subscriber.complete();
         });
@@ -597,6 +601,10 @@ export class DevotionalPipelineService {
     const buffer = await file.arrayBuffer();
 
     emit({ stage: 'converting',          message: 'Converting to HTML…',       progress: 18 });
+    // mammoth's CommonJS deps expect a Node-style `global`. The dev server
+    // defines it but the optimized production build does not, which makes the
+    // dynamic import throw "global is not defined" only on the deployed app.
+    (globalThis as unknown as { global?: unknown }).global ??= globalThis;
     const mammoth = await import('mammoth');
     const { value: rawHtml } = await mammoth.convertToHtml({ arrayBuffer: buffer }, {
       styleMap: [

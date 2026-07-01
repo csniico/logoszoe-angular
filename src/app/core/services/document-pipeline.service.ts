@@ -1,6 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
-import { html as htmlBeautify } from 'js-beautify';
+// Namespace import of the whole CommonJS module, then read `.html` off it.
+// The named import `{ html }` can resolve to `undefined` under Angular's
+// optimized production build (CJS->ESM interop) while working in `ng serve`,
+// which surfaces as a runtime "Pipeline failed" only on the deployed app.
+import * as jsBeautify from 'js-beautify';
+
+const htmlBeautify = jsBeautify.html;
 import { StorageService } from './storage.service';
 import { BibleService } from './bible.service';
 import { PipelineProgress } from '../models/pipeline.model';
@@ -144,10 +150,15 @@ export class DocumentPipelineService {
       this.run(file, imageKeyPrefix, (p) => subscriber.next(p))
         .then(() => subscriber.complete())
         .catch((err: unknown) => {
+          // Log the real error so it is visible in the browser console on
+          // production (the pipeline runs client-side, so there are no server
+          // logs to inspect).
+          console.error('[DocumentPipeline] process failed:', err);
+          const detail = err instanceof Error ? err.message : String(err);
           subscriber.next({
             stage: 'error',
-            message: 'Pipeline failed',
-            error: err instanceof Error ? err.message : String(err),
+            message: `Pipeline failed: ${detail}`,
+            error: detail,
           });
           subscriber.complete();
         });
@@ -164,10 +175,12 @@ export class DocumentPipelineService {
       this.runHtmlContent(html, (p) => subscriber.next(p))
         .then(() => subscriber.complete())
         .catch((err: unknown) => {
+          console.error('[DocumentPipeline] processHtmlContent failed:', err);
+          const detail = err instanceof Error ? err.message : String(err);
           subscriber.next({
             stage: 'error',
-            message: 'Processing failed',
-            error: err instanceof Error ? err.message : String(err),
+            message: `Processing failed: ${detail}`,
+            error: detail,
           });
           subscriber.complete();
         });
@@ -618,6 +631,10 @@ export class DocumentPipelineService {
   }
 
   private async docxToHtml(buffer: ArrayBuffer): Promise<string> {
+    // mammoth's CommonJS deps expect a Node-style `global`. The dev server
+    // defines it but the optimized production build does not, which makes the
+    // dynamic import throw "global is not defined" only on the deployed app.
+    (globalThis as unknown as { global?: unknown }).global ??= globalThis;
     const mammoth = await import('mammoth');
     const result  = await mammoth.convertToHtml(
       { arrayBuffer: buffer },
