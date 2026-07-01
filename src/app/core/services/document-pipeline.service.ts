@@ -1,11 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
-// Namespace import of the whole CommonJS module, then read `.html` off it.
-// The named import `{ html }` can resolve to `undefined` under Angular's
-// optimized production build (CJS->ESM interop) while working in `ng serve`,
-// which surfaces as a runtime "Pipeline failed" only on the deployed app.
-import * as jsBeautify from 'js-beautify';
+// js-beautify is a CommonJS `export =` module. Under Angular's optimized
+// production build the members can live only on `.default` (while `ng serve`
+// also exposes them at the top level), so the named import `{ html }` resolves
+// to `undefined` and throws "html is not a function" only on the deployed app.
+// Read through `.default` when present.
+import * as jsBeautifyNs from 'js-beautify';
 
+const jsBeautify =
+  (jsBeautifyNs as unknown as { default?: typeof jsBeautifyNs }).default ??
+  jsBeautifyNs;
 const htmlBeautify = jsBeautify.html;
 import { StorageService } from './storage.service';
 import { BibleService } from './bible.service';
@@ -635,7 +639,10 @@ export class DocumentPipelineService {
     // defines it but the optimized production build does not, which makes the
     // dynamic import throw "global is not defined" only on the deployed app.
     (globalThis as unknown as { global?: unknown }).global ??= globalThis;
-    const mammoth = await import('mammoth');
+    // mammoth is `export = mammoth`; the optimized prod build exposes it only
+    // on `.default`, so `convertToHtml` is undefined at the top level there.
+    const mammothImport = await import('mammoth');
+    const mammoth = mammothImport.default ?? mammothImport;
     const result  = await mammoth.convertToHtml(
       { arrayBuffer: buffer },
       {

@@ -605,7 +605,10 @@ export class DevotionalPipelineService {
     // defines it but the optimized production build does not, which makes the
     // dynamic import throw "global is not defined" only on the deployed app.
     (globalThis as unknown as { global?: unknown }).global ??= globalThis;
-    const mammoth = await import('mammoth');
+    // mammoth is `export = mammoth`; the optimized prod build exposes it only
+    // on `.default`, so `convertToHtml` is undefined at the top level there.
+    const mammothImport = await import('mammoth');
+    const mammoth = mammothImport.default ?? mammothImport;
     const { value: rawHtml } = await mammoth.convertToHtml({ arrayBuffer: buffer }, {
       styleMap: [
         "p[style-name='Heading 1'] => h1:fresh",
