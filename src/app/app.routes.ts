@@ -85,6 +85,13 @@ export const routes: Routes = [
           import('./features/videos/create/video-create').then((m) => m.VideoCreateComponent),
       },
 
+      /* Content - TikTok */
+      {
+        path: 'tiktok',
+        loadComponent: () =>
+          import('./features/tiktok/tiktok').then((m) => m.TiktokComponent),
+      },
+
       /* Content - Articles */
       {
         path: 'articles',
